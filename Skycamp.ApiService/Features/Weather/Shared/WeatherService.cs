@@ -13,7 +13,8 @@ public class WeatherService : IWeatherService
             {
                 Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(i)),
                 TemperatureC = 20 + i,
-                Summary = "Sunny"
+                Summary = "Sunny",
+                Description = "A sunny day with clear skies."
             });
         }
 
