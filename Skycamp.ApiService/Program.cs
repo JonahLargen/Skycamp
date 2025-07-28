@@ -41,16 +41,16 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 
-//if (app.Environment.IsDevelopment())
-//{
-//    app.MapOpenApi();
-//}
-
 // Configure FastEndpoints with versioning
 app.UseFastEndpoints(c =>
 {
     c.Versioning.Prefix = "v";
-}).UseSwaggerGen();
+});
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwaggerGen();
+}
 
 app.MapDefaultEndpoints();
 
