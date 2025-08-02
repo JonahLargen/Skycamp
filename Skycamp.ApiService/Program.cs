@@ -45,9 +45,6 @@ builder.Services.AddFastEndpoints()
         o.ShortSchemaNames = true;
     });
 
-// Shared Services
-builder.Services.AddWeatherServices();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

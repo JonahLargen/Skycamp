@@ -1,11 +1,11 @@
-﻿namespace Skycamp.ApiService.Features.Weather.V2.GetForecast;
+﻿namespace Skycamp.ApiService.Features.Weather.V2.GetForecasts;
 
 public record GetForecastResponse
 {
-    public List<Forecast> Forecasts { get; init; } = [];
+    public List<GetForecastResponseForecast> Forecasts { get; init; } = [];
 }
 
-public record Forecast
+public record GetForecastResponseForecast
 {
     public required DateOnly Date { get; init; }
     public required int TemperatureC { get; init; }
