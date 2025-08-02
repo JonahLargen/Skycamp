@@ -1,8 +1,5 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
-using NJsonSchema.Generation;
-using NJsonSchema.NewtonsoftJson.Generation;
-using Skycamp.ApiService.Common.Schema;
 using Skycamp.ApiService.Features.Weather.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
