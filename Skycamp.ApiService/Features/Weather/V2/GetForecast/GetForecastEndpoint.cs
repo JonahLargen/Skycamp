@@ -19,7 +19,16 @@ public class GetForecastEndpoint : EndpointWithMapping<GetForecastRequest, GetFo
 
         AllowAnonymous();
 
-        //Description("Gets weather forecast for a city.");
+        Description(b =>
+        {
+            b.WithName("GetForecastV2");
+        });
+
+        Summary(s =>
+        {
+            s.Summary = "Get weather forecast for a city";
+            s.Description = "Retrieves the weather forecast for a specified city for a given number of days.";
+        });
     }
 
     public override async Task HandleAsync(GetForecastRequest req, CancellationToken ct)
