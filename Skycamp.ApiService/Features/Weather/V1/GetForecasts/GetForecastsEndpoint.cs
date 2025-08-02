@@ -44,7 +44,7 @@ public class GetForecastsEndpoint : EndpointWithMapping<GetForecastsRequest, Get
         return new GetForecastsCommand()
         {
             City = req.City,
-            Days = req.Days
+            Days = req.Days ?? 1
         };
     }
 

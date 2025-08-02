@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace Skycamp.ApiService.Shared.FastEndpoints;
 
 /// <summary>
-/// use this base class for defining endpoints that use both request and response dtos as well as require mapping to and from a domain entity.
+/// use this base class for defining endpoints that use request dtos that map to a command and domain entity dtos that map to a response dto.
 /// </summary>
 /// <typeparam name="TRequest">the type of the request dto</typeparam>
 /// <typeparam name="TResponse">the type of the response dto</typeparam>
