@@ -1,5 +1,8 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using NJsonSchema.Generation;
+using NJsonSchema.NewtonsoftJson.Generation;
+using Skycamp.ApiService.Common.Schema;
 using Skycamp.ApiService.Features.Weather.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +17,11 @@ builder.Services.AddProblemDetails();
 builder.Services.AddFastEndpoints()
     .SwaggerDocument(o =>
     {
+        o.EndpointFilter = ep =>
+        {
+            return ep.Version.Current == 1;
+        };
+        o.MinEndpointVersion = 1;
         o.MaxEndpointVersion = 1;
         o.DocumentSettings = s =>
         {
@@ -21,9 +29,15 @@ builder.Services.AddFastEndpoints()
             s.Version = "v1";
             s.DocumentName = "v1";
         };
+        o.ShortSchemaNames = true;
     })
     .SwaggerDocument(o =>
     {
+        o.EndpointFilter = ep =>
+        {
+            return ep.Version.Current == 2;
+        };
+        o.MinEndpointVersion = 2;
         o.MaxEndpointVersion = 2;
         o.DocumentSettings = s =>
         {
@@ -31,6 +45,7 @@ builder.Services.AddFastEndpoints()
             s.Version = "v2";
             s.DocumentName = "v2";
         };
+        o.ShortSchemaNames = true;
     });
 
 // Shared Services
