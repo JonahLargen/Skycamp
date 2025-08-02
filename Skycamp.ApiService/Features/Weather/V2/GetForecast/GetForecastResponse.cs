@@ -2,11 +2,10 @@
 
 public record GetForecastResponse
 {
-    public required string City { get; init; }
-    public List<ForecastDay> Forecast { get; init; } = [];
+    public List<Forecast> Forecasts { get; init; } = [];
 }
 
-public record ForecastDay
+public record Forecast
 {
     public required DateOnly Date { get; init; }
     public required int TemperatureC { get; init; }

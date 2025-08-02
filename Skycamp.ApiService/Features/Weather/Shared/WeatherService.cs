@@ -2,7 +2,7 @@
 
 public class WeatherService : IWeatherService
 {
-    public Task<List<WeatherForecastDay>> GetForecastAsync(string city, int days)
+    public Task<List<WeatherForecastDay>> GetForecastsAsync(string city, int days)
     {
         // Simulate data
         var result = new List<WeatherForecastDay>();

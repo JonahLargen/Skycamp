@@ -2,5 +2,5 @@
 
 public interface IWeatherService
 {
-    Task<List<WeatherForecastDay>> GetForecastAsync(string city, int days);
+    Task<List<WeatherForecastDay>> GetForecastsAsync(string city, int days);
 }

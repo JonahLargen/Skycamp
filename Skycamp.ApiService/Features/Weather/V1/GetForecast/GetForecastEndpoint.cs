@@ -3,7 +3,7 @@ using Skycamp.ApiService.Features.Weather.Shared;
 
 namespace Skycamp.ApiService.Features.Weather.V1.GetForecast;
 
-public class GetForecastEndpoint : Endpoint<GetForecastRequest, GetForecastResponse>
+public class GetForecastEndpoint : EndpointWithMapping<GetForecastRequest, GetForecastResponse, List<WeatherForecastDay>>
 {
     private readonly IWeatherService _weatherService;
 
@@ -24,12 +24,17 @@ public class GetForecastEndpoint : Endpoint<GetForecastRequest, GetForecastRespo
 
     public override async Task HandleAsync(GetForecastRequest req, CancellationToken ct)
     {
-        var forecast = await _weatherService.GetForecastAsync(req.City, req.Days ?? 1);
+        var forecasts = await _weatherService.GetForecastsAsync(req.City, req.Days ?? 1);
+        var response = MapFromEntity(forecasts);
 
-        Response = new GetForecastResponse
+        await Send.OkAsync(response, ct);
+    }
+
+    public override GetForecastResponse MapFromEntity(List<WeatherForecastDay> e)
+    {
+        return new GetForecastResponse
         {
-            City = req.City,
-            Forecast = forecast.Select(day => new ForecastDay
+            Forecasts = e.Select(day => new Forecast
             {
                 Date = day.Date,
                 TemperatureC = day.TemperatureC,

@@ -1,9 +1,9 @@
 ﻿namespace Skycamp.ApiService.Features.Weather.Shared;
 
-public class WeatherForecastDay
+public record WeatherForecastDay
 {
-    public required DateOnly Date { get; set; }
-    public required int TemperatureC { get; set; }
-    public required string Summary { get; set; }
-    public required string Description { get; set; }
+    public required DateOnly Date { get; init; }
+    public required int TemperatureC { get; init; }
+    public required string Summary { get; init; }
+    public required string Description { get; init; }
 }
