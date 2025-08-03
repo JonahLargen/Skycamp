@@ -7,6 +7,8 @@ using Microsoft.Extensions.ServiceDiscovery;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using Serilog;
+using Serilog.Extensions.Hosting;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -20,6 +22,21 @@ public static class Extensions
 
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
+        var loggerConfiguration = new LoggerConfiguration()
+            .Enrich.FromLogContext()
+            .WriteTo.Console();
+
+        var otlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
+
+        if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+        {
+            loggerConfiguration.WriteTo.OpenTelemetry(otlpEndpoint);
+        }
+
+        Log.Logger = loggerConfiguration.CreateLogger();
+
+        builder.Services.AddSerilog();
+
         builder.ConfigureOpenTelemetry();
 
         builder.AddDefaultHealthChecks();
