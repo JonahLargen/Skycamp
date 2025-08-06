@@ -57,10 +57,14 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 
-// Configure FastEndpoints with versioning
+// Configure FastEndpoints with versioning & processors
 app.UseFastEndpoints(c =>
 {
     c.Versioning.Prefix = "v";
+    c.Endpoints.Configurator = (ep) =>
+    {
+        ep.PreProcessor<LoggingGlobalPreProcessor>(Order.Before);
+    };
 });
 
 if (app.Environment.IsDevelopment())
