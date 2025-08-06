@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using Skycamp.ApiService.Common.Middleware;
 using Skycamp.ApiService.Features.Weather.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +45,12 @@ builder.Services.AddFastEndpoints()
         };
         o.ShortSchemaNames = true;
     });
+
+// Add Command Middleware
+builder.Services.AddCommandMiddleware(c =>
+{
+    c.Register(typeof(CommandLoggingMiddleware<,>));
+});
 
 var app = builder.Build();
 

@@ -1,6 +1,6 @@
 ﻿using Skycamp.ApiService.Features.Weather.Shared;
 using Skycamp.ApiService.Features.Weather.Shared.GetForecasts;
-using Skycamp.ApiService.Shared.FastEndpoints;
+using Skycamp.ApiService.Common.Endpoints;
 
 namespace Skycamp.ApiService.Features.Weather.V2.GetForecasts;
 
