@@ -49,6 +49,7 @@ builder.Services.AddFastEndpoints()
 // Add Command Middleware
 builder.Services.AddCommandMiddleware(c =>
 {
+    c.Register(typeof(CommandTracingMiddleware<,>));
     c.Register(typeof(CommandLoggingMiddleware<,>));
 });
 
