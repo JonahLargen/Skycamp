@@ -1,7 +1,7 @@
 ﻿using FastEndpoints;
 using JetBrains.Annotations;
 
-namespace Skycamp.ApiService.Shared.FastEndpoints;
+namespace Skycamp.ApiService.Common.Endpoints;
 
 /// <summary>
 /// use this base class for defining endpoints that use request dtos that map to a command and domain entity dtos that map to a response dto.
