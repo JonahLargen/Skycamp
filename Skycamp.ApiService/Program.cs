@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using FluentValidation;
 using Skycamp.ApiService.Common.Middleware;
 using Skycamp.ApiService.Features.Weather.Shared;
 
@@ -46,9 +47,13 @@ builder.Services.AddFastEndpoints()
         o.ShortSchemaNames = true;
     });
 
+//Add FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
 // Add Command Middleware
 builder.Services.AddCommandMiddleware(c =>
 {
+    c.Register(typeof(CommandValidationMiddleware<,>));
     c.Register(typeof(CommandTracingMiddleware<,>));
     c.Register(typeof(CommandLoggingMiddleware<,>));
 });
@@ -64,7 +69,8 @@ app.UseFastEndpoints(c =>
     c.Versioning.Prefix = "v";
     c.Endpoints.Configurator = (ep) =>
     {
-        ep.PreProcessor<LoggingGlobalPreProcessor>(Order.Before);
+        ep.PreProcessor<GlobalLoggingPreProcessor>(Order.Before);
+        ep.PostProcessor<GlobalLoggingPostProcessor>(Order.After);
     };
 });
 
