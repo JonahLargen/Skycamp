@@ -53,9 +53,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 // Add Command Middleware
 builder.Services.AddCommandMiddleware(c =>
 {
-    c.Register(typeof(CommandValidationMiddleware<,>));
     c.Register(typeof(CommandTracingMiddleware<,>));
     c.Register(typeof(CommandLoggingMiddleware<,>));
+    c.Register(typeof(CommandValidationMiddleware<,>));
 });
 
 var app = builder.Build();
@@ -69,7 +69,9 @@ app.UseFastEndpoints(c =>
     c.Versioning.Prefix = "v";
     c.Endpoints.Configurator = (ep) =>
     {
+        ep.PreProcessor<GlobalTracingPreProcessor>(Order.Before);
         ep.PreProcessor<GlobalLoggingPreProcessor>(Order.Before);
+        ep.PostProcessor<GlobalTracingPostProcessor>(Order.After);
         ep.PostProcessor<GlobalLoggingPostProcessor>(Order.After);
     };
 });

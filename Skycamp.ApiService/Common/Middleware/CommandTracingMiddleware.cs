@@ -18,6 +18,7 @@ public class CommandTracingMiddleware<TCommand, TResult> : ICommandMiddleware<TC
         using var activity = TelemetryConstants.ActivitySource.StartActivity(command.GetType().Name, ActivityKind.Internal);
 
         activity?.SetTag("otel.library.name", TelemetryConstants.ActivitySourceName);
+        activity?.SetTag("component", "command");
         activity?.SetTag("command.type", command.GetType().FullName);
         activity?.SetTag("command.name", command.GetType().Name);
         activity?.SetTag("result.type", typeof(TResult).FullName);
