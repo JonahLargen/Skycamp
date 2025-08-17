@@ -2,9 +2,9 @@
 
 namespace Skycamp.ApiService.Features.Weather.Shared.GetForecasts;
 
-public class GetForecastsHandler : ICommandHandler<GetForecastsCommand, List<Forecast>>
+public class GetForecastsHandler : CommandHandler<GetForecastsCommand, List<Forecast>>
 {
-    public Task<List<Forecast>> ExecuteAsync(GetForecastsCommand command, CancellationToken ct)
+    public override Task<List<Forecast>> ExecuteAsync(GetForecastsCommand command, CancellationToken ct)
     {
         // Simulate data
         var result = new List<Forecast>();
@@ -20,6 +20,10 @@ public class GetForecastsHandler : ICommandHandler<GetForecastsCommand, List<For
                 Description = "A sunny day with clear skies."
             });
         }
+
+        AddError("an error added by the endpoint!");
+
+        ThrowIfAnyErrors();
 
         return Task.FromResult(result);
     }

@@ -7,9 +7,11 @@ public class GetForecastsValidator : Validator<GetForecastsRequest>
 {
     public GetForecastsValidator()
     {
-        RuleFor(x => x.City).NotEmpty().WithMessage("City is required.");
-        RuleFor(x => x.Days).GreaterThanOrEqualTo(1).LessThanOrEqualTo(7)
-            .When(x => x.Days.HasValue)
-            .WithMessage("Days must be between 1 and 7.");
+        RuleFor(x => x.City)
+            .NotEmpty();
+
+        RuleFor(x => x.Days)
+            .InclusiveBetween(1, 7)
+            .When(x => x.Days.HasValue);
     }
 }

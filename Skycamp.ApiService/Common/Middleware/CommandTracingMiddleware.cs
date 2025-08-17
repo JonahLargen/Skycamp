@@ -1,4 +1,5 @@
 ﻿using FastEndpoints;
+using Newtonsoft.Json;
 using Skycamp.ApiService.Common.Telemetry;
 using System.Diagnostics;
 
@@ -17,6 +18,7 @@ public class CommandTracingMiddleware<TCommand, TResult> : ICommandMiddleware<TC
         using var activity = TelemetryConstants.ActivitySource.StartActivity(command.GetType().Name, ActivityKind.Internal);
 
         activity?.SetTag("otel.library.name", TelemetryConstants.ActivitySourceName);
+        activity?.SetTag("component", "command");
         activity?.SetTag("command.type", command.GetType().FullName);
         activity?.SetTag("command.name", command.GetType().Name);
         activity?.SetTag("result.type", typeof(TResult).FullName);
@@ -32,13 +34,22 @@ public class CommandTracingMiddleware<TCommand, TResult> : ICommandMiddleware<TC
 
             return result;
         }
+        catch (ValidationFailureException vex)
+        {
+            activity?.AddEvent(new ActivityEvent("Command validation failed"));
+            activity?.SetStatus(ActivityStatusCode.Error);
+            activity?.SetTag("error.type", "ValidationFailure");
+            activity?.SetTag("validation.errors", vex.Failures != null ? JsonConvert.SerializeObject(vex.Failures) : "");
+            throw;
+        }
         catch (Exception ex)
         {
             activity?.AddEvent(new ActivityEvent("Command failed"));
             activity?.SetStatus(ActivityStatusCode.Error);
-            activity?.SetTag("exception.type", ex.GetType().FullName);
+            activity?.SetTag("error.type", "Exception");
+            activity?.SetTag("exception.type", ex.GetType().FullName ?? "");
             activity?.SetTag("exception.message", ex.Message);
-            activity?.SetTag("exception.stacktrace", ex.StackTrace);
+            activity?.SetTag("exception.stacktrace", ex.StackTrace ?? "");
             throw;
         }
     }
