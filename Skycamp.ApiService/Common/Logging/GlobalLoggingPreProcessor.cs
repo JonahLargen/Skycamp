@@ -13,9 +13,20 @@ public class GlobalLoggingPreProcessor : IGlobalPreProcessor
 
     public Task PreProcessAsync(IPreProcessorContext context, CancellationToken ct)
     {
-        var requestName = context.Request?.GetType()?.Name ?? "UnknownRequest";
+        var requestType = context.Request?.GetType();
+        var requestName = requestType != null ? LoggablePropertyHelper.GetFriendlyTypeName(requestType) : "UnknownRequest";
+        var isLoggable = requestType != null && Attribute.IsDefined(requestType, typeof(LoggableAttribute));
 
-        _logger.LogInformation("Processing request: {RequestName} - Data: {@Request}", requestName, context.Request);
+        if (isLoggable)
+        {
+            var loggableProps = LoggablePropertyHelper.GetLoggableProperties(context.Request);
+
+            _logger.LogInformation("Processing request: {RequestName} - Data: {@Request}", requestName, loggableProps);
+        }
+        else
+        {
+            _logger.LogInformation("Processing request: {RequestName} - Data omitted", requestName);
+        }
 
         return Task.CompletedTask;
     }

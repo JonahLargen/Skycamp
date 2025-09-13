@@ -13,9 +13,20 @@ public class GlobalLoggingPostProcessor : IGlobalPostProcessor
 
     public Task PostProcessAsync(IPostProcessorContext context, CancellationToken ct)
     {
-        var responseName = context.Response?.GetType()?.Name ?? "UnknownResponse";
+        var responseType = context.Response?.GetType();
+        var responseName = responseType != null ? LoggablePropertyHelper.GetFriendlyTypeName(responseType) : "UnknownResponse";
+        var isLoggable = responseType != null && Attribute.IsDefined(responseType, typeof(LoggableAttribute));
 
-        _logger.LogInformation("Processed response: {ResponseName} - Data: {@Response}", responseName, context.Response);
+        if (isLoggable)
+        {
+            var loggableProps = LoggablePropertyHelper.GetLoggableProperties(context.Response);
+
+            _logger.LogInformation("Processed response: {ResponseName} - Data: {@Response}", responseName, loggableProps);
+        }
+        else
+        {
+            _logger.LogInformation("Processed response: {ResponseName} - Data omitted", responseName);
+        }
 
         return Task.CompletedTask;
     }
