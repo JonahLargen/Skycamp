@@ -1,7 +1,9 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using FluentValidation;
-using Skycamp.ApiService.Common.Middleware;
+using Skycamp.ApiService.Common.Logging;
+using Skycamp.ApiService.Common.Tracing;
+using Skycamp.ApiService.Common.Validation;
 using Skycamp.ApiService.Features.Weather.Shared;
 
 var builder = WebApplication.CreateBuilder(args);

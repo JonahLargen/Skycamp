@@ -1,9 +1,8 @@
 ﻿using FastEndpoints;
 using Newtonsoft.Json;
-using Skycamp.ApiService.Common.Telemetry;
 using System.Diagnostics;
 
-namespace Skycamp.ApiService.Common.Middleware;
+namespace Skycamp.ApiService.Common.Tracing;
 
 public class CommandTracingMiddleware<TCommand, TResult> : ICommandMiddleware<TCommand, TResult>
     where TCommand : ICommand<TResult>

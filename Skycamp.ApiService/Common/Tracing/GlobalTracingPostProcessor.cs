@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using System.Diagnostics;
 
-namespace Skycamp.ApiService.Common.Middleware;
+namespace Skycamp.ApiService.Common.Tracing;
 
 public class GlobalTracingPostProcessor : IGlobalPostProcessor
 {

@@ -1,6 +1,6 @@
 ﻿using FastEndpoints;
 
-namespace Skycamp.ApiService.Common.Middleware;
+namespace Skycamp.ApiService.Common.Logging;
 
 public class CommandLoggingMiddleware<TCommand, TResult> : ICommandMiddleware<TCommand, TResult>
     where TCommand : ICommand<TResult>

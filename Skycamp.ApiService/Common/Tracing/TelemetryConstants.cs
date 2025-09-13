@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Skycamp.ApiService.Common.Telemetry;
+namespace Skycamp.ApiService.Common.Tracing;
 
 public static class TelemetryConstants
 {

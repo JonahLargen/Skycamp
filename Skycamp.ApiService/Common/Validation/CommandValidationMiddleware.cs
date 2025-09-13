@@ -2,7 +2,7 @@
 using FluentValidation;
 using FluentValidation.Results;
 
-namespace Skycamp.ApiService.Common.Middleware;
+namespace Skycamp.ApiService.Common.Validation;
 
 public class CommandValidationMiddleware<TCommand, TResult> : ICommandMiddleware<TCommand, TResult>
     where TCommand : ICommand<TResult>

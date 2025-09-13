@@ -1,8 +1,7 @@
 ﻿using FastEndpoints;
-using Skycamp.ApiService.Common.Telemetry;
 using System.Diagnostics;
 
-namespace Skycamp.ApiService.Common.Middleware;
+namespace Skycamp.ApiService.Common.Tracing;
 
 public class GlobalTracingPreProcessor : IGlobalPreProcessor
 {
