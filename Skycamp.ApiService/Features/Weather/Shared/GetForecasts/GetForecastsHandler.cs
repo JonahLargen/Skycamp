@@ -21,9 +21,9 @@ public class GetForecastsHandler : CommandHandler<GetForecastsCommand, List<Fore
             });
         }
 
-        AddError("an error added by the endpoint!");
+        //AddError("an error added by the endpoint!");
 
-        ThrowIfAnyErrors();
+        //ThrowIfAnyErrors();
 
         return Task.FromResult(result);
     }

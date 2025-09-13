@@ -16,7 +16,7 @@
 }
 else
 {
-    <h2>City: @forecast.City</h2>
+    <h2>City: @City</h2>
 
     <table class="table">
         <thead>
@@ -29,7 +29,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecast.Forecast)
+            @foreach (var forecast in forecast.Forecasts)
             {
                 <tr>
                     <td>@forecast.Date.ToShortDateString()</td>
@@ -45,9 +45,10 @@ else
 
 @code {
     private GetForecastResponse? forecast;
+    private string City { get; set; } = "Louisville";
 
     protected override async Task OnInitializedAsync()
     {
-        forecast = await WeatherApi.GetForecastAsync();
+        forecast = await WeatherApi.GetForecastAsync(City);
     }
 }
