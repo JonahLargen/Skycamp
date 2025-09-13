@@ -11,7 +11,7 @@ namespace Skycamp.ApiService.Common.Endpoints;
 /// <typeparam name="TCommand">the type of the command</typeparam>
 /// <typeparam name="TEntity">the type of domain entity that will be mapped to/from</typeparam>
 [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
-public abstract class EndpointWithCommandMapping<TRequest, TResponse, TCommand, TEntity> : Endpoint<TRequest, TResponse> 
+public abstract class EndpointWithCommandMapping<TRequest, TResponse, TCommand, TEntity> : Endpoint<TRequest, TResponse>
     where TRequest : notnull
     where TCommand : ICommand<TEntity>
 {
@@ -36,7 +36,7 @@ public abstract class EndpointWithCommandMapping<TRequest, TResponse, TCommand, 
     protected async Task SendMappedAsync(TRequest request, int statusCode = 200, CancellationToken ct = default)
     {
         var command = MapToCommand(request);
-        var result =  await command.ExecuteAsync(ct);
+        var result = await command.ExecuteAsync(ct);
         var response = MapFromEntity(result);
 
         await Send.ResponseAsync(response, statusCode, ct);
