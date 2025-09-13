@@ -1,4 +1,5 @@
 ﻿using FastEndpoints;
+using Skycamp.ApiService.Common.Logging;
 using System.Diagnostics;
 
 namespace Skycamp.ApiService.Common.Tracing;
@@ -9,7 +10,7 @@ public class GlobalTracingPreProcessor : IGlobalPreProcessor
 
     public Task PreProcessAsync(IPreProcessorContext context, CancellationToken ct)
     {
-        var requestName = context.Request?.GetType()?.Name ?? "UnknownRequest";
+        var requestName = context.Request != null ? LoggablePropertyHelper.GetFriendlyTypeName(context.Request.GetType()) : "UnknownRequest";
         var requestType = context.Request?.GetType()?.FullName ?? "UnknownRequestType";
         var activity = TelemetryConstants.ActivitySource.StartActivity(requestName, ActivityKind.Server);
 
