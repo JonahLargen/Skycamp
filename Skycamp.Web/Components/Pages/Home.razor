@@ -1,7 +1,40 @@
 ﻿@page "/"
 
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@rendermode InteractiveServer
+
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+@if (!isAuthenticated)
+{
+    <button class="btn btn-primary" @onclick="Login">Log In</button>
+}
+else
+{
+    <span>Hi, @userName</span>
+}
+
+@code {
+    private bool isAuthenticated;
+    private string userName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+        userName = isAuthenticated ? user?.Identity?.Name ?? "User" : "";
+    }
+
+    private void Login()
+    {
+        Navigation.NavigateTo("/login?redirectUri=/profile", forceLoad: true);
+    }
+}
