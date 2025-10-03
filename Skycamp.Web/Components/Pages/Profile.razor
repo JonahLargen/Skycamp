@@ -1,0 +1,58 @@
+﻿@page "/profile"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+<PageTitle>Profile</PageTitle>
+
+<AuthorizeView>
+    <Authorized Context="auth">
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Profile</h2>
+                <div class="col-md-4">
+                    <h3>@(auth.User.Identity?.Name)</h3>
+                    <p><b>Email:</b> @auth.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</p>
+                    <p><b>Authenticated:</b> @(auth.User.Identity?.IsAuthenticated == true ? "Yes" : "No")</p>
+                    <p><b>Roles:</b> @string.Join(", ", auth.User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(r => r.Value))</p>
+                    <button class="btn btn-danger mt-2" @onclick="Logout">Logout</button>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-8">
+                        <h4>Claims</h4>
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var claim in auth.User.Claims)
+                                {
+                                    <tr>
+                                        <td>@claim.Type</td>
+                                        <td>@claim.Value</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized. Redirecting...</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private void Logout()
+    {
+        Nav.NavigateTo("/logout", forceLoad: true);
+    }
+}
