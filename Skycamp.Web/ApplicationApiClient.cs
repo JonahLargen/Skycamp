@@ -2,11 +2,20 @@ using System.Text.Json.Serialization;
 
 namespace Skycamp.Web;
 
-public class WeatherApiClient(HttpClient httpClient)
+public class ApplicationApiClient(HttpClient httpClient)
 {
     public async Task<GetForecastResponse?> GetForecastAsync(string city, int days = 7, CancellationToken cancellationToken = default)
     {
         return await httpClient.GetFromJsonAsync<GetForecastResponse>($"/weather/forecasts/v2?city={city}&days={days}", cancellationToken);
+    }
+
+    public async Task<SyncUserResponse> SyncUserAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync("/users/sync/v1", new { UserId = userId }, cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<SyncUserResponse>(cancellationToken: cancellationToken) ?? throw new InvalidOperationException("Failed to deserialize SyncUserResponse");
     }
 }
 
@@ -31,4 +40,10 @@ public record ForecastDay
     public required string Description { get; init; }
 
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+}
+
+public record SyncUserResponse
+{
+    [JsonPropertyName("userId")]
+    public required string UserId { get; init; }
 }

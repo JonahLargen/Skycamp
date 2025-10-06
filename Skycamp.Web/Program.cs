@@ -2,6 +2,7 @@ using Auth0.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Skycamp.Web;
 using Skycamp.Web.Components;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,14 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
     {
        OnTokenValidated = async context =>
        {
+           var apiClient = context.HttpContext.RequestServices.GetRequiredService<ApplicationApiClient>();
+           var userId = context.Principal?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+           if (!string.IsNullOrEmpty(userId))
+           {
+               await apiClient.SyncUserAsync(userId);
+           }
+
            await Task.CompletedTask;
        }
     };
@@ -44,7 +53,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddRazorPages();
 
-builder.Services.AddHttpClient<WeatherApiClient>(client =>
+builder.Services.AddHttpClient<ApplicationApiClient>(client =>
     {
         // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
         // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
