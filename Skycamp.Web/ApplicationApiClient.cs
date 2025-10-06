@@ -9,9 +9,9 @@ public class ApplicationApiClient(HttpClient httpClient)
         return await httpClient.GetFromJsonAsync<GetForecastResponse>($"/weather/forecasts/v2?city={city}&days={days}", cancellationToken);
     }
 
-    public async Task<SyncUserResponse> SyncUserAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<SyncUserResponse> SyncUserAsync(SyncUserRequest request, CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PostAsJsonAsync("/users/sync/v1", new { UserId = userId }, cancellationToken);
+        var response = await httpClient.PostAsJsonAsync("/users/sync/v1", request, cancellationToken);
 
         response.EnsureSuccessStatusCode();
 
@@ -42,8 +42,35 @@ public record ForecastDay
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
 
+public record SyncUserRequest
+{
+    [JsonPropertyName("loginProvider")]
+    public required string LoginProvider { get; init; }
+
+    [JsonPropertyName("providerKey")]
+    public required string ProviderKey { get; init; }
+
+    [JsonPropertyName("email")]
+    public string? Email { get; init; }
+
+    [JsonPropertyName("emailVerified")]
+    public bool EmailVerified { get; init; }
+
+    [JsonPropertyName("displayName")]
+    public string? DisplayName { get; init; }
+
+    [JsonPropertyName("avatarUrl")]
+    public string? AvatarUrl { get; init; }
+}
+
 public record SyncUserResponse
 {
     [JsonPropertyName("userId")]
     public required string UserId { get; init; }
+
+    [JsonPropertyName("created")]
+    public required bool Created { get; init; }
+
+    [JsonPropertyName("roles")]
+    public required List<string> Roles { get; init; }
 }

@@ -38,7 +38,9 @@ public class SyncUserEndpoint : EndpointWithCommandMapping<SyncUserEndpointReque
     {
         return new SyncUserEndpointResponse
         {
-            UserId = e.UserId
+            UserId = e.UserId,
+            Created = e.Created,
+            Roles = e.Roles
         };
     }
 
@@ -46,7 +48,12 @@ public class SyncUserEndpoint : EndpointWithCommandMapping<SyncUserEndpointReque
     {
         return new SyncUserCommand
         {
-            UserId = r.UserId
+            LoginProvider = r.LoginProvider,
+            ProviderKey = r.ProviderKey,
+            Email = r.Email,
+            EmailVerified = r.EmailVerified,
+            DisplayName = r.DisplayName,
+            AvatarUrl = r.AvatarUrl
         };
     }
 }

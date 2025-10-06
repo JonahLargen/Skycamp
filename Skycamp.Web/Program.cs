@@ -19,20 +19,51 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
 {
     options.Domain = auth0Domain;
     options.ClientId = auth0ClientId;
+    options.Scope = "openid profile email";
     options.OpenIdConnectEvents = new()
     {
-       OnTokenValidated = async context =>
-       {
-           var apiClient = context.HttpContext.RequestServices.GetRequiredService<ApplicationApiClient>();
-           var userId = context.Principal?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        OnTokenValidated = async context =>
+        {
+            var apiClient = context.HttpContext.RequestServices.GetRequiredService<ApplicationApiClient>();
+            var sub = context.Principal?.Claims.FirstOrDefault(c => c.Type == "sub" || c.Type == ClaimTypes.NameIdentifier)?.Value;
+            var email = context.Principal?.Claims.FirstOrDefault(c => c.Type == "email" || c.Type == ClaimTypes.Email)?.Value;
+            var emailVerified = context.Principal?.Claims.FirstOrDefault(c => c.Type == "email_verified")?.Value == "true";
+            var displayName = context.Principal?.Claims.FirstOrDefault(c => c.Type == "name" || c.Type == ClaimTypes.Name)?.Value;
+            var avatarUrl = context.Principal?.Claims.FirstOrDefault(c => c.Type == "picture")?.Value;
 
-           if (!string.IsNullOrEmpty(userId))
-           {
-               await apiClient.SyncUserAsync(userId);
-           }
+            if (string.IsNullOrWhiteSpace(sub))
+            {
+                context.Fail("Sub claim is missing.");
+                return;
+            }
 
-           await Task.CompletedTask;
-       }
+            var response = await apiClient.SyncUserAsync(new SyncUserRequest
+            {
+                LoginProvider = "auth0",
+                ProviderKey = sub,
+                Email = email,
+                EmailVerified = emailVerified,
+                DisplayName = displayName,
+                AvatarUrl = avatarUrl
+            });
+
+            var identity = (ClaimsIdentity)context.Principal!.Identity!;
+
+            if (!identity.HasClaim(c => c.Type == "app_user_id"))
+            {
+                identity.AddClaim(new Claim("app_user_id", response.UserId));
+            }
+
+            foreach (var role in response.Roles)
+            {
+                if (!identity.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == role))
+                {
+                    identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                }
+            }
+
+            await Task.CompletedTask;
+        }
     };
 });
 
