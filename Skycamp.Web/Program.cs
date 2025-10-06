@@ -18,6 +18,13 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
 {
     options.Domain = auth0Domain;
     options.ClientId = auth0ClientId;
+    options.OpenIdConnectEvents = new()
+    {
+       OnTokenValidated = async context =>
+       {
+           await Task.CompletedTask;
+       }
+    };
 });
 
 builder.Services.Configure<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme, options =>

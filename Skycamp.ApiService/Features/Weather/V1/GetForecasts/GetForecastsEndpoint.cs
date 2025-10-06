@@ -1,4 +1,5 @@
 ﻿using FastEndpoints;
+using Skycamp.ApiService.Data;
 using Skycamp.ApiService.Features.Weather.Shared;
 using Skycamp.ApiService.Features.Weather.Shared.GetForecasts;
 
@@ -6,6 +7,8 @@ namespace Skycamp.ApiService.Features.Weather.V1.GetForecasts;
 
 public class GetForecastsEndpoint : EndpointWithMapping<GetForecastsRequest, GetForecastsResponse, List<Forecast>>
 {
+    public ApplicationDbContext Context { get; set; } = null!;
+
     public GetForecastsEndpoint()
     {
         

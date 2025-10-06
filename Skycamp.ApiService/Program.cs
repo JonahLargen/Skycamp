@@ -1,15 +1,31 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Common.Logging;
 using Skycamp.ApiService.Common.Tracing;
 using Skycamp.ApiService.Common.Validation;
-using Skycamp.ApiService.Features.Weather.Shared;
+using Skycamp.ApiService.Data;
+using Skycamp.ApiService.Data.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
+
+//Db Context
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("sqldb");
+
+    options.UseSqlServer(connectionString);
+});
+
+// Configure Identity to use ApplicationUser and ApplicationDbContext
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
