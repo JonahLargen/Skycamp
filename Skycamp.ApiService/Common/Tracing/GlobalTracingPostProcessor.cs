@@ -1,5 +1,6 @@
 ﻿using FastEndpoints;
 using Newtonsoft.Json;
+using Skycamp.ApiService.Common.Reflection;
 using System.Diagnostics;
 
 namespace Skycamp.ApiService.Common.Tracing;
@@ -10,11 +11,11 @@ public class GlobalTracingPostProcessor : IGlobalPostProcessor
     {
         if (context.HttpContext.Items.TryGetValue(GlobalTracingPreProcessor.ActivityKey, out var obj) && obj is Activity activity)
         {
-            var requestName = context.Response?.GetType()?.Name ?? "UnknownRequest";
-            var requestType = context.Response?.GetType()?.FullName ?? "UnknownRequestType";
+            var responseType = context.Response?.GetType()?.FullName ?? "";
+            var responseName = TypeNameHelper.GetFriendlyName(context.Response?.GetType());
 
-            activity.SetTag("response.type", requestType);
-            activity.SetTag("response.name", requestName);
+            activity.SetTag("response.type", responseType);
+            activity.SetTag("response.name", responseName);
 
             if (context.HasValidationFailures)
             {

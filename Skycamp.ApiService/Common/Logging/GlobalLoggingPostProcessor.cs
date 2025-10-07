@@ -1,4 +1,5 @@
 ﻿using FastEndpoints;
+using Skycamp.ApiService.Common.Reflection;
 
 namespace Skycamp.ApiService.Common.Logging;
 
@@ -15,24 +16,13 @@ public class GlobalLoggingPostProcessor : IGlobalPostProcessor
     {
         if (context.HasValidationFailures)
         {
-            _logger.LogInformation("Request processing failed due to validation errors: {Errors}", context.ValidationFailures);
+            _logger.LogInformation("Processing failed with {ValidationErrors}", context.ValidationFailures);
         }
         else
         {
-            var responseType = context.Response?.GetType();
-            var responseName = responseType != null ? LoggablePropertyHelper.GetFriendlyTypeName(responseType) : "UnknownResponse";
-            var isLoggable = responseType != null && Attribute.IsDefined(responseType, typeof(LoggableAttribute));
+            var responseType = TypeNameHelper.GetFriendlyName(context.Response?.GetType());
 
-            if (isLoggable)
-            {
-                var loggableProps = LoggablePropertyHelper.GetLoggableProperties(context.Response);
-
-                _logger.LogInformation("Processed response: {ResponseName} - Data: {@Response}", responseName, loggableProps);
-            }
-            else
-            {
-                _logger.LogInformation("Processed response: {ResponseName} - Data omitted", responseName);
-            }
+            _logger.LogInformation("Processed response with {ResponseType}: {@Response}", responseType, context.Response);
         }
 
         return Task.CompletedTask;

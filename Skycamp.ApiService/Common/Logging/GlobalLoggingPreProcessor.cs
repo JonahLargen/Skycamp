@@ -1,4 +1,5 @@
 ﻿using FastEndpoints;
+using Skycamp.ApiService.Common.Reflection;
 
 namespace Skycamp.ApiService.Common.Logging;
 
@@ -13,20 +14,9 @@ public class GlobalLoggingPreProcessor : IGlobalPreProcessor
 
     public Task PreProcessAsync(IPreProcessorContext context, CancellationToken ct)
     {
-        var requestType = context.Request?.GetType();
-        var requestName = requestType != null ? LoggablePropertyHelper.GetFriendlyTypeName(requestType) : "UnknownRequest";
-        var isLoggable = requestType != null && Attribute.IsDefined(requestType, typeof(LoggableAttribute));
+        var requestType = TypeNameHelper.GetFriendlyName(context.Request?.GetType());
 
-        if (isLoggable)
-        {
-            var loggableProps = LoggablePropertyHelper.GetLoggableProperties(context.Request);
-
-            _logger.LogInformation("Processing request: {RequestName} - Data: {@Request}", requestName, loggableProps);
-        }
-        else
-        {
-            _logger.LogInformation("Processing request: {RequestName} - Data omitted", requestName);
-        }
+        _logger.LogInformation("Handling request {RequestType}: {@Request}", requestType, context.Request);
 
         return Task.CompletedTask;
     }

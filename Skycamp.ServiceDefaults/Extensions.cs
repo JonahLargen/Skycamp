@@ -1,14 +1,13 @@
+using Destructurama;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.ServiceDiscovery;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
-using Serilog.Extensions.Hosting;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -24,6 +23,7 @@ public static class Extensions
     {
         var loggerConfiguration = new LoggerConfiguration()
             .Enrich.FromLogContext()
+            .Destructure.UsingAttributes()
             .WriteTo.Console();
 
         var otlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];

@@ -12,6 +12,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Destructurama.Attributed" Version="5.1.0" />
 		<PackageReference Include="FastEndpoints" Version="7.0.1" />
 		<PackageReference Include="FastEndpoints.Swagger" Version="7.0.1" />
 		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
