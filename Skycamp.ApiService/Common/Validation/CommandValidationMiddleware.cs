@@ -1,6 +1,7 @@
 ﻿using FastEndpoints;
 using FluentValidation;
 using FluentValidation.Results;
+using Skycamp.ApiService.Common.Reflection;
 
 namespace Skycamp.ApiService.Common.Validation;
 
@@ -18,14 +19,16 @@ public class CommandValidationMiddleware<TCommand, TResult> : ICommandMiddleware
 
     public async Task<TResult> ExecuteAsync(TCommand command, CommandDelegate<TResult> next, CancellationToken ct)
     {
+        var commandName = TypeNameHelper.GetFriendlyName(command.GetType());
+
         if (_validators == null || !_validators.Any())
         {
-            _logger.LogWarning("No validators found for command: {name}", command.GetType().Name);
+            _logger.LogWarning("No validators found for command: {name}", commandName);
 
             return await next();
         }
 
-        _logger.LogInformation("Validating command: {name}", command.GetType().Name);
+        _logger.LogInformation("Validating command: {name}", commandName);
 
         var failures = new List<ValidationFailure>();
 
@@ -41,7 +44,7 @@ public class CommandValidationMiddleware<TCommand, TResult> : ICommandMiddleware
 
         if (failures.Count != 0)
         {
-            _logger.LogInformation("Validation failed for {name}: {@errors}", command.GetType().Name, failures);
+            _logger.LogInformation("Validation failed for {name}: {@errors}", commandName, failures);
 
             foreach (var failure in failures)
             {
@@ -53,7 +56,7 @@ public class CommandValidationMiddleware<TCommand, TResult> : ICommandMiddleware
 
         var result = await next();
 
-        _logger.LogInformation("Validated Command: {@value}", command.GetType().Name);
+        _logger.LogInformation("Validated Command: {@value}", commandName);
 
         return result;
     }
