@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace Skycamp.ApiService.Features.Users.V1.SyncUser;
 
-public class SyncUserEndpointValidator : Validator<SyncUserEndpointRequest>
+public class SyncUserRequestValidator : Validator<SyncUserRequest>
 {
-    public SyncUserEndpointValidator()
+    public SyncUserRequestValidator()
     {
         RuleFor(x => x.LoginProvider)
             .NotEmpty();

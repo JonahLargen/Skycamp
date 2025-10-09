@@ -3,7 +3,7 @@ using FastEndpoints;
 
 namespace Skycamp.ApiService.Features.Users.Shared.SyncUser;
 
-public record SyncUserCommand : ICommand<SyncUserCommandResponse>
+public record SyncUserCommand : ICommand<SyncUserResult>
 {
     public required string LoginProvider { get; init; }
 

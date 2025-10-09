@@ -1,6 +1,6 @@
-﻿namespace Skycamp.ApiService.Features.Users.V1.SyncUser;
+﻿namespace Skycamp.ApiService.Features.Users.Shared.SyncUser;
 
-public class SyncUserEndpointResponse
+public record SyncUserResult
 {
     public required string UserId { get; init; }
     public required bool Created { get; init; }

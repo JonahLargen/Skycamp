@@ -1,11 +1,11 @@
 ﻿using FastEndpoints;
 using FluentValidation;
 
-namespace Skycamp.ApiService.Features.Weather.V1.GetForecasts;
+namespace Skycamp.ApiService.Features.Weather.V2.GetForecasts;
 
-public class GetForecastsValidator : Validator<GetForecastsRequest>
+public class GetForecastsRequestValidator : Validator<GetForecastsRequest>
 {
-    public GetForecastsValidator()
+    public GetForecastsRequestValidator()
     {
         RuleFor(x => x.City)
             .NotEmpty();

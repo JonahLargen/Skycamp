@@ -2,17 +2,17 @@
 
 namespace Skycamp.ApiService.Features.Weather.Shared.GetForecasts;
 
-public class GetForecastsHandler : CommandHandler<GetForecastsCommand, List<Forecast>>
+public class GetForecastsCommandHandler : CommandHandler<GetForecastsCommand, List<GetForecastsResult>>
 {
-    public override Task<List<Forecast>> ExecuteAsync(GetForecastsCommand command, CancellationToken ct)
+    public override Task<List<GetForecastsResult>> ExecuteAsync(GetForecastsCommand command, CancellationToken ct)
     {
         // Simulate data
-        var result = new List<Forecast>();
+        var result = new List<GetForecastsResult>();
         var now = DateTime.UtcNow;
 
         for (int i = 0; i < command.Days; i++)
         {
-            result.Add(new Forecast
+            result.Add(new GetForecastsResult
             {
                 Date = DateOnly.FromDateTime(now.AddDays(i)),
                 TemperatureC = 20 + i,

@@ -3,11 +3,11 @@ using System.Text.RegularExpressions;
 
 namespace Skycamp.ApiService.Features.Weather.Shared.GetForecasts;
 
-public partial class GetForecastsValidator : AbstractValidator<GetForecastsCommand>
+public partial class GetForecastsCommandValidator : AbstractValidator<GetForecastsCommand>
 {
     private static readonly Regex CityNameRegex = MyCityNameRegex();
 
-    public GetForecastsValidator()
+    public GetForecastsCommandValidator()
     {
         RuleFor(x => x.City)
             .NotEmpty()

@@ -3,7 +3,7 @@ using Skycamp.ApiService.Features.Users.Shared.SyncUser;
 
 namespace Skycamp.ApiService.Features.Users.V1.SyncUser;
 
-public class SyncUserEndpoint : EndpointWithCommandMapping<SyncUserEndpointRequest, SyncUserEndpointResponse, SyncUserCommand, SyncUserCommandResponse>
+public class SyncUserEndpoint : EndpointWithCommandMapping<SyncUserRequest, SyncUserResponse, SyncUserCommand, SyncUserResult>
 {
     public SyncUserEndpoint()
     {
@@ -29,14 +29,14 @@ public class SyncUserEndpoint : EndpointWithCommandMapping<SyncUserEndpointReque
         });
     }
 
-    public override async Task HandleAsync(SyncUserEndpointRequest req, CancellationToken ct)
+    public override async Task HandleAsync(SyncUserRequest req, CancellationToken ct)
     {
         await SendMappedAsync(req, ct: ct);
     }
 
-    public override SyncUserEndpointResponse MapFromEntity(SyncUserCommandResponse e)
+    public override SyncUserResponse MapFromEntity(SyncUserResult e)
     {
-        return new SyncUserEndpointResponse
+        return new SyncUserResponse
         {
             UserId = e.UserId,
             Created = e.Created,
@@ -44,7 +44,7 @@ public class SyncUserEndpoint : EndpointWithCommandMapping<SyncUserEndpointReque
         };
     }
 
-    public override SyncUserCommand MapToCommand(SyncUserEndpointRequest r)
+    public override SyncUserCommand MapToCommand(SyncUserRequest r)
     {
         return new SyncUserCommand
         {

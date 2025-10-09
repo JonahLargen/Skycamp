@@ -2,7 +2,7 @@
 
 namespace Skycamp.ApiService.Features.Users.V1.SyncUser;
 
-public class SyncUserEndpointRequest
+public class SyncUserRequest
 {
     public required string LoginProvider { get; init; }
 

@@ -1,6 +1,6 @@
 ﻿namespace Skycamp.ApiService.Features.Weather.V2.GetForecasts;
 
-public record GetForecastResponse
+public record GetForecastsResponse
 {
     public List<GetForecastResponseForecast> Forecasts { get; init; } = [];
 }

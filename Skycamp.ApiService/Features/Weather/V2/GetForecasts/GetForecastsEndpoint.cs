@@ -1,10 +1,9 @@
-﻿using Skycamp.ApiService.Features.Weather.Shared;
-using Skycamp.ApiService.Features.Weather.Shared.GetForecasts;
+﻿using Skycamp.ApiService.Features.Weather.Shared.GetForecasts;
 using Skycamp.ApiService.Common.Endpoints;
 
 namespace Skycamp.ApiService.Features.Weather.V2.GetForecasts;
 
-public class GetForecastsEndpoint : EndpointWithCommandMapping<GetForecastsRequest, GetForecastResponse, GetForecastsCommand, List<Forecast>>
+public class GetForecastsEndpoint : EndpointWithCommandMapping<GetForecastsRequest, GetForecastsResponse, GetForecastsCommand, List<GetForecastsResult>>
 {
     public GetForecastsEndpoint()
     {
@@ -44,9 +43,9 @@ public class GetForecastsEndpoint : EndpointWithCommandMapping<GetForecastsReque
         };
     }
 
-    public override GetForecastResponse MapFromEntity(List<Forecast> e)
+    public override GetForecastsResponse MapFromEntity(List<GetForecastsResult> e)
     {
-        return new GetForecastResponse
+        return new GetForecastsResponse
         {
             Forecasts = e.Select(day => new GetForecastResponseForecast
             {

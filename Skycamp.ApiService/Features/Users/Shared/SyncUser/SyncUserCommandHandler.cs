@@ -5,7 +5,7 @@ using Skycamp.ApiService.Data.Identity;
 
 namespace Skycamp.ApiService.Features.Users.Shared.SyncUser;
 
-public class SyncUserCommandHandler : CommandHandler<SyncUserCommand, SyncUserCommandResponse>
+public class SyncUserCommandHandler : CommandHandler<SyncUserCommand, SyncUserResult>
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
@@ -18,7 +18,7 @@ public class SyncUserCommandHandler : CommandHandler<SyncUserCommand, SyncUserCo
         _logger = logger;
     }
 
-    public override async Task<SyncUserCommandResponse> ExecuteAsync(SyncUserCommand command, CancellationToken ct = default)
+    public override async Task<SyncUserResult> ExecuteAsync(SyncUserCommand command, CancellationToken ct = default)
     {
         using var transaction = await _dbContext.Database.BeginTransactionAsync(ct);
 
@@ -85,7 +85,7 @@ public class SyncUserCommandHandler : CommandHandler<SyncUserCommand, SyncUserCo
 
         var roles = await _userManager.GetRolesAsync(user);
 
-        return new SyncUserCommandResponse()
+        return new SyncUserResult()
         {
             UserId = user.Id,
             Created = created,

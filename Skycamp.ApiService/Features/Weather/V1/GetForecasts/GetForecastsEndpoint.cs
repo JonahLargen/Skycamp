@@ -1,11 +1,10 @@
 ﻿using FastEndpoints;
 using Skycamp.ApiService.Data;
-using Skycamp.ApiService.Features.Weather.Shared;
 using Skycamp.ApiService.Features.Weather.Shared.GetForecasts;
 
 namespace Skycamp.ApiService.Features.Weather.V1.GetForecasts;
 
-public class GetForecastsEndpoint : EndpointWithMapping<GetForecastsRequest, GetForecastsResponse, List<Forecast>>
+public class GetForecastsEndpoint : EndpointWithMapping<GetForecastsRequest, GetForecastsResponse, List<GetForecastsResult>>
 {
     public ApplicationDbContext Context { get; set; } = null!;
 
@@ -51,8 +50,7 @@ public class GetForecastsEndpoint : EndpointWithMapping<GetForecastsRequest, Get
         };
     }
 
-
-    public override GetForecastsResponse MapFromEntity(List<Forecast> e)
+    public override GetForecastsResponse MapFromEntity(List<GetForecastsResult> e)
     {
         return new GetForecastsResponse
         {
