@@ -2,54 +2,96 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 
+@inject AuthenticationStateProvider AuthStateProvider
+
+@using System.Security.Claims
+
 <PageTitle>Profile</PageTitle>
 
 <AuthorizeView>
     <Authorized Context="auth">
-        <div class="row">
-            <div class="col-md-12">
-                <h2>Profile</h2>
-                <div class="col-md-4">
-                    <h3>@(auth.User.Identity?.Name)</h3>
-                    <p><b>Email:</b> @auth.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</p>
-                    <p><b>Authenticated:</b> @(auth.User.Identity?.IsAuthenticated == true ? "Yes" : "No")</p>
-                    <p><b>Roles:</b> @string.Join(", ", auth.User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(r => r.Value))</p>
-                    <button class="btn btn-danger mt-2" @onclick="Logout">Logout</button>
-                </div>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+            <FluentLabel Typo="Typography.H2">Profile</FluentLabel>
 
-                <div class="row mt-4">
-                    <div class="col-md-8">
-                        <h4>Claims</h4>
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Type</th>
-                                    <th>Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var claim in auth.User.Claims)
-                                {
-                                    <tr>
-                                        <td>@claim.Type</td>
-                                        <td>@claim.Value</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <FluentStack Orientation="Orientation.Horizontal" Wrap="true" HorizontalGap="24">
+                <FluentCard>
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+                        <FluentLabel Typo="Typography.H4">
+                            @auth.User.Identity?.Name
+                        </FluentLabel>
 
-            </div>
-        </div>
+                        <FluentLabel Typo="Typography.Body">
+                            <strong>Email:</strong>
+                            @auth.User.FindFirst(ClaimTypes.Email)?.Value
+                        </FluentLabel>
+
+                        <FluentLabel Typo="Typography.Body">
+                            <strong>Authenticated:</strong> @(auth.User.Identity?.IsAuthenticated == true ? "Yes" : "No")
+                        </FluentLabel>
+
+                        <div>
+                            <FluentLabel Typo="Typography.Body">
+                                <strong>Roles:</strong>
+                            </FluentLabel>
+                            @if (!Roles.Any())
+                            {
+                                <FluentLabel Typo="Typography.Body"> None</FluentLabel>
+                            }
+                            else
+                            {
+                                <FluentStack Orientation="Orientation.Horizontal" Wrap="true">
+                                    @foreach (var role in Roles)
+                                    {
+                                        <FluentBadge Appearance="Appearance.Accent">@role</FluentBadge>
+                                    }
+                                </FluentStack>
+                            }
+                        </div>
+
+                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+                            <FluentButton Appearance="Appearance.Accent" OnClick="Logout">
+                                Logout
+                            </FluentButton>
+                        </FluentStack>
+                    </FluentStack>
+                </FluentCard>
+
+                <FluentCard>
+                    <FluentStack Orientation="Orientation.Vertical">
+                        <FluentLabel Typo="Typography.H4">Claims</FluentLabel>
+                        <FluentDataGrid Items="@ClaimsList.AsQueryable()" GridTemplateColumns="1fr 2fr" GenerateHeader="GenerateHeaderOption.Sticky">
+                            <PropertyColumn Property="@(c => c.Type)" Title="Type" />
+                            <PropertyColumn Property="@(c => c.Value)" Title="Value" />
+                        </FluentDataGrid>
+                    </FluentStack>
+                </FluentCard>
+            </FluentStack>
+        </FluentStack>
     </Authorized>
     <NotAuthorized>
-        <p>You are not authorized. Redirecting...</p>
+        <FluentMessageBar Intent="MessageIntent.Error">
+            <FluentLabel Typo="Typography.Body">You are not authorized. Redirecting...</FluentLabel>
+        </FluentMessageBar>
     </NotAuthorized>
 </AuthorizeView>
 
 @code {
+    private List<Claim> ClaimsList = new();
+    private List<string> Roles = new();
+
     [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            ClaimsList = user.Claims.OrderBy(c => c.Type).ToList();
+            Roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value).Distinct().OrderBy(r => r).ToList();
+        }
+    }
 
     private void Logout()
     {
