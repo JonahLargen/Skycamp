@@ -1,5 +1,6 @@
 using Auth0.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.FluentUI.AspNetCore.Components;
 using Skycamp.Web;
 using Skycamp.Web.Components;
 using System.Security.Claims;
@@ -84,12 +85,15 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddRazorPages();
 
+builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<ApplicationApiClient>(client =>
     {
         // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
         // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
         client.BaseAddress = new("https+http://apiservice");
     });
+
+builder.Services.AddFluentUIComponents();
 
 var app = builder.Build();
 
