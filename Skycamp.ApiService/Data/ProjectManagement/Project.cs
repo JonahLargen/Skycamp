@@ -1,4 +1,5 @@
 ﻿using Skycamp.ApiService.Data.Identity;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -16,12 +17,15 @@ public class Project
     [MaxLength(500)]
     public string? Description { get; set; }
 
-    public string CreateUserId { get; set; } = null!;
+    [DefaultValue(false)]
+    public bool IsAllAccess { get; set; } = false;
+
+    public string? CreateUserId { get; set; }
 
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime LastUpdatedUtc { get; set; } = DateTime.UtcNow;
 
     [ForeignKey(nameof(CreateUserId))]
-    public ApplicationUser CreateUser { get; set; } = null!;
+    public ApplicationUser? CreateUser { get; set; } = null!;
 }

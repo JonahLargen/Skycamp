@@ -16,12 +16,12 @@ public class Workspace
     [MaxLength(500)]
     public string? Description { get; set; }
 
-    public string CreateUserId { get; set; } = null!;
+    public string? CreateUserId { get; set; }
 
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime LastUpdatedUtc { get; set; } = DateTime.UtcNow;
 
     [ForeignKey(nameof(CreateUserId))]
-    public ApplicationUser CreateUser { get; set; } = null!;
+    public ApplicationUser? CreateUser { get; set; } = null!;
 }
