@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authentication;
+using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 
 namespace Skycamp.Web;
@@ -16,6 +18,28 @@ public class ApplicationApiClient(HttpClient httpClient)
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<SyncUserResponse>(cancellationToken: cancellationToken) ?? throw new InvalidOperationException("Failed to deserialize SyncUserResponse");
+    }
+}
+
+public class AccessTokenHandler : DelegatingHandler
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public AccessTokenHandler(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var accessToken = await _httpContextAccessor.HttpContext!.GetTokenAsync("access_token");
+
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        }
+
+        return await base.SendAsync(request, cancellationToken);
     }
 }
 

@@ -15,7 +15,7 @@ public class GetForecastsEndpoint : EndpointWithCommandMapping<GetForecastsReque
         Get("/weather/forecasts");
         Version(2);
 
-        AllowAnonymous();
+        //AllowAnonymous();
 
         Description(b =>
         {

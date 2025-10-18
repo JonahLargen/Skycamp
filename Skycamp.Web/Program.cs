@@ -1,4 +1,5 @@
 using Auth0.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Skycamp.Web;
@@ -10,17 +11,23 @@ var builder = WebApplication.CreateBuilder(args);
 //Add Auth0 authentication
 var auth0Domain = builder.Configuration["Auth0:Domain"];
 var auth0ClientId = builder.Configuration["Auth0:ClientId"];
+var auth0ClientSecret = builder.Configuration["Auth0:ClientSecret"];
+var auth0Audience = builder.Configuration["Auth0:Audience"];
 
-if (string.IsNullOrEmpty(auth0Domain) || string.IsNullOrEmpty(auth0ClientId))
+if (string.IsNullOrEmpty(auth0Domain) || string.IsNullOrEmpty(auth0ClientId) || string.IsNullOrEmpty(auth0ClientSecret) || string.IsNullOrEmpty(auth0Audience))
 {
-    throw new InvalidOperationException("Auth0 configuration is missing. Please ensure Auth0:Domain and Auth0:ClientId are set in the configuration.");
+    throw new InvalidOperationException("Auth0 configuration is missing. Please ensure Auth0:Domain, Auth0:ClientId, Auth0:ClientSecret, and Auth0:Audience are set in the configuration.");
 }
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<AccessTokenHandler>();
 
 builder.Services.AddAuth0WebAppAuthentication(options =>
 {
     options.Domain = auth0Domain;
     options.ClientId = auth0ClientId;
-    options.Scope = "openid profile email";
+    options.ClientSecret = auth0ClientSecret;
+    options.Scope = "openid profile email offline_access";
     options.OpenIdConnectEvents = new()
     {
         OnTokenValidated = async context =>
@@ -66,6 +73,11 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
             await Task.CompletedTask;
         }
     };
+})
+.WithAccessToken(options =>
+{
+    options.Audience = auth0Audience;
+    options.UseRefreshTokens = true;
 });
 
 builder.Services.Configure<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme, options =>
@@ -91,7 +103,8 @@ builder.Services.AddHttpClient<ApplicationApiClient>(client =>
         // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
         // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
         client.BaseAddress = new("https+http://apiservice");
-    });
+    })
+    .AddHttpMessageHandler<AccessTokenHandler>();
 
 builder.Services.AddFluentUIComponents();
 

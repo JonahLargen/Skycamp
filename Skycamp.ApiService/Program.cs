@@ -1,8 +1,10 @@
 using FastEndpoints;
+using FastEndpoints.Security;
 using FastEndpoints.Swagger;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Skycamp.ApiService.Common.Logging;
 using Skycamp.ApiService.Common.Tracing;
 using Skycamp.ApiService.Common.Validation;
@@ -23,15 +25,31 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 // Configure Identity to use ApplicationUser and ApplicationDbContext
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
 {
     options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+|";
 })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
+
+builder.Services.AddAuthenticationJwtBearer(signingOptions =>
+{
+    //signingOptions.SigningKey = "W3L8pJrXZ97bqK1e2yM5vN4sQ6tFhG0zT7cRjP8kSaVwEoU9";
+}, bearerOptions =>
+{
+    bearerOptions.Authority = $"https://{builder.Configuration["Auth0:Domain"]}/";
+    bearerOptions.Audience = builder.Configuration["Auth0:Audience"];
+    bearerOptions.TokenValidationParameters = new TokenValidationParameters
+    {
+        NameClaimType = "name",
+        RoleClaimType = "roles"
+    };
+});
+builder.Services.AddAuthorization();
 
 // Add FastEndpoints
 builder.Services.AddFastEndpoints()
@@ -83,6 +101,9 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure FastEndpoints with versioning & processors
 app.UseFastEndpoints(c =>
