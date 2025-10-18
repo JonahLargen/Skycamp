@@ -1,5 +1,75 @@
-﻿namespace Skycamp.ApiService.Features.ProjectManagement.CreateProject.V1;
+﻿using FastEndpoints;
+using FluentValidation;
+using Skycamp.ApiService.Common.Endpoints;
+using Skycamp.ApiService.Common.Security;
+using Skycamp.ApiService.Features.ProjectManagement.CreateProject.Shared;
 
-public class CreateProjectEndpoint
+namespace Skycamp.ApiService.Features.ProjectManagement.CreateProject.V1;
+
+public class CreateWorkspaceEndpoint : EndpointWithCommandMapping<CreateProjectRequest, CreateProjectResponse, CreateProjectCommand, CreateProjectResult>
 {
+    public override void Configure()
+    {
+        Post("/projectmanagement/projects");
+        Version(1);
+
+        Description(b =>
+        {
+            b.WithName("CreateProjectV1");
+        });
+
+        Summary(s =>
+        {
+            s.Summary = "Create a new project";
+            s.Description = "Creates a new project in the system.";
+        });
+    }
+
+    public override async Task HandleAsync(CreateProjectRequest req, CancellationToken ct)
+    {
+        await SendMappedAsync(req, ct: ct);
+    }
+
+    public override CreateProjectResponse MapFromEntity(CreateProjectResult e)
+    {
+        return new CreateProjectResponse
+        {
+            Id = e.Id
+        };
+    }
+
+    public override CreateProjectCommand MapToCommand(CreateProjectRequest r)
+    {
+        return new CreateProjectCommand
+        {
+            Name = r.Name,
+            Description = r.Description,
+            CreateUserId = User.GetRequiredUserId()
+        };
+    }
+}
+
+public class CreateProjectRequest
+{
+    public required string Name { get; set; }
+    public string? Description { get; set; }
+}
+
+public class CreateProjectRequestValidator : Validator<CreateProjectRequest>
+{
+    public CreateProjectRequestValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .MaximumLength(100);
+
+        RuleFor(x => x.Description)
+            .MaximumLength(500)
+            .When(x => !string.IsNullOrEmpty(x.Description));
+    }
+}
+
+public class CreateProjectResponse
+{
+    public required Guid Id { get; set; }
 }

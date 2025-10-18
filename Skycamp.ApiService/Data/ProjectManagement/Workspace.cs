@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Skycamp.ApiService.Data.ProjectManagement;
 
-[Table("Projects", Schema = "projectmgmt")]
-public class Project
+[Table("Workspaces", Schema = "projectmgmt")]
+public class Workspace
 {
     [Key]
     public Guid Id { get; set; }

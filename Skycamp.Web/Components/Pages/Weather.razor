@@ -1,6 +1,7 @@
 ﻿@page "/weather"
 @rendermode InteractiveServer
 @attribute [OutputCache(Duration = 5)]
+@attribute [Authorize]
 
 @inject ApplicationApiClient WeatherApi
 
@@ -12,7 +13,12 @@
 
 @if (forecast == null)
 {
-    <p><em>Loading...</em></p>
+    <FluentStack Orientation="Orientation.Vertical">
+        @for (int i = 0; i < 5; i++)
+        {
+            <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="40px" Shimmer="true" />
+        }
+    </FluentStack>
 }
 else
 {
@@ -28,8 +34,12 @@ else
     private GetForecastResponse? forecast;
     private string City { get; set; } = "Louisville";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        forecast = await WeatherApi.GetForecastAsync(City);
+        if (firstRender)
+        {
+            forecast = await WeatherApi.GetForecastAsync(City);
+            StateHasChanged();
+        }
     }
 }
