@@ -1,11 +1,12 @@
 ﻿using FastEndpoints;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
 using Skycamp.ApiService.Data.ProjectManagement;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.CreateWorkspace.Shared;
 
-public class CreateWorkspaceCommandHandler : ICommandHandler<CreateWorkspaceCommand, CreateWorkspaceResult>
+public class CreateWorkspaceCommandHandler : CommandHandler<CreateWorkspaceCommand, CreateWorkspaceResult>
 {
     private readonly ILogger<CreateWorkspaceCommandHandler> _logger;
     private readonly ApplicationDbContext _dbContext;
@@ -16,9 +17,17 @@ public class CreateWorkspaceCommandHandler : ICommandHandler<CreateWorkspaceComm
         _dbContext = dbContext;
     }
 
-    public async Task<CreateWorkspaceResult> ExecuteAsync(CreateWorkspaceCommand command, CancellationToken ct)
+    public async override Task<CreateWorkspaceResult> ExecuteAsync(CreateWorkspaceCommand command, CancellationToken ct)
     {
         _logger.LogInformation("Creating new workspace with name {WorkspaceName}", command.Name);
+
+        var user = await _dbContext.Users
+            .FirstOrDefaultAsync(u => u.Id == command.CreateUserId, ct);
+
+        if (user == null)
+        {
+            ThrowError("User does not exist", statusCode: 500);
+        }
 
         var result = await _dbContext.Workspaces.AddAsync(new Workspace
         {
@@ -28,6 +37,14 @@ public class CreateWorkspaceCommandHandler : ICommandHandler<CreateWorkspaceComm
             CreateUserId = command.CreateUserId,
             CreatedUtc = DateTime.UtcNow,
             LastUpdatedUtc = DateTime.UtcNow
+        }, ct);
+
+        await _dbContext.WorkspaceUsers.AddAsync(new WorkspaceUser
+        {
+            WorkspaceId = result.Entity.Id,
+            UserId = command.CreateUserId,
+            RoleName = "Owner",
+            JoinedUtc = DateTime.UtcNow
         }, ct);
 
         await _dbContext.SaveChangesAsync(ct);

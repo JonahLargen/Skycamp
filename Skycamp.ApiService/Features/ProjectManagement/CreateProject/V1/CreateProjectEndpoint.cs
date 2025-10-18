@@ -42,23 +42,30 @@ public class CreateWorkspaceEndpoint : EndpointWithCommandMapping<CreateProjectR
     {
         return new CreateProjectCommand
         {
+            WorkspaceId = r.WorkspaceId,
             Name = r.Name,
             Description = r.Description,
-            CreateUserId = User.GetRequiredUserId()
+            CreateUserId = User.GetRequiredUserId(),
+            IsAllAccess = r.IsAllAccess
         };
     }
 }
 
 public class CreateProjectRequest
 {
+    public required Guid WorkspaceId { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }
+    public required bool IsAllAccess { get; set; }
 }
 
 public class CreateProjectRequestValidator : Validator<CreateProjectRequest>
 {
     public CreateProjectRequestValidator()
     {
+        RuleFor(x => x.WorkspaceId)
+            .NotEmpty();
+
         RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(100);
@@ -66,6 +73,9 @@ public class CreateProjectRequestValidator : Validator<CreateProjectRequest>
         RuleFor(x => x.Description)
             .MaximumLength(500)
             .When(x => !string.IsNullOrEmpty(x.Description));
+
+        RuleFor(x => x.IsAllAccess)
+            .NotNull();
     }
 }
 

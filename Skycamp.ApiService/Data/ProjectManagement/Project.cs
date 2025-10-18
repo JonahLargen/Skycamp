@@ -11,6 +11,8 @@ public class Project
     [Key]
     public Guid Id { get; set; }
 
+    public Guid WorkspaceId { get; set; }
+
     [MaxLength(100)]
     public string Name { get; set; } = null!;
 
@@ -25,6 +27,9 @@ public class Project
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime LastUpdatedUtc { get; set; } = DateTime.UtcNow;
+
+    [ForeignKey(nameof(WorkspaceId))]
+    public Workspace Workspace { get; set; } = null!;
 
     [ForeignKey(nameof(CreateUserId))]
     public ApplicationUser? CreateUser { get; set; } = null!;

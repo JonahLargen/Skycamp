@@ -10,7 +10,7 @@ public class ProjectUser
     [Key]
     public Guid Id { get; set; }
 
-    public Guid WorkspaceId { get; set; }
+    public Guid ProjectId { get; set; }
 
     public string UserId { get; set; } = null!;
 
@@ -21,8 +21,8 @@ public class ProjectUser
     [ForeignKey(nameof(UserId))]
     public ApplicationUser User { get; set; } = null!;
 
-    [ForeignKey(nameof(WorkspaceId))]
-    public Workspace Workspace { get; set; } = null!;
+    [ForeignKey(nameof(ProjectId))]
+    public Project Workspace { get; set; } = null!;
 
     [ForeignKey(nameof(RoleName))]
     public ProjectRole Role { get; set; } = null!;
