@@ -29,6 +29,13 @@ public class ApplicationApiClient(HttpClient httpClient)
         return await response.Content.ReadFromJsonAsync<CreateWorkspaceResponse>(cancellationToken: cancellationToken) ?? throw new InvalidOperationException("Failed to deserialize CreateWorkspaceResponse");
     }
 
+    public async Task EditWorkspaceAsync(Guid id, EditWorkspaceRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"/projectmanagement/workspaces/{id}/v1", request, cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<GetWorkspacesResponse> GetWorkspacesAsync(CancellationToken cancellationToken = default)
     {
         var response = await httpClient.GetAsync("/projectmanagement/workspaces/v1", cancellationToken);
@@ -126,6 +133,12 @@ public record CreateWorkspaceRequest
 public record CreateWorkspaceResponse
 {
     public required string Id { get; init; }
+}
+
+public record EditWorkspaceRequest
+{
+    public required string Name { get; init; }
+    public string? Description { get; init; }
 }
 
 public record GetWorkspacesResponse

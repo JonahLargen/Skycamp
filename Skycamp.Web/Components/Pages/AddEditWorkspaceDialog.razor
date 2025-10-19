@@ -1,4 +1,4 @@
-﻿@implements IDialogContentComponent<AddWorkspaceDialogModel>
+﻿@implements IDialogContentComponent<AddEditWorkspaceDialogModel>
 
 @inject IToastService ToastService
 @inject ApplicationApiClient ApiClient
@@ -8,7 +8,7 @@
         <FluentStack VerticalAlignment="VerticalAlignment.Center">
             <FluentIcon Value="@(new Icons.Regular.Size24.WindowApps())" />
             <FluentLabel Typo="Typography.PaneHeader">
-                @(Dialog.Instance.Parameters.Title ?? "Add New Workspace")
+                @(Dialog.Instance.Parameters.Title != null ? Dialog.Instance.Parameters.Title : (Content.Id == null ? "Add New Workspace" : "Edit Workspace"))
             </FluentLabel>
         </FluentStack>
     </FluentDialogHeader>
@@ -37,7 +37,7 @@
 
 @code {
     [Parameter]
-    public AddWorkspaceDialogModel Content { get; set; } = default!;
+    public AddEditWorkspaceDialogModel Content { get; set; } = default!;
 
     [CascadingParameter]
     public FluentDialog Dialog { get; set; } = default!;
@@ -50,13 +50,26 @@
         {
             saveLoading = true;
 
-            await ApiClient.CreateWorkspaceAsync(new CreateWorkspaceRequest
+            if (Content.Id == null)
             {
-                Name = Content.Name,
-                Description = Content.Description
-            });
+                await ApiClient.CreateWorkspaceAsync(new CreateWorkspaceRequest
+                {
+                    Name = Content.Name,
+                    Description = Content.Description
+                });
 
-            ToastService.ShowSuccess($"Workspace '{Content.Name}' created successfully.");
+                ToastService.ShowSuccess($"Workspace '{Content.Name}' created successfully.");
+            }
+            else
+            {
+                await ApiClient.EditWorkspaceAsync(Content.Id.Value, new EditWorkspaceRequest
+                {
+                    Name = Content.Name,
+                    Description = Content.Description
+                });
+
+                ToastService.ShowSuccess($"Workspace '{Content.Name}' updated successfully.");
+            }
 
             await Dialog.CloseAsync();
         }

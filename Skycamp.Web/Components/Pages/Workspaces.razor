@@ -57,12 +57,18 @@ else
                     }
                 </TemplateColumn>
                 <TemplateColumn Title="Actions">
-                    @if (context.Id != activeWorkspace?.WorkspaceId)
-                    {
-                        <FluentButton Loading="@(loadingWorkspaceId == context.Id)" IconStart="@(new Icons.Regular.Size16.ArrowRight())" Appearance="Appearance.Outline" OnClick="@(async () => await SetActiveWorkspace(context))">
-                            Set Active
+                    <FluentStack>
+                        <FluentButton Loading="@(loadingWorkspaceId == context.Id && loadingContext == "edit")" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Outline" OnClick="@(async () => await EditWorkspace(context))">
+                            Edit
                         </FluentButton>
-                    }
+
+                        @if (context.Id != activeWorkspace?.WorkspaceId)
+                        {
+                            <FluentButton Loading="@(loadingWorkspaceId == context.Id && loadingContext == "setactive")" IconStart="@(new Icons.Regular.Size16.ArrowRight())" Appearance="Appearance.Outline" OnClick="@(async () => await SetActiveWorkspace(context))">
+                                Set Active
+                            </FluentButton>
+                        }
+                    </FluentStack>
                 </TemplateColumn>
             </FluentDataGrid>
         }
@@ -75,6 +81,7 @@ else
     private WorkspaceState? activeWorkspace;
     private bool gridLoading = false;
     private Guid? loadingWorkspaceId = null;
+    private string? loadingContext = null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -112,11 +119,11 @@ else
             TrapFocus = true,
             Modal = false
         };
-        var data = new AddWorkspaceDialogModel()
+        var data = new AddEditWorkspaceDialogModel()
         {
 
         };
-        var dialog = await DialogService.ShowDialogAsync<AddWorkspaceDialog>(data, parameters);
+        var dialog = await DialogService.ShowDialogAsync<AddEditWorkspaceDialog>(data, parameters);
         var result = await dialog.Result;
 
         if (result is not null && !result.Cancelled)
@@ -128,6 +135,7 @@ else
     private async Task SetActiveWorkspace(GetWorkspacesResponseItem item)
     {
         loadingWorkspaceId = item.Id;
+        loadingContext = "setactive";
 
         await Task.Delay(1000);
 
@@ -146,5 +154,35 @@ else
         ToastService.ShowSuccess($"Active workspace set to '{item.Name}'.");
 
         loadingWorkspaceId = null;
+        loadingContext = null;
+    }
+
+    private async Task EditWorkspace(GetWorkspacesResponseItem item)
+    {
+        loadingWorkspaceId = item.Id;
+        loadingContext = "edit";
+
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new AddEditWorkspaceDialogModel()
+        {
+            Id = item.Id,
+            Name = item.Name,
+            Description = item.Description
+        };
+        var dialog = await DialogService.ShowDialogAsync<AddEditWorkspaceDialog>(data, parameters);
+
+        loadingWorkspaceId = null;
+        loadingContext = null;
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await RefreshWorkspaces();
+        }
     }
 }

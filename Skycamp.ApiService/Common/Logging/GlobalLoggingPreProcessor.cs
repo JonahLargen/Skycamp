@@ -16,7 +16,7 @@ public class GlobalLoggingPreProcessor : IGlobalPreProcessor
     {
         var requestType = TypeNameHelper.GetFriendlyName(context.Request?.GetType());
 
-        _logger.LogInformation("Handling request {RequestType}: {@Request}", requestType, context.Request);
+        _logger.LogInformation("Handling request {RequestType}: {@Request} with validation failures {@ValidationFailures}", requestType, context.Request, context.ValidationFailures);
 
         return Task.CompletedTask;
     }
