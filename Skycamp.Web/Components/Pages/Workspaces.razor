@@ -5,6 +5,7 @@
 @inject ApplicationApiClient ApiClient
 @inject IToastService ToastService
 @inject IDialogService DialogService
+@inject WorkspaceStateService WorkspaceStateService
 
 <PageTitle>Workspaces</PageTitle>
 
@@ -40,28 +41,47 @@ else
         }
         else
         {
-            <FluentDataGrid Items="@workspaces.AsQueryable()" Style="width: 100%;">
+            <FluentDataGrid Items="@workspaces.AsQueryable()" Style="width: 100%;" MultiLine="true" Loading="@gridLoading">
                 <PropertyColumn Property="@(p => p.Id.ToString().ToUpper())" Sortable="true" Title="Workspace Id" />
                 <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
                 <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" />
                 <PropertyColumn Property="@(p => p.CreatedUtc)" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created (UTC)" />
+                <TemplateColumn Title="Is Active Workspace?">
+                    @if (context.Id == activeWorkspace?.WorkspaceId)
+                    {
+                        <FluentBadge Appearance="Appearance.Accent">Active</FluentBadge>
+                    }
+                    else
+                    {
+                        <FluentBadge Appearance="Appearance.Neutral">Inactive</FluentBadge>
+                    }
+                </TemplateColumn>
+                <TemplateColumn Title="Actions">
+                    @if (context.Id != activeWorkspace?.WorkspaceId)
+                    {
+                        <FluentButton Loading="@(loadingWorkspaceId == context.Id)" IconStart="@(new Icons.Regular.Size16.ArrowRight())" Appearance="Appearance.Outline" OnClick="@(async () => await SetActiveWorkspace(context))">
+                            Set Active
+                        </FluentButton>
+                    }
+                </TemplateColumn>
             </FluentDataGrid>
         }
     </FluentStack>
 }
 
 @code {
-
-}
-
-@code {
     private List<GetWorkspacesResponseItem>? workspaces;
     private bool refreshLoading = false;
+    private WorkspaceState? activeWorkspace;
+    private bool gridLoading = false;
+    private Guid? loadingWorkspaceId = null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            activeWorkspace = await WorkspaceStateService.GetWorkspaceAsync();
+
             var response = await ApiClient.GetWorkspacesAsync();
 
             workspaces = response.Workspaces;
@@ -73,6 +93,7 @@ else
     private async Task RefreshWorkspaces()
     {
         refreshLoading = true;
+        gridLoading = true;
 
         var response = await ApiClient.GetWorkspacesAsync();
 
@@ -81,6 +102,7 @@ else
         ToastService.ShowSuccess("Workspaces refreshed successfully.");
 
         refreshLoading = false;
+        gridLoading = false;
     }
 
     private async Task AddWorkspace()
@@ -101,5 +123,28 @@ else
         {
             await RefreshWorkspaces();
         }
+    }
+
+    private async Task SetActiveWorkspace(GetWorkspacesResponseItem item)
+    {
+        loadingWorkspaceId = item.Id;
+
+        await Task.Delay(1000);
+
+        activeWorkspace = new WorkspaceState()
+        {
+            WorkspaceId = item.Id,
+            WorkspaceName = item.Name
+        };
+
+        await WorkspaceStateService.SetWorkspaceAsync(new WorkspaceState()
+        {
+            WorkspaceId = item.Id,
+            WorkspaceName = item.Name
+        });
+
+        ToastService.ShowSuccess($"Active workspace set to '{item.Name}'.");
+
+        loadingWorkspaceId = null;
     }
 }
