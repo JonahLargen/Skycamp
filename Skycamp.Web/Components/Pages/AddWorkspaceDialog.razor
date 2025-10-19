@@ -1,0 +1,73 @@
+﻿@implements IDialogContentComponent<AddWorkspaceDialogModel>
+
+@inject IToastService ToastService
+@inject ApplicationApiClient ApiClient
+
+<FluentEditForm Model="@Content" OnValidSubmit="SaveAsync">
+    <FluentDialogHeader ShowDismiss="true">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.WindowApps())" />
+            <FluentLabel Typo="Typography.PaneHeader">
+                @(Dialog.Instance.Parameters.Title ?? "Add New Workspace")
+            </FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+
+    <FluentDialogBody>
+        <DataAnnotationsValidator />
+        @* <FluentValidationSummary /> *@
+
+        <FluentGrid>
+            <FluentGridItem xs="12">
+                <FluentTextField @bind-Value="@Content.Name" style="width: 100%;">Name:</FluentTextField>
+                <FluentValidationMessage For="@(() => Content.Name)" />
+            </FluentGridItem>
+            <FluentGridItem xs="12">
+                <FluentTextField @bind-Value="@Content.Description" style="width: 100%;">Description:</FluentTextField>
+                <FluentValidationMessage For="@(() => Content.Description)" />
+            </FluentGridItem>
+        </FluentGrid>
+
+        <FluentDialogFooter>
+            <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading=@saveLoading>Save</FluentButton>
+            <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+        </FluentDialogFooter>
+    </FluentDialogBody>
+</FluentEditForm>
+
+@code {
+    [Parameter]
+    public AddWorkspaceDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool saveLoading = false;
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            saveLoading = true;
+
+            await ApiClient.CreateWorkspaceAsync(new CreateWorkspaceRequest
+            {
+                Name = Content.Name,
+                Description = Content.Description
+            });
+
+            ToastService.ShowSuccess($"Workspace '{Content.Name}' created successfully.");
+
+            await Dialog.CloseAsync();
+        }
+        finally
+        {
+            saveLoading = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CloseAsync(DialogResult.Cancel());
+    }
+}

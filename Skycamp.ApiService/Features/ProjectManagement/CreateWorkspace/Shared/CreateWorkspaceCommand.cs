@@ -1,7 +1,9 @@
 ﻿using FastEndpoints;
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
+using Skycamp.ApiService.Data.Identity;
 using Skycamp.ApiService.Data.ProjectManagement;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.CreateWorkspace.Shared;
@@ -10,21 +12,20 @@ public class CreateWorkspaceCommandHandler : CommandHandler<CreateWorkspaceComma
 {
     private readonly ILogger<CreateWorkspaceCommandHandler> _logger;
     private readonly ApplicationDbContext _dbContext;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public CreateWorkspaceCommandHandler(ILogger<CreateWorkspaceCommandHandler> logger, ApplicationDbContext dbContext)
+    public CreateWorkspaceCommandHandler(ILogger<CreateWorkspaceCommandHandler> logger, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
     {
         _logger = logger;
         _dbContext = dbContext;
+        _userManager = userManager;
     }
 
     public async override Task<CreateWorkspaceResult> ExecuteAsync(CreateWorkspaceCommand command, CancellationToken ct)
     {
-        _logger.LogInformation("Creating new workspace with name {WorkspaceName}", command.Name);
+        var createUser = await _userManager.FindByNameAsync(command.CreateUserName);
 
-        var user = await _dbContext.Users
-            .FirstOrDefaultAsync(u => u.Id == command.CreateUserId, ct);
-
-        if (user == null)
+        if (createUser == null)
         {
             ThrowError("User does not exist", statusCode: 500);
         }
@@ -34,7 +35,7 @@ public class CreateWorkspaceCommandHandler : CommandHandler<CreateWorkspaceComma
             Id = Guid.CreateVersion7(),
             Name = command.Name,
             Description = command.Description,
-            CreateUserId = command.CreateUserId,
+            CreateUserId = createUser.Id,
             CreatedUtc = DateTime.UtcNow,
             LastUpdatedUtc = DateTime.UtcNow
         }, ct);
@@ -42,14 +43,12 @@ public class CreateWorkspaceCommandHandler : CommandHandler<CreateWorkspaceComma
         await _dbContext.WorkspaceUsers.AddAsync(new WorkspaceUser
         {
             WorkspaceId = result.Entity.Id,
-            UserId = command.CreateUserId,
+            UserId = createUser.Id,
             RoleName = "Owner",
             JoinedUtc = DateTime.UtcNow
         }, ct);
 
         await _dbContext.SaveChangesAsync(ct);
-
-        _logger.LogInformation("Created new workspace with ID {WorkspaceId}", result.Entity.Id);
 
         return new CreateWorkspaceResult
         {
@@ -62,7 +61,7 @@ public record CreateWorkspaceCommand : ICommand<CreateWorkspaceResult>
 {
     public required string Name { get; set; }
     public string? Description { get; set; }
-    public required string CreateUserId { get; set; }
+    public required string CreateUserName { get; set; }
 }
 
 public class CreateWorkspaceCommandValidator : AbstractValidator<CreateWorkspaceCommand>

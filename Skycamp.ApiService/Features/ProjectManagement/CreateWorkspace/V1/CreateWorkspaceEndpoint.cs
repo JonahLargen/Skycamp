@@ -44,12 +44,12 @@ public class CreateWorkspaceEndpoint : EndpointWithCommandMapping<CreateWorkspac
         {
             Name = r.Name,
             Description = r.Description,
-            CreateUserId = User.GetRequiredUserId()
+            CreateUserName = User.GetRequiredUserName()
         };
     }
 }
 
-public class CreateWorkspaceRequest
+public record CreateWorkspaceRequest
 {
     public required string Name { get; set; }
     public string? Description { get; set; }
@@ -69,7 +69,7 @@ public class CreateWorkspaceRequestValidator : Validator<CreateWorkspaceRequest>
     }
 }
 
-public class CreateWorkspaceResponse
+public record CreateWorkspaceResponse
 {
     public required Guid Id { get; set; }
 }

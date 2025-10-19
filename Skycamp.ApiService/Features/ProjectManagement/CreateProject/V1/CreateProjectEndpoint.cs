@@ -45,7 +45,7 @@ public class CreateWorkspaceEndpoint : EndpointWithCommandMapping<CreateProjectR
             WorkspaceId = r.WorkspaceId,
             Name = r.Name,
             Description = r.Description,
-            CreateUserId = User.GetRequiredUserId(),
+            CreateUserName = User.GetRequiredUserName(),
             IsAllAccess = r.IsAllAccess
         };
     }

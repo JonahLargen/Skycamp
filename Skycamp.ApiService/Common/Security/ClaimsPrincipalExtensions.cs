@@ -4,13 +4,13 @@ namespace Skycamp.ApiService.Common.Security;
 
 public static class ClaimsPrincipalExtensions
 {
-    public static string GetRequiredUserId(this ClaimsPrincipal user)
+    public static string GetRequiredUserName(this ClaimsPrincipal user)
     {
-        return user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User is not authenticated");
+        return user.FindFirstValue("sub") ?? throw new InvalidOperationException("User is not authenticated or does not have a sub/username claim");
     }
 
-    public static string? GetUserId(this ClaimsPrincipal user)
+    public static string? GetUserName(this ClaimsPrincipal user)
     {
-        return user.FindFirstValue(ClaimTypes.NameIdentifier);
+        return user.FindFirstValue("sub");
     }
 }

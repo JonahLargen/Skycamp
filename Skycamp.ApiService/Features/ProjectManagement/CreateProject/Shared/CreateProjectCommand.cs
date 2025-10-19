@@ -1,7 +1,9 @@
 ﻿using FastEndpoints;
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
+using Skycamp.ApiService.Data.Identity;
 using Skycamp.ApiService.Data.ProjectManagement;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.CreateProject.Shared;
@@ -10,19 +12,20 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
 {
     private readonly ILogger<CreateProjectCommandHandler> _logger;
     private readonly ApplicationDbContext _dbContext;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public CreateProjectCommandHandler(ILogger<CreateProjectCommandHandler> logger, ApplicationDbContext dbContext)
+    public CreateProjectCommandHandler(ILogger<CreateProjectCommandHandler> logger, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
     {
         _logger = logger;
         _dbContext = dbContext;
+        _userManager = userManager;
     }
 
     public async override Task<CreateProjectResult> ExecuteAsync(CreateProjectCommand command, CancellationToken ct = default)
     {
-        var user = await _dbContext.Users
-            .FirstOrDefaultAsync(u => u.Id == command.CreateUserId, ct);
+        var createUser = await _userManager.FindByNameAsync(command.CreateUserName);
 
-        if (user == null)
+        if (createUser == null)
         {
             ThrowError("User does not exist", statusCode: 500);
         }
@@ -36,7 +39,7 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
         }
 
         var workspaceUser = await _dbContext.WorkspaceUsers
-            .FirstOrDefaultAsync(wu => wu.WorkspaceId == command.WorkspaceId && wu.UserId == command.CreateUserId, ct);
+            .FirstOrDefaultAsync(wu => wu.WorkspaceId == command.WorkspaceId && wu.UserId == createUser.Id, ct);
 
         if (workspaceUser is not { RoleName: "Owner" or "Admin" or "Member" })
         {
@@ -49,7 +52,7 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
             WorkspaceId = command.WorkspaceId,
             Name = command.Name.Trim(),
             Description = command.Description?.Trim(),
-            CreateUserId = command.CreateUserId,
+            CreateUserId = createUser.Id,
             CreatedUtc = DateTime.UtcNow,
             LastUpdatedUtc = DateTime.UtcNow,
             IsAllAccess = command.IsAllAccess
@@ -58,7 +61,7 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
         await _dbContext.ProjectUsers.AddAsync(new ProjectUser
         {
             ProjectId = projectResult.Entity.Id,
-            UserId = command.CreateUserId,
+            UserId = createUser.Id,
             RoleName = "Owner",
             JoinedUtc = DateTime.UtcNow
         }, ct);
@@ -77,7 +80,7 @@ public record CreateProjectCommand : ICommand<CreateProjectResult>
     public required Guid WorkspaceId { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }
-    public required string CreateUserId { get; set; }
+    public required string CreateUserName { get; set; }
     public required bool IsAllAccess { get; set; }
 }
 
@@ -96,7 +99,7 @@ public class CreateProjectCommandValidator : AbstractValidator<CreateProjectComm
             .MaximumLength(500)
             .When(x => !string.IsNullOrEmpty(x.Description));
 
-        RuleFor(x => x.CreateUserId)
+        RuleFor(x => x.CreateUserName)
             .NotEmpty();
 
         RuleFor(x => x.IsAllAccess)

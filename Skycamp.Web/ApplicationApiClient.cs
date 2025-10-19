@@ -19,6 +19,24 @@ public class ApplicationApiClient(HttpClient httpClient)
 
         return await response.Content.ReadFromJsonAsync<SyncUserResponse>(cancellationToken: cancellationToken) ?? throw new InvalidOperationException("Failed to deserialize SyncUserResponse");
     }
+
+    public async Task<CreateWorkspaceResponse> CreateWorkspaceAsync(CreateWorkspaceRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync("/projectmanagement/workspaces/v1", request, cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<CreateWorkspaceResponse>(cancellationToken: cancellationToken) ?? throw new InvalidOperationException("Failed to deserialize CreateWorkspaceResponse");
+    }
+
+    public async Task<GetWorkspacesResponse> GetWorkspacesAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync("/projectmanagement/workspaces/v1", cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<GetWorkspacesResponse>(cancellationToken: cancellationToken) ?? throw new InvalidOperationException("Failed to deserialize GetWorkspacesResponse");
+    }
 }
 
 public class AccessTokenHandler : DelegatingHandler
@@ -97,4 +115,31 @@ public record SyncUserResponse
 
     [JsonPropertyName("roles")]
     public required List<string> Roles { get; init; }
+}
+
+public record CreateWorkspaceRequest
+{
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+}
+
+public record CreateWorkspaceResponse
+{
+    public required string Id { get; init; }
+}
+
+public record GetWorkspacesResponse
+{
+    public required List<GetWorkspacesResponseItem> Workspaces { get; init; }
+}
+
+public record GetWorkspacesResponseItem
+{
+    public required Guid Id { get; init; }
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+    public string? CreateUserId { get; init; }
+    public string? CreateUserDisplayName { get; init; }
+    public DateTime CreatedUtc { get; init; }
+    public DateTime LastUpdatedUtc { get; init; }
 }
