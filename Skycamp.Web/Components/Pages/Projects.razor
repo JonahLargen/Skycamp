@@ -44,11 +44,11 @@ else
         else
         {
             <FluentDataGrid Items="@projects.AsQueryable()" Style="width: 100%;" MultiLine="true" Loading="@gridLoading">
-                <PropertyColumn Property="@(p => p.Id.ToString().ToUpper())" Sortable="true" Title="Workspace Id" />
-                <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
-                <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" />
-                <PropertyColumn Property="@(p => p.RoleName)" Sortable="true" Title="Your Role" />
-                <TemplateColumn Sortable="true" Title="All Access?">
+                @* <PropertyColumn Property="@(p => p.Id.ToString().ToUpper())" Sortable="true" Title="Workspace Id" Style="align-content: center;" /> *@
+                <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" Style="align-content: center;" />
+                <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" Style="align-content: center;" />
+                <PropertyColumn Property="@(p => p.RoleName)" Sortable="true" Title="Your Role" Style="align-content: center;" />
+                <TemplateColumn Sortable="true" Title="All Access?" Style="align-content: center;">
                     @if (context.IsAllAccess)
                     {
                         <FluentBadge Appearance="Appearance.Accent">Yes</FluentBadge>
@@ -58,18 +58,18 @@ else
                         <FluentBadge Appearance="Appearance.Neutral">No</FluentBadge>
                     }
                 </TemplateColumn>
-                <PropertyColumn Property="@(p => TimeZoneService.ConvertFromUtc(p.CreatedUtc))" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created" />
-                <TemplateColumn Title="Actions">
+                <PropertyColumn Property="@(p => TimeZoneService.ConvertFromUtc(p.CreatedUtc))" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created" Style="align-content: center;" />
+                <TemplateColumn Title="Actions" Style="align-content: center;">
                     <FluentStack>
                         @if (context is { RoleName: "Owner" or "Admin" })
                         {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Outline" OnClick="@(async () => await EditProject(context))">
+                            <FluentButton IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Neutral" OnClick="@(async () => await EditProject(context))">
                                 Edit
                             </FluentButton>
                         }
                         else
                         {
-                            <FluentButton Disabled=@true Title="You must be an owner or admin of a project in order to edit it" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Outline">
+                            <FluentButton Disabled=@true Title="You must be an owner or admin of a project in order to edit it" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Neutral">
                                 Edit
                             </FluentButton>
                         }
@@ -183,7 +183,8 @@ else
                 Id = item.Id,
                 WorkspaceId = activeWorkspace.WorkspaceId,
                 Name = item.Name,
-                Description = item.Description
+                Description = item.Description,
+                IsAllAccess = item.IsAllAccess
             };
 
             dialog = await DialogService.ShowDialogAsync<AddEditProjectDialog>(data, parameters);

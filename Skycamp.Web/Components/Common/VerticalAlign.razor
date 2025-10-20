@@ -1,0 +1,8 @@
+﻿<div style="display: flex; align-items: center;">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

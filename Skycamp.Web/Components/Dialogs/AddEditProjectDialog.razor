@@ -27,8 +27,13 @@
                 <FluentValidationMessage For="@(() => Content.Description)" />
             </FluentGridItem>
             <FluentGridItem xs="12">
-                <FluentCheckbox Id="chkIsAllAccess" @bind-Value="@Content.IsAllAccess">Is All Access?</FluentCheckbox>
-                <FluentTooltip Anchor="chkIsAllAccess">
+                <VerticalAlign>
+                    <FluentCheckbox @bind-Value="@Content.IsAllAccess">
+                        Is All Access?
+                    </FluentCheckbox>
+                    <FluentIcon Id="fiIsAllAccess" Value="@(new Icons.Regular.Size16.QuestionCircle())" />
+                </VerticalAlign>
+                <FluentTooltip Anchor="fiIsAllAccess">
                     If yes, all users in the workspace can join this project without being invited.
                 </FluentTooltip>
                 <FluentValidationMessage For="@(() => Content.IsAllAccess)" />

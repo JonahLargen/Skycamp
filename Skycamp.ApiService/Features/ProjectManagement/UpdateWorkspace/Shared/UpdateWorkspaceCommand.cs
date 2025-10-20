@@ -33,7 +33,7 @@ public class UpdateWorkspaceCommandHandler : CommandHandler<UpdateWorkspaceComma
 
         if (workspace == null)
         {
-            ThrowError("Workspace does not exist, or you do not have access to edit this workspace", statusCode: 400);
+            ThrowError("Workspace does not exist", statusCode: 404);
         }
 
         var workspaceUser = await _dbContext.WorkspaceUsers
@@ -42,7 +42,7 @@ public class UpdateWorkspaceCommandHandler : CommandHandler<UpdateWorkspaceComma
 
         if (workspaceUser is not { RoleName: "Owner" or "Admin" })
         {
-            ThrowError("Workspace does not exist, or you do not have access to edit this workspace", statusCode: 400);
+            ThrowError("You do not have access to edit this workspace", statusCode: 403);
         }
 
         workspace.Name = command.Name.Trim();

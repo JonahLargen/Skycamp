@@ -28,9 +28,9 @@ public class ApplicationApiClient(HttpClient httpClient)
         return await CreateApiDataResultAsync<CreateWorkspaceResponse>(response);
     }
 
-    public async Task<ApiResult> EditWorkspaceAsync(Guid id, EditWorkspaceRequest request, CancellationToken cancellationToken = default)
+    public async Task<ApiResult> EditWorkspaceAsync(Guid workspaceId, EditWorkspaceRequest request, CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PutAsJsonAsync($"/projectmanagement/workspaces/{id}/v1", request, cancellationToken);
+        var response = await httpClient.PutAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/v1", request, cancellationToken);
 
         return await CreateApiResultAsync(response);
     }

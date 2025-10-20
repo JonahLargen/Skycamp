@@ -35,7 +35,7 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
 
         if (workspace == null)
         {
-            ThrowError("Workspace does not exist, or you do not have access to create projects in this workspace", statusCode: 400);
+            ThrowError("Workspace does not exist", statusCode: 404);
         }
 
         var workspaceUser = await _dbContext.WorkspaceUsers
@@ -43,7 +43,7 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
 
         if (workspaceUser is not { RoleName: "Owner" or "Admin" or "Member" })
         {
-            ThrowError("Workspace does not exist, or you do not have access to create projects in this workspace", statusCode: 400);
+            ThrowError("You do not have access to create projects in this workspace", statusCode: 403);
         }
 
         var projectResult = await _dbContext.Projects.AddAsync(new Project
