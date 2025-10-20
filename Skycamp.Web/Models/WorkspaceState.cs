@@ -2,6 +2,6 @@
 
 public class WorkspaceState
 {
-    public Guid? WorkspaceId { get; set; }
-    public string? WorkspaceName { get; set; }
+    public required Guid WorkspaceId { get; set; }
+    public required string WorkspaceName { get; set; }
 }

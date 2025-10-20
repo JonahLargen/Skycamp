@@ -18,7 +18,7 @@
     {
         if (firstRender)
         {
-            _activeWorkspace = await WorkspaceStateService.GetWorkspaceAsync();
+            _activeWorkspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
 
             StateHasChanged();
         }

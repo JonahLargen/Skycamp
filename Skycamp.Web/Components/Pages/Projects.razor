@@ -1,4 +1,4 @@
-﻿@page "/workspaces"
+﻿@page "/projects"
 @rendermode InteractiveServer
 @attribute [Authorize]
 
@@ -8,13 +8,12 @@
 @inject WorkspaceStateService WorkspaceStateService
 @inject TimeZoneService TimeZoneService
 @inject NavigationManager NavigationManager
-@inject IJSRuntime JS
 
-<PageTitle>Workspaces</PageTitle>
+<PageTitle>Projects</PageTitle>
 
-<h1>Workspaces</h1>
+<h1>Projects</h1>
 
-@if (workspaces == null)
+@if (projects == null)
 {
     <FluentStack Orientation="Orientation.Vertical">
         @for (int i = 0; i < 5; i++)
@@ -27,31 +26,30 @@ else
 {
     <FluentStack Orientation="Orientation.Vertical">
         <FluentStack>
-            <FluentButton Loading=@refreshLoading IconStart="@(new Icons.Regular.Size16.ArrowRedo())" Appearance="Appearance.Neutral" OnClick="RefreshWorkspaces">
+            <FluentButton Loading=@refreshLoading IconStart="@(new Icons.Regular.Size16.ArrowRedo())" Appearance="Appearance.Neutral" OnClick="RefreshProjects">
                 Refresh
             </FluentButton>
 
-            <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" Appearance="Appearance.Accent" OnClick="AddWorkspace">
+            <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" Appearance="Appearance.Accent" OnClick="AddProject">
                 Add
             </FluentButton>
         </FluentStack>
 
-        @if (workspaces.Count == 0)
+        @if (projects.Count == 0)
         {
-            <FluentMessageBar Title="No Workspaces Found" Intent="MessageIntent.Warning" AllowDismiss=false FadeIn=false>
-                You currently have no workspaces. Consider creating one to get started!
+            <FluentMessageBar Title="No Projects Found" Intent="MessageIntent.Warning" AllowDismiss=false FadeIn=false>
+                You currently have no projects. Consider creating one to get started!
             </FluentMessageBar>
         }
         else
         {
-            <FluentDataGrid Items="@workspaces.AsQueryable()" Style="width: 100%;" MultiLine="true" Loading="@gridLoading">
+            <FluentDataGrid Items="@projects.AsQueryable()" Style="width: 100%;" MultiLine="true" Loading="@gridLoading">
                 <PropertyColumn Property="@(p => p.Id.ToString().ToUpper())" Sortable="true" Title="Workspace Id" />
                 <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
                 <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" />
                 <PropertyColumn Property="@(p => p.RoleName)" Sortable="true" Title="Your Role" />
-                <PropertyColumn Property="@(p => TimeZoneService.ConvertFromUtc(p.CreatedUtc))" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created" />
-                <TemplateColumn Title="Is Workspace Selected?">
-                    @if (context.Id == activeWorkspace?.WorkspaceId)
+                <TemplateColumn Sortable="true" Title="All Access?">
+                    @if (context.IsAllAccess)
                     {
                         <FluentBadge Appearance="Appearance.Accent">Yes</FluentBadge>
                     }
@@ -60,17 +58,18 @@ else
                         <FluentBadge Appearance="Appearance.Neutral">No</FluentBadge>
                     }
                 </TemplateColumn>
+                <PropertyColumn Property="@(p => TimeZoneService.ConvertFromUtc(p.CreatedUtc))" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created" />
                 <TemplateColumn Title="Actions">
                     <FluentStack>
                         @if (context is { RoleName: "Owner" or "Admin" })
                         {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Outline" OnClick="@(async () => await EditWorkspace(context))">
+                            <FluentButton IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Outline" OnClick="@(async () => await EditProject(context))">
                                 Edit
                             </FluentButton>
                         }
                         else
                         {
-                            <FluentButton Disabled=@true Title="You must be an owner or admin of a workspace in order to edit it" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Outline">
+                            <FluentButton Disabled=@true Title="You must be an owner or admin of a project in order to edit it" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Outline">
                                 Edit
                             </FluentButton>
                         }
@@ -78,13 +77,7 @@ else
                         @if (context.Id != activeWorkspace?.WorkspaceId)
                         {
                             <FluentButton Loading="@(loadingWorkspaceId == context.Id && loadingContext == "setactive")" IconStart="@(new Icons.Regular.Size16.ArrowRight())" Appearance="Appearance.Outline" OnClick="@(async () => await SetActiveWorkspace(context))">
-                                Select
-                            </FluentButton>
-                        }
-                        else
-                        {
-                            <FluentButton Loading="@(loadingWorkspaceId == context.Id && loadingContext == "removeactive")" IconStart="@(new Icons.Regular.Size16.ArrowLeft())" Appearance="Appearance.Outline" OnClick="@(async () => await RemoveActiveWorkspace(context))">
-                                Deselect
+                                Set Active
                             </FluentButton>
                         }
                     </FluentStack>
@@ -95,7 +88,7 @@ else
 }
 
 @code {
-    private List<GetWorkspacesResponseItem>? workspaces;
+    private List<GetProjectsByWorkspaceIdResponseItem>? projects;
     private bool refreshLoading = false;
     private WorkspaceState? activeWorkspace;
     private bool gridLoading = false;
@@ -106,53 +99,53 @@ else
     {
         if (firstRender)
         {
-            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-            var query = QueryHelpers.ParseQuery(uri.Query);
+            activeWorkspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
 
-            if (query.TryGetValue("toast", out var toastValue) && toastValue == "1")
+            if (activeWorkspace == null)
             {
-                ToastService.ShowWarning("No workspace has been selected. Please select a workspace before continuing with projects.");
-
-                var newUri = uri.GetLeftPart(UriPartial.Path);
-
-                await JS.InvokeVoidAsync("history.replaceState", new { }, null, newUri);
+                NavigationManager.NavigateTo("/workspaces?toast=1");
+                return;
             }
 
             await TimeZoneService.InitializeAsync();
 
-            activeWorkspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
-
-            var response = await ApiClient.GetWorkspacesAsync();
+            var response = await ApiClient.GetProjectsByWorkspaceIdAsync(activeWorkspace.WorkspaceId);
 
             if (response.IsSuccess && response.Data != null)
             {
-                workspaces = response.Data.Workspaces;
+                projects = response.Data.Projects;
             }
             else
             {
-                ToastService.ShowError("Failed to load workspaces: " + response.ErrorMessage);
+                ToastService.ShowError("Failed to load projects: " + response.ErrorMessage);
             }
 
             StateHasChanged();
         }
     }
 
-    private async Task RefreshWorkspaces()
+    private async Task RefreshProjects()
     {
         refreshLoading = true;
         gridLoading = true;
 
         try
         {
-            var response = await ApiClient.GetWorkspacesAsync();
+            if (activeWorkspace == null)
+            {
+                NavigationManager.NavigateTo("/workspaces?toast=1");
+                return;
+            }
+
+            var response = await ApiClient.GetProjectsByWorkspaceIdAsync(activeWorkspace.WorkspaceId);
 
             if (response.IsSuccess && response.Data != null)
             {
-                workspaces = response.Data.Workspaces;
+                projects = response.Data.Projects;
             }
             else
             {
-                ToastService.ShowError("Failed to load workspaces: " + response.ErrorMessage);
+                ToastService.ShowError("Failed to load projects: " + response.ErrorMessage);
             }
         }
         finally
@@ -162,7 +155,7 @@ else
         }
     }
 
-    private async Task AddWorkspace()
+    private async Task AddProject()
     {
         var parameters = new DialogParameters()
         {
@@ -178,11 +171,11 @@ else
 
         if (result is not null && !result.Cancelled)
         {
-            await RefreshWorkspaces();
+            await RefreshProjects();
         }
     }
 
-    private async Task SetActiveWorkspace(GetWorkspacesResponseItem item)
+    private async Task SetActiveWorkspace(GetProjectsByWorkspaceIdResponseItem item)
     {
         loadingWorkspaceId = item.Id;
         loadingContext = "setactive";
@@ -210,27 +203,7 @@ else
         }
     }
 
-    private async Task RemoveActiveWorkspace(GetWorkspacesResponseItem item)
-    {
-        loadingWorkspaceId = item.Id;
-        loadingContext = "setactive";
-
-        try
-        {
-            await WorkspaceStateService.RemoveSelectedWorkspaceAsync();
-
-            activeWorkspace = null;
-
-            ToastService.ShowSuccess($"Workspace '{item.Name}' no longer active.");
-        }
-        finally
-        {
-            loadingWorkspaceId = null;
-            loadingContext = null;
-        }
-    }
-
-    private async Task EditWorkspace(GetWorkspacesResponseItem item)
+    private async Task EditProject(GetProjectsByWorkspaceIdResponseItem item)
     {
         loadingWorkspaceId = item.Id;
         loadingContext = "edit";
@@ -263,7 +236,7 @@ else
 
         if (result is not null && !result.Cancelled)
         {
-            await RefreshWorkspaces();
+            await RefreshProjects();
         }
     }
 }

@@ -42,11 +42,11 @@ public class ApplicationApiClient(HttpClient httpClient)
         return await CreateApiDataResultAsync<GetWorkspacesResponse>(response);
     }
 
-    public async Task<ApiDataResult<GetWorkspacesByProjectIdResponse>> GetProjectsByWorkspaceIdAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    public async Task<ApiDataResult<GetProjectsByWorkspaceIdResponse>> GetProjectsByWorkspaceIdAsync(Guid workspaceId, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.GetAsync($"/projectmanagement/workspaces/{workspaceId}/projects/v1", cancellationToken);
 
-        return await CreateApiDataResultAsync<GetWorkspacesByProjectIdResponse>(response);
+        return await CreateApiDataResultAsync<GetProjectsByWorkspaceIdResponse>(response);
     }
 
     private static async Task<ApiResult> CreateApiResultAsync(HttpResponseMessage response)
@@ -216,12 +216,12 @@ public record GetWorkspacesResponseItem
     public DateTime LastUpdatedUtc { get; init; }
 }
 
-public record GetWorkspacesByProjectIdResponse
+public record GetProjectsByWorkspaceIdResponse
 {
-    public List<GetWorkspacesByProjectIdResponseItem> Workspaces { get; init; } = [];
+    public List<GetProjectsByWorkspaceIdResponseItem> Projects { get; init; } = [];
 }
 
-public record GetWorkspacesByProjectIdResponseItem
+public record GetProjectsByWorkspaceIdResponseItem
 {
     public required Guid Id { get; init; }
     public required string Name { get; init; }

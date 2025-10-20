@@ -15,17 +15,26 @@ public class WorkspaceStateService
 
     public event Action<WorkspaceState?>? OnChange;
 
-    public async Task<WorkspaceState?> GetWorkspaceAsync()
+    public async Task<WorkspaceState?> GetSelectedWorkspaceAsync()
     {
         var result = await _localStorage.GetAsync<WorkspaceState>(LocalStorageKeys.ActiveWorkspace);
 
         return result.Success ? result.Value : null;
     }
 
-    public async Task SetWorkspaceAsync(WorkspaceState workspace)
+    public async Task SetSelectedWorkspaceAsync(WorkspaceState workspace)
     {
+        ArgumentNullException.ThrowIfNull(workspace);
+
         await _localStorage.SetAsync(LocalStorageKeys.ActiveWorkspace, workspace);
 
         OnChange?.Invoke(workspace);
+    }
+
+    public async Task RemoveSelectedWorkspaceAsync()
+    {
+        await _localStorage.DeleteAsync(LocalStorageKeys.ActiveWorkspace);
+
+        OnChange?.Invoke(null);
     }
 }

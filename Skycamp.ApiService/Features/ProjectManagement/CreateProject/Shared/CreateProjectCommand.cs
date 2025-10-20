@@ -55,7 +55,7 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
             CreateUserId = createUser.Id,
             CreatedUtc = DateTime.UtcNow,
             LastUpdatedUtc = DateTime.UtcNow,
-            IsAllAccess = command.IsAllAccess
+            IsAllAccess = command.IsAllAccess,
         }, ct);
 
         await _dbContext.ProjectUsers.AddAsync(new ProjectUser

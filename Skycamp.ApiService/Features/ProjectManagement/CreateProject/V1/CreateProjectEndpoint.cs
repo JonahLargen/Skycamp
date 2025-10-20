@@ -6,7 +6,7 @@ using Skycamp.ApiService.Features.ProjectManagement.CreateProject.Shared;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.CreateProject.V1;
 
-public class CreateWorkspaceEndpoint : EndpointWithCommandMapping<CreateProjectRequest, CreateProjectResponse, CreateProjectCommand, CreateProjectResult>
+public class CreateProjectEndpoint : EndpointWithCommandMapping<CreateProjectRequest, CreateProjectResponse, CreateProjectCommand, CreateProjectResult>
 {
     public override void Configure()
     {
