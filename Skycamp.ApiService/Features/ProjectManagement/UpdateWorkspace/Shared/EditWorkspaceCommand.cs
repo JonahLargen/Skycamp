@@ -5,22 +5,22 @@ using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
 using Skycamp.ApiService.Data.Identity;
 
-namespace Skycamp.ApiService.Features.ProjectManagement.EditWorkspace.Shared;
+namespace Skycamp.ApiService.Features.ProjectManagement.UpdateWorkspace.Shared;
 
-public class EditWorkspaceCommandHandler : CommandHandler<EditWorkspaceCommand>
+public class UpdateWorkspaceCommandHandler : CommandHandler<UpdateWorkspaceCommand>
 {
-    private readonly ILogger<EditWorkspaceCommandHandler> _logger;
+    private readonly ILogger<UpdateWorkspaceCommandHandler> _logger;
     private readonly ApplicationDbContext _dbContext;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public EditWorkspaceCommandHandler(ILogger<EditWorkspaceCommandHandler> logger, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
+    public UpdateWorkspaceCommandHandler(ILogger<UpdateWorkspaceCommandHandler> logger, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
     {
         _logger = logger;
         _dbContext = dbContext;
         _userManager = userManager;
     }
 
-    public async override Task ExecuteAsync(EditWorkspaceCommand command, CancellationToken ct)
+    public async override Task ExecuteAsync(UpdateWorkspaceCommand command, CancellationToken ct)
     {
         var editUser = await _userManager.FindByNameAsync(command.EditUserName);
 
@@ -45,15 +45,15 @@ public class EditWorkspaceCommandHandler : CommandHandler<EditWorkspaceCommand>
             ThrowError("Workspace does not exist, or you do not have access to edit this workspace", statusCode: 400);
         }
 
-        workspace.Name = command.Name;
-        workspace.Description = command.Description;
+        workspace.Name = command.Name.Trim();
+        workspace.Description = command.Description?.Trim();
         workspace.LastUpdatedUtc = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync(ct);
     }
 }
 
-public record EditWorkspaceCommand : ICommand
+public record UpdateWorkspaceCommand : ICommand
 {
     public required Guid Id { get; set; }
     public required string Name { get; set; }
@@ -61,9 +61,9 @@ public record EditWorkspaceCommand : ICommand
     public required string EditUserName { get; set; }
 }
 
-public class EditWorkspaceCommandValidator : AbstractValidator<EditWorkspaceCommand>
+public class UpdateWorkspaceCommandValidator : AbstractValidator<UpdateWorkspaceCommand>
 {
-    public EditWorkspaceCommandValidator()
+    public UpdateWorkspaceCommandValidator()
     {
         RuleFor(x => x.Id)
             .NotEmpty();

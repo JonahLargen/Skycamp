@@ -22,7 +22,7 @@ public class ProjectUser
     public ApplicationUser User { get; set; } = null!;
 
     [ForeignKey(nameof(ProjectId))]
-    public Project Workspace { get; set; } = null!;
+    public Project Project { get; set; } = null!;
 
     [ForeignKey(nameof(RoleName))]
     public ProjectRole Role { get; set; } = null!;

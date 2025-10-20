@@ -40,6 +40,7 @@ public class GetWorkspacesCommandHandler : CommandHandler<GetWorkspacesCommand, 
                 Id = wu.Workspace.Id,
                 Name = wu.Workspace.Name,
                 Description = wu.Workspace.Description,
+                RoleName = wu.RoleName,
                 CreateUserId = wu.Workspace.CreateUserId,
                 CreateUserDisplayName = wu.Workspace.CreateUser != null ? wu.Workspace.CreateUser.DisplayName ?? wu.Workspace.CreateUser.UserName : null,
                 CreatedUtc = wu.Workspace.CreatedUtc,
@@ -78,6 +79,7 @@ public record GetWorkspacesResultItem
     public required Guid Id { get; init; }
     public required string Name { get; init; }
     public string? Description { get; init; }
+    public required string RoleName { get; init; }
     public string? CreateUserId { get; init; }
     public string? CreateUserDisplayName { get; init; }
     public DateTime CreatedUtc { get; init; }

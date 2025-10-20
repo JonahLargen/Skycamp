@@ -57,14 +57,20 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
                 AvatarUrl = avatarUrl
             });
 
+            if (!response.IsSuccess)
+            {
+                context.Fail($"Failed to sync user: {response.ErrorMessage}");
+                return;
+            }
+
             var identity = (ClaimsIdentity)context.Principal!.Identity!;
 
             if (!identity.HasClaim(c => c.Type == "app_user_id"))
             {
-                identity.AddClaim(new Claim("app_user_id", response.UserId));
+                identity.AddClaim(new Claim("app_user_id", response.Data.UserId));
             }
 
-            foreach (var role in response.Roles)
+            foreach (var role in response.Data.Roles)
             {
                 if (!identity.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == role))
                 {

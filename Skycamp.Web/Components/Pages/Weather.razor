@@ -4,6 +4,7 @@
 @attribute [Authorize]
 
 @inject ApplicationApiClient WeatherApi
+@inject ToastService ToastService
 
 <PageTitle>Weather</PageTitle>
 
@@ -38,7 +39,17 @@ else
     {
         if (firstRender)
         {
-            forecast = await WeatherApi.GetForecastAsync(City);
+            var result = await WeatherApi.GetForecastAsync(City);
+
+            if (result.IsSuccess)
+            {
+                forecast = result.Data;
+            }
+            else
+            {
+                ToastService.ShowError("Failed to load weather data: " + result.ErrorMessage);
+            }
+
             StateHasChanged();
         }
     }

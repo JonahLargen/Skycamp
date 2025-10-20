@@ -2,11 +2,11 @@
 using FluentValidation;
 using Skycamp.ApiService.Common.Endpoints;
 using Skycamp.ApiService.Common.Security;
-using Skycamp.ApiService.Features.ProjectManagement.EditWorkspace.Shared;
+using Skycamp.ApiService.Features.ProjectManagement.UpdateWorkspace.Shared;
 
-namespace Skycamp.ApiService.Features.ProjectManagement.EditWorkspace.V1;
+namespace Skycamp.ApiService.Features.ProjectManagement.UpdateWorkspace.V1;
 
-public class EditWorkspaceEndpoint : EndpointWithoutResponseWithCommandMapping<EditWorkspaceRequest, EditWorkspaceCommand>
+public class UpdateWorkspaceEndpoint : EndpointWithoutResponseWithCommandMapping<UpdateWorkspaceRequest, UpdateWorkspaceCommand>
 {
     public override void Configure()
     {
@@ -15,7 +15,7 @@ public class EditWorkspaceEndpoint : EndpointWithoutResponseWithCommandMapping<E
 
         Description(b =>
         {
-            b.WithName("EditWorkspaceV1");
+            b.WithName("UpdateWorkspaceV1");
         });
 
         Summary(s =>
@@ -25,14 +25,14 @@ public class EditWorkspaceEndpoint : EndpointWithoutResponseWithCommandMapping<E
         });
     }
 
-    public override async Task HandleAsync(EditWorkspaceRequest req, CancellationToken ct)
+    public override async Task HandleAsync(UpdateWorkspaceRequest req, CancellationToken ct)
     {
         await SendMappedAsync(req, ct: ct);
     }
 
-    public override EditWorkspaceCommand MapToCommand(EditWorkspaceRequest r)
+    public override UpdateWorkspaceCommand MapToCommand(UpdateWorkspaceRequest r)
     {
-        return new EditWorkspaceCommand
+        return new UpdateWorkspaceCommand
         {
             Id = r.Id,
             Name = r.Name,
@@ -42,16 +42,16 @@ public class EditWorkspaceEndpoint : EndpointWithoutResponseWithCommandMapping<E
     }
 }
 
-public record EditWorkspaceRequest
+public record UpdateWorkspaceRequest
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
 }
 
-public class EditWorkspaceRequestValidator : Validator<EditWorkspaceRequest>
+public class UpdateWorkspaceRequestValidator : Validator<UpdateWorkspaceRequest>
 {
-    public EditWorkspaceRequestValidator()
+    public UpdateWorkspaceRequestValidator()
     {
         RuleFor(x => x.Id)
             .NotEmpty();

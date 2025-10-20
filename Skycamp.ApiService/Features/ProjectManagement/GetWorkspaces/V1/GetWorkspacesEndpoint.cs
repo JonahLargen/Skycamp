@@ -38,6 +38,7 @@ public class GetWorkspacesEndpoint : EndpointWithoutRequestWithCommandMapping<Ge
                 Id = w.Id,
                 Name = w.Name,
                 Description = w.Description,
+                RoleName = w.RoleName,
                 CreateUserId = w.CreateUserId,
                 CreateUserDisplayName = w.CreateUserDisplayName,
                 CreatedUtc = w.CreatedUtc,
@@ -65,6 +66,7 @@ public record GetWorkspacesResponseItem
     public required Guid Id { get; init; }
     public required string Name { get; init; }
     public string? Description { get; init; }
+    public required string RoleName { get; init; }
     public string? CreateUserId { get; init; }
     public string? CreateUserDisplayName { get; init; }
     public DateTime CreatedUtc { get; init; }

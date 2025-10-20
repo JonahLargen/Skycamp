@@ -45,6 +45,7 @@ else
                 <PropertyColumn Property="@(p => p.Id.ToString().ToUpper())" Sortable="true" Title="Workspace Id" />
                 <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
                 <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" />
+                <PropertyColumn Property="@(p => p.RoleName)" Sortable="true" Title="Your Role" />
                 <PropertyColumn Property="@(p => p.CreatedUtc)" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created (UTC)" />
                 <TemplateColumn Title="Is Active Workspace?">
                     @if (context.Id == activeWorkspace?.WorkspaceId)
@@ -58,9 +59,18 @@ else
                 </TemplateColumn>
                 <TemplateColumn Title="Actions">
                     <FluentStack>
-                        <FluentButton Loading="@(loadingWorkspaceId == context.Id && loadingContext == "edit")" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Outline" OnClick="@(async () => await EditWorkspace(context))">
-                            Edit
-                        </FluentButton>
+                        @if (context is { RoleName: "Owner" or "Admin" })
+                        {
+                            <FluentButton IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Outline" OnClick="@(async () => await EditWorkspace(context))">
+                                Edit
+                            </FluentButton>
+                        }
+                        else
+                        {
+                            <FluentButton Disabled=@true Title="You must be an owner or admin of a workspace in order to edit it" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Outline">
+                                Edit
+                            </FluentButton>
+                        }
 
                         @if (context.Id != activeWorkspace?.WorkspaceId)
                         {
@@ -91,7 +101,14 @@ else
 
             var response = await ApiClient.GetWorkspacesAsync();
 
-            workspaces = response.Workspaces;
+            if (response.IsSuccess && response.Data != null)
+            {
+                workspaces = response.Data.Workspaces;
+            }
+            else
+            {
+                ToastService.ShowError("Failed to load workspaces: " + response.ErrorMessage);
+            }
 
             StateHasChanged();
         }
@@ -102,14 +119,24 @@ else
         refreshLoading = true;
         gridLoading = true;
 
-        var response = await ApiClient.GetWorkspacesAsync();
+        try
+        {
+            var response = await ApiClient.GetWorkspacesAsync();
 
-        workspaces = response.Workspaces;
-
-        ToastService.ShowSuccess("Workspaces refreshed successfully.");
-
-        refreshLoading = false;
-        gridLoading = false;
+            if (response.IsSuccess && response.Data != null)
+            {
+                workspaces = response.Data.Workspaces;
+            }
+            else
+            {
+                ToastService.ShowError("Failed to load workspaces: " + response.ErrorMessage);
+            }
+        }
+        finally
+        {
+            refreshLoading = false;
+            gridLoading = false;
+        }
     }
 
     private async Task AddWorkspace()
@@ -137,24 +164,27 @@ else
         loadingWorkspaceId = item.Id;
         loadingContext = "setactive";
 
-        await Task.Delay(1000);
-
-        activeWorkspace = new WorkspaceState()
+        try
         {
-            WorkspaceId = item.Id,
-            WorkspaceName = item.Name
-        };
+            activeWorkspace = new WorkspaceState()
+            {
+                WorkspaceId = item.Id,
+                WorkspaceName = item.Name
+            };
 
-        await WorkspaceStateService.SetWorkspaceAsync(new WorkspaceState()
+            await WorkspaceStateService.SetWorkspaceAsync(new WorkspaceState()
+            {
+                WorkspaceId = item.Id,
+                WorkspaceName = item.Name
+            });
+
+            ToastService.ShowSuccess($"Active workspace set to '{item.Name}'.");
+        }
+        finally
         {
-            WorkspaceId = item.Id,
-            WorkspaceName = item.Name
-        });
-
-        ToastService.ShowSuccess($"Active workspace set to '{item.Name}'.");
-
-        loadingWorkspaceId = null;
-        loadingContext = null;
+            loadingWorkspaceId = null;
+            loadingContext = null;
+        }
     }
 
     private async Task EditWorkspace(GetWorkspacesResponseItem item)
@@ -162,21 +192,29 @@ else
         loadingWorkspaceId = item.Id;
         loadingContext = "edit";
 
-        var parameters = new DialogParameters()
-        {
-            TrapFocus = true,
-            Modal = false
-        };
-        var data = new AddEditWorkspaceDialogModel()
-        {
-            Id = item.Id,
-            Name = item.Name,
-            Description = item.Description
-        };
-        var dialog = await DialogService.ShowDialogAsync<AddEditWorkspaceDialog>(data, parameters);
+        IDialogReference dialog;
 
-        loadingWorkspaceId = null;
-        loadingContext = null;
+        try
+        {
+            var parameters = new DialogParameters()
+            {
+                TrapFocus = true,
+                Modal = false
+            };
+            var data = new AddEditWorkspaceDialogModel()
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Description = item.Description
+            };
+
+            dialog = await DialogService.ShowDialogAsync<AddEditWorkspaceDialog>(data, parameters);
+        }
+        finally
+        {
+            loadingWorkspaceId = null;
+            loadingContext = null;
+        }
 
         var result = await dialog.Result;
 

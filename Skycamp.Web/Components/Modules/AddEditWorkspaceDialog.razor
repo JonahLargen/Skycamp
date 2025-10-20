@@ -19,7 +19,7 @@
 
         <FluentGrid>
             <FluentGridItem xs="12">
-                <FluentTextField @bind-Value="@Content.Name" style="width: 100%;">Name:</FluentTextField>
+                <FluentTextField @bind-Value="@Content.Name" style="width: 100%;" Autofocus=true>Name:</FluentTextField>
                 <FluentValidationMessage For="@(() => Content.Name)" />
             </FluentGridItem>
             <FluentGridItem xs="12">
@@ -52,26 +52,40 @@
 
             if (Content.Id == null)
             {
-                await ApiClient.CreateWorkspaceAsync(new CreateWorkspaceRequest
+                var result = await ApiClient.CreateWorkspaceAsync(new CreateWorkspaceRequest
                 {
                     Name = Content.Name,
                     Description = Content.Description
                 });
 
-                ToastService.ShowSuccess($"Workspace '{Content.Name}' created successfully.");
+                if (!result.IsSuccess)
+                {
+                    ToastService.ShowError("Failed to create workspace.");
+                }
+                else
+                {
+                    ToastService.ShowSuccess($"Workspace '{Content.Name}' created successfully.");
+                    await Dialog.CloseAsync();
+                }
             }
             else
             {
-                await ApiClient.EditWorkspaceAsync(Content.Id.Value, new EditWorkspaceRequest
+                var result =  await ApiClient.EditWorkspaceAsync(Content.Id.Value, new EditWorkspaceRequest
                 {
                     Name = Content.Name,
                     Description = Content.Description
                 });
 
-                ToastService.ShowSuccess($"Workspace '{Content.Name}' updated successfully.");
+                if (!result.IsSuccess)
+                {
+                    ToastService.ShowError($"Failed to update workspace: {result.ErrorMessage}");
+                }
+                else
+                {
+                    ToastService.ShowSuccess($"Workspace '{Content.Name}' updated successfully.");
+                    await Dialog.CloseAsync();
+                }
             }
-
-            await Dialog.CloseAsync();
         }
         finally
         {
