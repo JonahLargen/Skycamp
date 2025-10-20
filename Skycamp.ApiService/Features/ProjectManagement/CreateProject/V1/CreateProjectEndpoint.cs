@@ -10,7 +10,7 @@ public class CreateProjectEndpoint : EndpointWithCommandMapping<CreateProjectReq
 {
     public override void Configure()
     {
-        Post("/projectmanagement/projects");
+        Post("/projectmanagement/workspaces/{WorkspaceId}/projects");
         Version(1);
 
         Description(b =>
@@ -53,10 +53,10 @@ public class CreateProjectEndpoint : EndpointWithCommandMapping<CreateProjectReq
 
 public class CreateProjectRequest
 {
-    public required Guid WorkspaceId { get; set; }
-    public required string Name { get; set; }
+    public Guid WorkspaceId { get; set; }
+    public string Name { get; set; } = null!;
     public string? Description { get; set; }
-    public required bool IsAllAccess { get; set; }
+    public bool IsAllAccess { get; set; }
 }
 
 public class CreateProjectRequestValidator : Validator<CreateProjectRequest>

@@ -35,6 +35,20 @@ public class ApplicationApiClient(HttpClient httpClient)
         return await CreateApiResultAsync(response);
     }
 
+    public async Task<ApiDataResult<CreateProjectResponse>> CreateProjectAsync(Guid workspaceId, CreateProjectRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/projects/v1", request, cancellationToken);
+
+        return await CreateApiDataResultAsync<CreateProjectResponse>(response);
+    }
+
+    public async Task<ApiResult> EditProjectAsync(Guid workspaceId, Guid projectId, EditProjectRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/v1", request, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
     public async Task<ApiDataResult<GetWorkspacesResponse>> GetWorkspacesAsync(CancellationToken cancellationToken = default)
     {
         var response = await httpClient.GetAsync("/projectmanagement/workspaces/v1", cancellationToken);
@@ -197,6 +211,25 @@ public record EditWorkspaceRequest
 {
     public required string Name { get; init; }
     public string? Description { get; init; }
+}
+
+public record CreateProjectRequest
+{
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+    public required bool IsAllAccess { get; init; }
+}
+
+public record EditProjectRequest
+{
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+    public required bool IsAllAccess { get; init; }
+}
+
+public record CreateProjectResponse
+{
+    public required string Id { get; init; }
 }
 
 public record GetWorkspacesResponse

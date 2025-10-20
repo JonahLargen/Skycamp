@@ -73,13 +73,6 @@ else
                                 Edit
                             </FluentButton>
                         }
-
-                        @if (context.Id != activeWorkspace?.WorkspaceId)
-                        {
-                            <FluentButton Loading="@(loadingWorkspaceId == context.Id && loadingContext == "setactive")" IconStart="@(new Icons.Regular.Size16.ArrowRight())" Appearance="Appearance.Outline" OnClick="@(async () => await SetActiveWorkspace(context))">
-                                Set Active
-                            </FluentButton>
-                        }
                     </FluentStack>
                 </TemplateColumn>
             </FluentDataGrid>
@@ -90,7 +83,7 @@ else
 @code {
     private List<GetProjectsByWorkspaceIdResponseItem>? projects;
     private bool refreshLoading = false;
-    private WorkspaceState? activeWorkspace;
+    private WorkspaceState activeWorkspace = null!;
     private bool gridLoading = false;
     private Guid? loadingWorkspaceId = null;
     private string? loadingContext = null;
@@ -99,13 +92,15 @@ else
     {
         if (firstRender)
         {
-            activeWorkspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
+            var selectedWorkspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
 
-            if (activeWorkspace == null)
+            if (selectedWorkspace == null)
             {
                 NavigationManager.NavigateTo("/workspaces?toast=1");
                 return;
             }
+
+            activeWorkspace = selectedWorkspace;
 
             await TimeZoneService.InitializeAsync();
 
@@ -131,12 +126,6 @@ else
 
         try
         {
-            if (activeWorkspace == null)
-            {
-                NavigationManager.NavigateTo("/workspaces?toast=1");
-                return;
-            }
-
             var response = await ApiClient.GetProjectsByWorkspaceIdAsync(activeWorkspace.WorkspaceId);
 
             if (response.IsSuccess && response.Data != null)
@@ -162,44 +151,16 @@ else
             TrapFocus = true,
             Modal = false
         };
-        var data = new AddEditWorkspaceDialogModel()
+        var data = new AddEditProjectDialogModel()
         {
-
+            WorkspaceId = activeWorkspace.WorkspaceId
         };
-        var dialog = await DialogService.ShowDialogAsync<AddEditWorkspaceDialog>(data, parameters);
+        var dialog = await DialogService.ShowDialogAsync<AddEditProjectDialog>(data, parameters);
         var result = await dialog.Result;
 
         if (result is not null && !result.Cancelled)
         {
             await RefreshProjects();
-        }
-    }
-
-    private async Task SetActiveWorkspace(GetProjectsByWorkspaceIdResponseItem item)
-    {
-        loadingWorkspaceId = item.Id;
-        loadingContext = "setactive";
-
-        try
-        {
-            activeWorkspace = new WorkspaceState()
-            {
-                WorkspaceId = item.Id,
-                WorkspaceName = item.Name
-            };
-
-            await WorkspaceStateService.SetSelectedWorkspaceAsync(new WorkspaceState()
-            {
-                WorkspaceId = item.Id,
-                WorkspaceName = item.Name
-            });
-
-            ToastService.ShowSuccess($"Active workspace set to '{item.Name}'.");
-        }
-        finally
-        {
-            loadingWorkspaceId = null;
-            loadingContext = null;
         }
     }
 
@@ -217,14 +178,15 @@ else
                 TrapFocus = true,
                 Modal = false
             };
-            var data = new AddEditWorkspaceDialogModel()
+            var data = new AddEditProjectDialogModel()
             {
                 Id = item.Id,
+                WorkspaceId = activeWorkspace.WorkspaceId,
                 Name = item.Name,
                 Description = item.Description
             };
 
-            dialog = await DialogService.ShowDialogAsync<AddEditWorkspaceDialog>(data, parameters);
+            dialog = await DialogService.ShowDialogAsync<AddEditProjectDialog>(data, parameters);
         }
         finally
         {

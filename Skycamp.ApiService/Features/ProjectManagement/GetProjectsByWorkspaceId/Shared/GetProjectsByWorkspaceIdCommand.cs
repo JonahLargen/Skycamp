@@ -41,6 +41,7 @@ public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjects
                 Name = pu.Project.Name,
                 Description = pu.Project.Description,
                 RoleName = pu.RoleName,
+                IsAllAccess = pu.Project.IsAllAccess,
                 CreateUserId = pu.Project.CreateUserId,
                 CreateUserDisplayName = pu.Project.CreateUser != null ? pu.Project.CreateUser.DisplayName ?? pu.Project.CreateUser.UserName : null,
                 CreatedUtc = pu.Project.CreatedUtc,
