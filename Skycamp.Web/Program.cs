@@ -19,7 +19,9 @@ if (string.IsNullOrEmpty(auth0Domain) || string.IsNullOrEmpty(auth0ClientId) || 
     throw new InvalidOperationException("Auth0 configuration is missing. Please ensure Auth0:Domain, Auth0:ClientId, Auth0:ClientSecret, and Auth0:Audience are set in the configuration.");
 }
 
+//General services
 builder.Services.AddScoped<WorkspaceStateService>();
+builder.Services.AddScoped<TimeZoneService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<AccessTokenHandler>();

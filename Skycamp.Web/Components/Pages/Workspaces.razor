@@ -6,6 +6,7 @@
 @inject IToastService ToastService
 @inject IDialogService DialogService
 @inject WorkspaceStateService WorkspaceStateService
+@inject TimeZoneService TimeZoneService
 
 <PageTitle>Workspaces</PageTitle>
 
@@ -46,7 +47,7 @@ else
                 <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
                 <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" />
                 <PropertyColumn Property="@(p => p.RoleName)" Sortable="true" Title="Your Role" />
-                <PropertyColumn Property="@(p => p.CreatedUtc)" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created (UTC)" />
+                <PropertyColumn Property="@(p => TimeZoneService.ConvertFromUtc(p.CreatedUtc))" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created" />
                 <TemplateColumn Title="Is Active Workspace?">
                     @if (context.Id == activeWorkspace?.WorkspaceId)
                     {
@@ -97,6 +98,8 @@ else
     {
         if (firstRender)
         {
+            await TimeZoneService.InitializeAsync();
+
             activeWorkspace = await WorkspaceStateService.GetWorkspaceAsync();
 
             var response = await ApiClient.GetWorkspacesAsync();
