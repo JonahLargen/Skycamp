@@ -7,11 +7,13 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Welcome to sky camp.</h1>
+<h1>Welcome to Skycamp.</h1>
 
 @if (!isAuthenticated)
 {
-    <button class="btn btn-primary" @onclick="Login">Log In</button>
+    <FluentButton Appearance="Appearance.Accent" OnClick="Login">
+        Login
+    </FluentButton>
 }
 else
 {

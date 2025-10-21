@@ -1,0 +1,269 @@
+﻿@page "/workspaces"
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@inject ApplicationApiClient ApiClient
+@inject IToastService ToastService
+@inject IDialogService DialogService
+@inject WorkspaceStateService WorkspaceStateService
+@inject TimeZoneService TimeZoneService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+<PageTitle>Workspaces</PageTitle>
+
+<h1>Workspaces</h1>
+
+@if (workspaces == null)
+{
+    <FluentStack Orientation="Orientation.Vertical">
+        @for (int i = 0; i < 5; i++)
+        {
+            <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="40px" Shimmer="true" />
+        }
+    </FluentStack>
+}
+else
+{
+    <FluentStack Orientation="Orientation.Vertical">
+        <FluentStack>
+            <FluentButton Loading=@refreshLoading IconStart="@(new Icons.Regular.Size16.ArrowRedo())" Appearance="Appearance.Neutral" OnClick="RefreshWorkspaces">
+                Refresh
+            </FluentButton>
+
+            <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" Appearance="Appearance.Accent" OnClick="AddWorkspace">
+                Add
+            </FluentButton>
+        </FluentStack>
+
+        @if (workspaces.Count == 0)
+        {
+            <FluentMessageBar Title="No Workspaces Found" Intent="MessageIntent.Warning" AllowDismiss=false FadeIn=false>
+                You currently have no workspaces. Consider creating one to get started!
+            </FluentMessageBar>
+        }
+        else
+        {
+            <FluentDataGrid Items="@workspaces.AsQueryable()" Style="width: 100%;" MultiLine="true" Loading="@gridLoading">
+               @*  <PropertyColumn Property="@(p => p.Id.ToString().ToUpper())" Sortable="true" Title="Workspace Id" /> *@
+                <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" Style="align-content: center;" />
+                <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" Style="align-content: center;" />
+                <PropertyColumn Property="@(p => p.RoleName)" Sortable="true" Title="Your Role" Style="align-content: center;" />
+                <PropertyColumn Property="@(p => TimeZoneService.ConvertFromUtc(p.CreatedUtc))" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created" Style="align-content: center;" />
+                <TemplateColumn Title="Is Workspace Selected?" Style="align-content: center;">
+                    @if (context.Id == activeWorkspace?.WorkspaceId)
+                    {
+                        <FluentBadge Appearance="Appearance.Accent">Yes</FluentBadge>
+                    }
+                    else
+                    {
+                        <FluentBadge Appearance="Appearance.Neutral">No</FluentBadge>
+                    }
+                </TemplateColumn>
+                <TemplateColumn Title="Actions" Style="align-content: center;">
+                    <FluentStack>
+                        @if (context is { RoleName: "Owner" or "Admin" })
+                        {
+                            <FluentButton IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Neutral" OnClick="@(async () => await EditWorkspace(context))">
+                                Edit
+                            </FluentButton>
+                        }
+                        else
+                        {
+                            <FluentButton Disabled=@true Title="You must be an owner or admin of a workspace in order to edit it" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Neutral">
+                                Edit
+                            </FluentButton>
+                        }
+
+                        @if (context.Id != activeWorkspace?.WorkspaceId)
+                        {
+                            <FluentButton Loading="@(loadingWorkspaceId == context.Id && loadingContext == "setactive")" IconStart="@(new Icons.Regular.Size16.ArrowRight())" Appearance="Appearance.Neutral" OnClick="@(async () => await SetActiveWorkspace(context))">
+                                Select
+                            </FluentButton>
+                        }
+                        else
+                        {
+                            <FluentButton Loading="@(loadingWorkspaceId == context.Id && loadingContext == "removeactive")" IconStart="@(new Icons.Regular.Size16.ArrowLeft())" Appearance="Appearance.Neutral" OnClick="@(async () => await RemoveActiveWorkspace(context))">
+                                Deselect
+                            </FluentButton>
+                        }
+                    </FluentStack>
+                </TemplateColumn>
+            </FluentDataGrid>
+        }
+    </FluentStack>
+}
+
+@code {
+    private List<GetWorkspacesResponseItem>? workspaces;
+    private bool refreshLoading = false;
+    private WorkspaceState? activeWorkspace;
+    private bool gridLoading = false;
+    private Guid? loadingWorkspaceId = null;
+    private string? loadingContext = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+            var query = QueryHelpers.ParseQuery(uri.Query);
+
+            if (query.TryGetValue("toast", out var toastValue) && toastValue == "1")
+            {
+                ToastService.ShowWarning("No workspace has been selected. Please select a workspace before continuing with projects.");
+
+                var newUri = uri.GetLeftPart(UriPartial.Path);
+
+                await JS.InvokeVoidAsync("history.replaceState", new { }, null, newUri);
+            }
+
+            await TimeZoneService.InitializeAsync();
+
+            activeWorkspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
+
+            var response = await ApiClient.GetWorkspacesAsync();
+
+            if (response.IsSuccess && response.Data != null)
+            {
+                workspaces = response.Data.Workspaces;
+            }
+            else
+            {
+                ToastService.ShowError("Failed to load workspaces: " + response.ErrorMessage);
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshWorkspaces()
+    {
+        refreshLoading = true;
+        gridLoading = true;
+
+        try
+        {
+            var response = await ApiClient.GetWorkspacesAsync();
+
+            if (response.IsSuccess && response.Data != null)
+            {
+                workspaces = response.Data.Workspaces;
+            }
+            else
+            {
+                ToastService.ShowError("Failed to load workspaces: " + response.ErrorMessage);
+            }
+        }
+        finally
+        {
+            refreshLoading = false;
+            gridLoading = false;
+        }
+    }
+
+    private async Task AddWorkspace()
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new AddEditWorkspaceDialogModel()
+        {
+
+        };
+        var dialog = await DialogService.ShowDialogAsync<AddEditWorkspaceDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await RefreshWorkspaces();
+        }
+    }
+
+    private async Task SetActiveWorkspace(GetWorkspacesResponseItem item)
+    {
+        loadingWorkspaceId = item.Id;
+        loadingContext = "setactive";
+
+        try
+        {
+            activeWorkspace = new WorkspaceState()
+            {
+                WorkspaceId = item.Id,
+                WorkspaceName = item.Name
+            };
+
+            await WorkspaceStateService.SetSelectedWorkspaceAsync(new WorkspaceState()
+            {
+                WorkspaceId = item.Id,
+                WorkspaceName = item.Name
+            });
+
+            ToastService.ShowSuccess($"Active workspace set to '{item.Name}'.");
+        }
+        finally
+        {
+            loadingWorkspaceId = null;
+            loadingContext = null;
+        }
+    }
+
+    private async Task RemoveActiveWorkspace(GetWorkspacesResponseItem item)
+    {
+        loadingWorkspaceId = item.Id;
+        loadingContext = "setactive";
+
+        try
+        {
+            await WorkspaceStateService.RemoveSelectedWorkspaceAsync();
+
+            activeWorkspace = null;
+
+            ToastService.ShowSuccess($"Workspace '{item.Name}' no longer active.");
+        }
+        finally
+        {
+            loadingWorkspaceId = null;
+            loadingContext = null;
+        }
+    }
+
+    private async Task EditWorkspace(GetWorkspacesResponseItem item)
+    {
+        loadingWorkspaceId = item.Id;
+        loadingContext = "edit";
+
+        IDialogReference dialog;
+
+        try
+        {
+            var parameters = new DialogParameters()
+            {
+                TrapFocus = true,
+                Modal = false
+            };
+            var data = new AddEditWorkspaceDialogModel()
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Description = item.Description
+            };
+
+            dialog = await DialogService.ShowDialogAsync<AddEditWorkspaceDialog>(data, parameters);
+        }
+        finally
+        {
+            loadingWorkspaceId = null;
+            loadingContext = null;
+        }
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await RefreshWorkspaces();
+        }
+    }
+}

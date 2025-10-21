@@ -13,7 +13,11 @@ var db = sql.AddDatabase("database");
 
 var apiService = builder.AddProject<Projects.Skycamp_ApiService>("apiservice")
     .WithReference(db)
-    .WithHttpHealthCheck("/health");
+    .WithHttpHealthCheck("/health")
+    .WithEnvironment("Auth0__Domain", builder.Configuration["Auth0:Domain"])
+    .WithEnvironment("Auth0__ClientId", builder.Configuration["Auth0:ClientId"])
+    .WithEnvironment("Auth0__ClientSecret", builder.Configuration["Auth0:ClientSecret"])
+    .WithEnvironment("Auth0__Audience", builder.Configuration["Auth0:Audience"]);
 
 builder.AddProject<Projects.Skycamp_Web>("webfrontend")
     .WithExternalHttpEndpoints()
@@ -21,6 +25,10 @@ builder.AddProject<Projects.Skycamp_Web>("webfrontend")
     .WithReference(cache)
     .WaitFor(cache)
     .WithReference(apiService)
-    .WaitFor(apiService);
+    .WaitFor(apiService)
+    .WithEnvironment("Auth0__Domain", builder.Configuration["Auth0:Domain"])
+    .WithEnvironment("Auth0__ClientId", builder.Configuration["Auth0:ClientId"])
+    .WithEnvironment("Auth0__ClientSecret", builder.Configuration["Auth0:ClientSecret"])
+    .WithEnvironment("Auth0__Audience", builder.Configuration["Auth0:Audience"]);
 
 builder.Build().Run();

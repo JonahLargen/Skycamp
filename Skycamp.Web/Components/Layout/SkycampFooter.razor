@@ -1,0 +1,37 @@
+﻿
+@inject WorkspaceStateService WorkspaceStateService
+@inject ProtectedLocalStorage LocalStorage
+
+<a href="/workspaces">@(_activeWorkspace == null ? "No workspace selected" : $"Workspace: {_activeWorkspace.WorkspaceName}")</a>
+<FluentSpacer />
+<a href="https://learn.microsoft.com/en-us/aspnet/core/blazor" target="_blank">About Blazor</a>
+
+@code {
+    private WorkspaceState? _activeWorkspace;
+
+    protected override void OnInitialized()
+    {
+        WorkspaceStateService.OnChange += WorkspaceChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _activeWorkspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
+
+            StateHasChanged();
+        }
+    }
+
+    private void WorkspaceChanged(WorkspaceState? state)
+    {
+        _activeWorkspace = state;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        WorkspaceStateService.OnChange -= WorkspaceChanged;
+    }
+}

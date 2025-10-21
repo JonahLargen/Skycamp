@@ -1,0 +1,114 @@
+﻿@implements IDialogContentComponent<AddEditProjectDialogModel>
+
+@inject IToastService ToastService
+@inject ApplicationApiClient ApiClient
+
+<FluentEditForm Model="@Content" OnValidSubmit="SaveAsync">
+    <FluentDialogHeader ShowDismiss="true">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.WindowApps())" />
+            <FluentLabel Typo="Typography.PaneHeader">
+                @(Dialog.Instance.Parameters.Title != null ? Dialog.Instance.Parameters.Title : (Content.Id == null ? "Add New Project" : "Edit Project"))
+            </FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+
+    <FluentDialogBody>
+        <DataAnnotationsValidator />
+        @* <FluentValidationSummary /> *@
+
+        <FluentGrid>
+            <FluentGridItem xs="12">
+                <FluentTextField @bind-Value="@Content.Name" style="width: 100%;" Autofocus=true>Name:</FluentTextField>
+                <FluentValidationMessage For="@(() => Content.Name)" />
+            </FluentGridItem>
+            <FluentGridItem xs="12">
+                <FluentTextField @bind-Value="@Content.Description" style="width: 100%;">Description:</FluentTextField>
+                <FluentValidationMessage For="@(() => Content.Description)" />
+            </FluentGridItem>
+            <FluentGridItem xs="12">
+                <VerticalAlign>
+                    <FluentCheckbox @bind-Value="@Content.IsAllAccess">
+                        Is All Access?
+                    </FluentCheckbox>
+                    <FluentIcon Id="fiIsAllAccess" Value="@(new Icons.Regular.Size16.QuestionCircle())" />
+                </VerticalAlign>
+                <FluentTooltip Anchor="fiIsAllAccess">
+                    If yes, all users in the workspace can join this project without being invited.
+                </FluentTooltip>
+                <FluentValidationMessage For="@(() => Content.IsAllAccess)" />
+            </FluentGridItem>
+        </FluentGrid>
+
+        <FluentDialogFooter>
+            <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading=@saveLoading>Save</FluentButton>
+            <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+        </FluentDialogFooter>
+    </FluentDialogBody>
+</FluentEditForm>
+
+@code {
+    [Parameter]
+    public AddEditProjectDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool saveLoading = false;
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            saveLoading = true;
+
+            if (Content.Id == null)
+            {
+                var result = await ApiClient.CreateProjectAsync(Content.WorkspaceId, new CreateProjectRequest
+                {
+                    Name = Content.Name,
+                    Description = Content.Description,
+                    IsAllAccess = Content.IsAllAccess
+                });
+
+                if (!result.IsSuccess)
+                {
+                    ToastService.ShowError($"Failed to create project: {result.ErrorMessage}");
+                }
+                else
+                {
+                    ToastService.ShowSuccess($"Project '{Content.Name}' created successfully.");
+                    await Dialog.CloseAsync();
+                }
+            }
+            else
+            {
+                var result = await ApiClient.EditProjectAsync(Content.WorkspaceId, Content.Id.Value, new EditProjectRequest
+                {
+                    Name = Content.Name,
+                    Description = Content.Description,
+                    IsAllAccess = Content.IsAllAccess
+                });
+
+                if (!result.IsSuccess)
+                {
+                    ToastService.ShowError($"Failed to update project: {result.ErrorMessage}");
+                }
+                else
+                {
+                    ToastService.ShowSuccess($"Project '{Content.Name}' updated successfully.");
+                    await Dialog.CloseAsync();
+                }
+            }
+        }
+        finally
+        {
+            saveLoading = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CloseAsync(DialogResult.Cancel());
+    }
+}

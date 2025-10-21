@@ -8,11 +8,6 @@ public class GetForecastsEndpoint : EndpointWithMapping<GetForecastsRequest, Get
 {
     public ApplicationDbContext Context { get; set; } = null!;
 
-    public GetForecastsEndpoint()
-    {
-        
-    }
-
     public override void Configure()
     {
         Get("/weather/forecasts");
