@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
 using Skycamp.ApiService.Data.Identity;
+using Skycamp.ApiService.Data.Messaging;
 using Skycamp.ApiService.Data.ProjectManagement;
+using Skycamp.Contracts.Events;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.CreateProject.Shared;
 
@@ -66,6 +68,30 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
             JoinedUtc = DateTime.UtcNow
         }, ct);
 
+        var outboxMessage = OutboxMessage.CreateWithGuidId(new ProjectCreatedEventV1()
+        {
+            CreatedUtc = projectResult.Entity.CreatedUtc,
+            Description = projectResult.Entity.Description,
+            Id = projectResult.Entity.Id,
+            IsAllAccess = projectResult.Entity.IsAllAccess,
+            LastUpdatedUtc = projectResult.Entity.LastUpdatedUtc,
+            Name = projectResult.Entity.Name,
+            WorkspaceId = projectResult.Entity.WorkspaceId,
+            CreateUserId = createUser.Id,
+            CreateUserDisplayName = createUser.DisplayName,
+            Users =
+            [
+                new ProjectCreatedEventV1.User
+                {
+                    UserId = createUser.Id,
+                    UserDisplayName = createUser.DisplayName,
+                    RoleName = "Owner",
+                    JoinedUtc = DateTime.UtcNow
+                }
+            ]
+        });
+
+        await _dbContext.OutboxMessages.AddAsync(outboxMessage, ct);
         await _dbContext.SaveChangesAsync(ct);
 
         return new CreateProjectResult

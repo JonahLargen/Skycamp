@@ -1,7 +1,6 @@
 ﻿using FastEndpoints;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
 using Skycamp.ApiService.Data.Identity;
 using Skycamp.ApiService.Data.ProjectManagement;
