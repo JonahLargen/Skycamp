@@ -12,6 +12,7 @@ using Skycamp.ApiService.Common.Tracing;
 using Skycamp.ApiService.Common.Validation;
 using Skycamp.ApiService.Data;
 using Skycamp.ApiService.Data.Identity;
+using Skycamp.ApiService.Hubs;
 using Skycamp.ApiService.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,9 @@ builder.Services.AddHangfire(configuration => configuration
     .UseRecommendedSerializerSettings()
     .UseSqlServerStorage(builder.Configuration.GetConnectionString("sqldb")));
 builder.Services.AddHangfireServer();
+
+//SignalR
+builder.Services.AddSignalR();
 
 // Configure Identity to use ApplicationUser and ApplicationDbContext
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -114,6 +118,7 @@ builder.AddAzureServiceBusClient(connectionName: "sbemulatorns");
 //Hosted Services
 builder.Services.AddHostedService<OutboxSubscriber1>();
 builder.Services.AddHostedService<OutboxSubscriber2>();
+builder.Services.AddHostedService<FeedSubscriber>();
 
 var app = builder.Build();
 
@@ -152,5 +157,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapDefaultEndpoints();
+
+//Map Hubs
+app.MapHub<FeedHub>("/hubs/feed");
 
 app.Run();
