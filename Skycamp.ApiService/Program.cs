@@ -2,14 +2,17 @@ using FastEndpoints;
 using FastEndpoints.Security;
 using FastEndpoints.Swagger;
 using FluentValidation;
+using Hangfire;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Skycamp.ApiService.BackgroundServices;
 using Skycamp.ApiService.Common.Logging;
 using Skycamp.ApiService.Common.Tracing;
 using Skycamp.ApiService.Common.Validation;
 using Skycamp.ApiService.Data;
 using Skycamp.ApiService.Data.Identity;
+using Skycamp.ApiService.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +26,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
     options.UseSqlServer(connectionString);
 });
+
+//Hangfire
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("sqldb")));
+builder.Services.AddHangfireServer();
 
 // Configure Identity to use ApplicationUser and ApplicationDbContext
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -97,6 +108,13 @@ builder.Services.AddCommandMiddleware(c =>
     c.Register(typeof(CommandValidationMiddleware<,>));
 });
 
+//Service Bus
+builder.AddAzureServiceBusClient(connectionName: "sbemulatorns");
+
+//Hosted Services
+builder.Services.AddHostedService<OutboxSubscriber1>();
+builder.Services.AddHostedService<OutboxSubscriber2>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -117,6 +135,16 @@ app.UseFastEndpoints(c =>
         ep.PostProcessor<GlobalLoggingPostProcessor>(Order.After);
     };
 });
+
+app.UseHangfireDashboard();
+
+var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
+
+recurringJobManager.AddOrUpdate<OutboxPublisherJob>(
+    "OutboxPublisherJob",
+    job => job.PublishUnprocessedMessagesAsync(),
+    "*/5 * * * * *"
+);
 
 if (app.Environment.IsDevelopment())
 {

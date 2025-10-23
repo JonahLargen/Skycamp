@@ -24,16 +24,39 @@ var db = sql.AddDatabase("database");
 var serviceBus = builder.AddAzureServiceBus(isDevelopment ? "sbemulatorns" : "messaging")
     .RunAsEmulator(config =>
     {
+        config.WithConfiguration(node =>
+        {
+            var userConfig = node["UserConfig"]!;
+            var ns = userConfig["Namespaces"]![0]!;
+            var topics = ns["Topics"]!.AsArray();
+
+            foreach (var topic in topics)
+            {
+                if ((string)topic!["Name"]! == "outbox")
+                {
+                    var topicProperties = topic["Properties"]!;
+
+                    topicProperties["RequiresDuplicateDetection"] = true;
+                    topicProperties["DuplicateDetectionHistoryTimeWindow"] = "PT5M";
+                    topicProperties["DefaultMessageTimeToLive"] = "PT1H";
+                }
+            }
+        });
         config.WithLifetime(ContainerLifetime.Persistent);
     });
 
-serviceBus.AddServiceBusTopic("outbox")
-    .AddServiceBusSubscription("outbox-subscription");
+var outboxTopic = serviceBus.AddServiceBusTopic("outbox");
+var outboxSubscription1 = outboxTopic.AddServiceBusSubscription("outbox-subscription-1");
+var outboxSubscription2 = outboxTopic.AddServiceBusSubscription("outbox-subscription-2");
 
 var apiService = builder.AddProject<Projects.Skycamp_ApiService>("apiservice")
     .WithReference(db)
+    .WaitFor(db)
     .WithReference(cache)
-    //.WithHttpHealthCheck("/health")
+    .WaitFor(cache)
+    .WithReference(serviceBus)
+    .WaitFor(serviceBus)
+    .WithHttpHealthCheck("/health")
     .WithEnvironment("Auth0__Domain", builder.Configuration["Auth0:Domain"])
     .WithEnvironment("Auth0__ClientId", builder.Configuration["Auth0:ClientId"])
     .WithEnvironment("Auth0__ClientSecret", builder.Configuration["Auth0:ClientSecret"])
@@ -41,7 +64,7 @@ var apiService = builder.AddProject<Projects.Skycamp_ApiService>("apiservice")
 
 builder.AddProject<Projects.Skycamp_Web>("webfrontend")
     .WithExternalHttpEndpoints()
-    //.WithHttpHealthCheck("/health")
+    .WithHttpHealthCheck("/health")
     .WithReference(cache)
     .WithReference(apiService)
     .WaitFor(apiService)
