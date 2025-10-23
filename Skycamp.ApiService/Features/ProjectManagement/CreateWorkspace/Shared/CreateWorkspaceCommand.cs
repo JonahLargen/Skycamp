@@ -1,7 +1,6 @@
 ﻿using FastEndpoints;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
 using Skycamp.ApiService.Data.Identity;
 using Skycamp.ApiService.Data.ProjectManagement;
@@ -32,7 +31,6 @@ public class CreateWorkspaceCommandHandler : CommandHandler<CreateWorkspaceComma
 
         var result = await _dbContext.Workspaces.AddAsync(new Workspace
         {
-            Id = Guid.CreateVersion7(),
             Name = command.Name.Trim(),
             Description = command.Description?.Trim(),
             CreateUserId = createUser.Id,

@@ -1,18 +1,61 @@
-var builder = DistributedApplication.CreateBuilder(args);
+using Microsoft.Extensions.Hosting;
 
-var cache = builder.AddRedis("cache");
+var builder = DistributedApplication.CreateBuilder(args);
+var isDevelopment = builder.Environment.IsDevelopment();
+
+var cache = builder.AddRedis("cache")
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithRedisInsight(config =>
+    {
+        config.WithLifetime(ContainerLifetime.Persistent);
+    });
 
 #pragma warning disable ASPIREPROXYENDPOINTS001
+
 var sql = builder.AddSqlServer("sqldb")
     .WithLifetime(ContainerLifetime.Persistent)
     .WithEndpointProxySupport(false) //https://github.com/dotnet/aspire/issues/7046
     .WithDataVolume();
+
 #pragma warning restore ASPIREPROXYENDPOINTS001
 
 var db = sql.AddDatabase("database");
 
+var serviceBus = builder.AddAzureServiceBus(isDevelopment ? "sbemulatorns" : "messaging")
+    .RunAsEmulator(config =>
+    {
+        config.WithConfiguration(node =>
+        {
+            var userConfig = node["UserConfig"]!;
+            var ns = userConfig["Namespaces"]![0]!;
+            var topics = ns["Topics"]!.AsArray();
+
+            foreach (var topic in topics)
+            {
+                if ((string)topic!["Name"]! == "outbox")
+                {
+                    var topicProperties = topic["Properties"]!;
+
+                    topicProperties["RequiresDuplicateDetection"] = true;
+                    topicProperties["DuplicateDetectionHistoryTimeWindow"] = "PT5M";
+                    topicProperties["DefaultMessageTimeToLive"] = "PT1H";
+                }
+            }
+        });
+        config.WithLifetime(ContainerLifetime.Persistent);
+    });
+
+var outboxTopic = serviceBus.AddServiceBusTopic("outbox");
+var outboxSubscription1 = outboxTopic.AddServiceBusSubscription("outbox-subscription-1");
+var outboxSubscription2 = outboxTopic.AddServiceBusSubscription("outbox-subscription-2");
+
 var apiService = builder.AddProject<Projects.Skycamp_ApiService>("apiservice")
     .WithReference(db)
+    .WaitFor(db)
+    .WithReference(cache)
+    .WaitFor(cache)
+    .WithReference(serviceBus)
+    .WaitFor(serviceBus)
     .WithHttpHealthCheck("/health")
     .WithEnvironment("Auth0__Domain", builder.Configuration["Auth0:Domain"])
     .WithEnvironment("Auth0__ClientId", builder.Configuration["Auth0:ClientId"])
@@ -23,7 +66,6 @@ builder.AddProject<Projects.Skycamp_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(cache)
-    .WaitFor(cache)
     .WithReference(apiService)
     .WaitFor(apiService)
     .WithEnvironment("Auth0__Domain", builder.Configuration["Auth0:Domain"])

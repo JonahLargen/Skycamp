@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Skycamp.ApiService.Data;
 
@@ -11,9 +12,11 @@ using Skycamp.ApiService.Data;
 namespace Skycamp.ApiService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251021032350_Outbox")]
+    partial class Outbox
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -332,22 +335,25 @@ namespace Skycamp.ApiService.Migrations
 
             modelBuilder.Entity("Skycamp.ApiService.Data.ProjectManagement.ProjectUser", b =>
                 {
-                    b.Property<Guid>("ProjectId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("JoinedUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("RoleName")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("ProjectId", "UserId");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.HasIndex("JoinedUtc");
+                    b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
 
@@ -419,11 +425,9 @@ namespace Skycamp.ApiService.Migrations
 
             modelBuilder.Entity("Skycamp.ApiService.Data.ProjectManagement.WorkspaceUser", b =>
                 {
-                    b.Property<Guid>("WorkspaceId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("JoinedUtc")
                         .HasColumnType("datetime2");
@@ -432,11 +436,20 @@ namespace Skycamp.ApiService.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("WorkspaceId", "UserId");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("RoleName");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("WorkspaceUsers", "projectmgmt");
                 });

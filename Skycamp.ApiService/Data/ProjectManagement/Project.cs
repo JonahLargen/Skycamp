@@ -1,4 +1,7 @@
-﻿using Skycamp.ApiService.Data.Identity;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.ValueGeneration;
+using Skycamp.ApiService.Data.Identity;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -33,4 +36,18 @@ public class Project
 
     [ForeignKey(nameof(CreateUserId))]
     public ApplicationUser? CreateUser { get; set; } = null!;
+}
+
+public class ProjectConfiguration : IEntityTypeConfiguration<Project>
+{
+    public void Configure(EntityTypeBuilder<Project> builder)
+    {
+        builder.Property(m => m.Id)
+           .HasValueGenerator<SequentialGuidValueGenerator>();
+
+        builder.HasOne(p => p.CreateUser)
+            .WithMany()
+            .HasForeignKey(p => p.CreateUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
 }

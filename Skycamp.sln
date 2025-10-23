@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skycamp.Web", "Skycamp.Web\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skycamp.Tests", "Skycamp.Tests\Skycamp.Tests.csproj", "{828EB59E-2C3E-8526-06AD-A0479D22D95B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skycamp.Contracts", "Skycamp.Contracts\Skycamp.Contracts.csproj", "{4DDC0CE2-7BD7-47AF-A2A3-60C2A20065E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{828EB59E-2C3E-8526-06AD-A0479D22D95B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{828EB59E-2C3E-8526-06AD-A0479D22D95B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{828EB59E-2C3E-8526-06AD-A0479D22D95B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DDC0CE2-7BD7-47AF-A2A3-60C2A20065E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DDC0CE2-7BD7-47AF-A2A3-60C2A20065E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DDC0CE2-7BD7-47AF-A2A3-60C2A20065E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DDC0CE2-7BD7-47AF-A2A3-60C2A20065E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
