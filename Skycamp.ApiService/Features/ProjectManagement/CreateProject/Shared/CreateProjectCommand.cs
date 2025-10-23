@@ -7,6 +7,7 @@ using Skycamp.ApiService.Data.Identity;
 using Skycamp.ApiService.Data.Messaging;
 using Skycamp.ApiService.Data.ProjectManagement;
 using Skycamp.Contracts.Events;
+using System.Diagnostics;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.CreateProject.Shared;
 
@@ -50,7 +51,6 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
 
         var projectResult = await _dbContext.Projects.AddAsync(new Project
         {
-            Id = Guid.CreateVersion7(),
             WorkspaceId = command.WorkspaceId,
             Name = command.Name.Trim(),
             Description = command.Description?.Trim(),
@@ -68,7 +68,7 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
             JoinedUtc = DateTime.UtcNow
         }, ct);
 
-        var outboxMessage = OutboxMessage.CreateWithGuidId(new ProjectCreatedEventV1()
+        var outboxMessage = OutboxMessage.Create(new ProjectCreatedEventV1()
         {
             CreatedUtc = projectResult.Entity.CreatedUtc,
             Description = projectResult.Entity.Description,

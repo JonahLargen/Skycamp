@@ -1,5 +1,6 @@
-﻿using Skycamp.ApiService.Data.Identity;
-using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Skycamp.ApiService.Data.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Skycamp.ApiService.Data.ProjectManagement;
@@ -7,9 +8,6 @@ namespace Skycamp.ApiService.Data.ProjectManagement;
 [Table("ProjectUsers", Schema = "projectmgmt")]
 public class ProjectUser
 {
-    [Key]
-    public Guid Id { get; set; }
-
     public Guid ProjectId { get; set; }
 
     public string UserId { get; set; } = null!;
@@ -26,4 +24,17 @@ public class ProjectUser
 
     [ForeignKey(nameof(RoleName))]
     public ProjectRole Role { get; set; } = null!;
+}
+
+public class ProjectUserConfiguration : IEntityTypeConfiguration<ProjectUser>
+{
+    public void Configure(EntityTypeBuilder<ProjectUser> builder)
+    {
+        builder.HasKey(pu => new { pu.ProjectId, pu.UserId });
+
+        builder.HasIndex(pu => pu.ProjectId);
+        builder.HasIndex(pu => pu.UserId);
+        builder.HasIndex(pu => pu.RoleName);
+        builder.HasIndex(pu => pu.JoinedUtc);
+    }
 }

@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data.Identity;
 using Skycamp.ApiService.Data.Messaging;
 using Skycamp.ApiService.Data.ProjectManagement;
-using System.Reflection.Emit;
 
 namespace Skycamp.ApiService.Data;
 
@@ -26,35 +25,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<WorkspaceRole>().HasData(
-            new WorkspaceRole { Name = "Owner" },
-            new WorkspaceRole { Name = "Admin" },
-            new WorkspaceRole { Name = "Member" },
-            new WorkspaceRole { Name = "Viewer" }
-        );
-
-        modelBuilder.Entity<ProjectRole>().HasData(
-            new ProjectRole { Name = "Owner" },
-            new ProjectRole { Name = "Admin" },
-            new ProjectRole { Name = "Member" },
-            new ProjectRole { Name = "Viewer" }
-        );
-
-        modelBuilder.Entity<Workspace>()
-            .HasOne(w => w.CreateUser)
-            .WithMany()
-            .HasForeignKey(w => w.CreateUserId)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        modelBuilder.Entity<Project>()
-            .HasOne(p => p.CreateUser)
-            .WithMany()
-            .HasForeignKey(p => p.CreateUserId)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        modelBuilder.Entity<OutboxMessage>()
-            .HasIndex(m => m.OccurredOnUtc)
-            .HasDatabaseName("IX_Outbox_Unprocessed")
-            .HasFilter("[ProcessedOnUtc] IS NULL");
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }

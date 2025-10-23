@@ -1,9 +1,8 @@
 ﻿namespace Skycamp.Contracts.Events;
 
-public class ProjectCreatedEventV1 : EventBase<Guid>
+public class ProjectCreatedEventV1
 {
-    public override int Version => 1;
-    public override Guid Id { get; init; }
+    public Guid Id { get; init; }
     public Guid WorkspaceId { get; init; }
     public string Name { get; init; } = null!;
     public string? Description { get; init; } = null!;

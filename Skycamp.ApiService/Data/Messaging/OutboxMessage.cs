@@ -1,5 +1,8 @@
-﻿using Newtonsoft.Json;
-using Skycamp.Contracts.Events;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.ValueGeneration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -19,39 +22,29 @@ public class OutboxMessage
 
     public DateTime? ProcessedOnUtc { get; set; }
 
-    public static OutboxMessage Create<TEvent, TId>(TEvent @event) 
-        where TEvent : EventBase<TId>
+    public static OutboxMessage Create<TEvent>(TEvent @event)
     {
         return new OutboxMessage
         {
-            Id = @event.EventId,
             Type = typeof(TEvent).FullName!,
-            Payload = JsonConvert.SerializeObject(@event),
+            Payload = JsonConvert.SerializeObject(@event, new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            }),
             OccurredOnUtc = DateTime.UtcNow
         };
     }
+}
 
-    public static OutboxMessage CreateWithGuidId<TEvent>(TEvent @event)
-        where TEvent : EventBase<Guid>
+public class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
+{
+    public void Configure(EntityTypeBuilder<OutboxMessage> builder)
     {
-        return Create<TEvent, Guid>(@event);
-    }
+        builder.Property(m => m.Id)
+            .HasValueGenerator<SequentialGuidValueGenerator>();
 
-    public static OutboxMessage CreateWithIntId<TEvent>(TEvent @event)
-        where TEvent : EventBase<int>
-    {
-        return Create<TEvent, int>(@event);
-    }
-
-    public static OutboxMessage CreateWithLongId<TEvent>(TEvent @event)
-        where TEvent : EventBase<long>
-    {
-        return Create<TEvent, long>(@event);
-    }
-
-    public static OutboxMessage CreateWithStringId<TEvent>(TEvent @event)
-        where TEvent : EventBase<string>
-    {
-        return Create<TEvent, string>(@event);
+        builder.HasIndex(m => m.OccurredOnUtc)
+            .HasDatabaseName("IX_Outbox_Unprocessed")
+            .HasFilter("[ProcessedOnUtc] IS NULL");
     }
 }

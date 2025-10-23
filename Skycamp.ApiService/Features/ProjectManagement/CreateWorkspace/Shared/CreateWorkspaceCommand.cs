@@ -31,7 +31,6 @@ public class CreateWorkspaceCommandHandler : CommandHandler<CreateWorkspaceComma
 
         var result = await _dbContext.Workspaces.AddAsync(new Workspace
         {
-            Id = Guid.CreateVersion7(),
             Name = command.Name.Trim(),
             Description = command.Description?.Trim(),
             CreateUserId = createUser.Id,
