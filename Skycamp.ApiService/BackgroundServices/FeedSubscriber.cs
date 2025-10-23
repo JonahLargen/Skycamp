@@ -28,7 +28,7 @@ public class FeedSubscriber : BackgroundService
     {
         var body = args.Message.Body.ToString();
 
-        await _hubContext.Clients.All.SendAsync("ReceiveFeedMessage", body);
+        await _hubContext.Clients.All.SendAsync("ReceiveMessage", body);
 
         await args.CompleteMessageAsync(args.Message);
     }

@@ -1,0 +1,93 @@
+﻿@page "/feed"
+@rendermode InteractiveServer
+
+@inject TimeZoneService TimeZoneService
+
+<PageTitle>Feed</PageTitle>
+
+<h3>Live Feed</h3>
+
+@if (messages.Count == 0)
+{
+    <FluentMessageBar Intent="MessageIntent.Info" AllowDismiss="false">
+        Nothing yet. Waiting for a message...
+    </FluentMessageBar>
+}
+else
+{
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+        @foreach (var msg in messages)
+        {
+            <FluentCard>
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Chat())" Color="Color.Accent" />
+                    <FluentLabel>@msg</FluentLabel>
+                </FluentStack>
+            </FluentCard>
+        }
+    </FluentStack>
+}
+
+@code {
+    private List<string> messages = new();
+    private HubConnection? _connection;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await TimeZoneService.InitializeAsync();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var url = Environment.GetEnvironmentVariable("services__apiservice__https__0") ?? throw new InvalidOperationException("Api Service URL is missing in service discovery");
+
+        _connection = new HubConnectionBuilder()
+             .WithUrl($"{url}/hubs/feed")
+             .WithAutomaticReconnect()
+             .Build();
+
+        _connection.On<string>("ReceiveMessage", (message) =>
+        {
+            var payload = JsonSerializer.Deserialize<ProjectPayload>(message);
+
+            if (payload == null)
+            {
+                return;
+            }
+
+            var output = $"{payload.CreateUserDisplayName} created project {payload.Name} at {TimeZoneService.ConvertFromUtc(payload.CreatedUtc).ToString("MM/dd/yyyy hh:mm:ss tt")}";
+
+            messages.Add(output);
+
+            InvokeAsync(StateHasChanged);
+        });
+
+        await _connection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_connection != null)
+        {
+            await _connection.DisposeAsync();
+        }
+    }
+
+    public class ProjectPayload
+    {
+        [JsonPropertyName("name")]
+
+        public string Name { get; set; } = null!;
+
+        [JsonPropertyName("createUserDisplayName")]
+
+        public string CreateUserDisplayName { get; set; } = null!;
+
+        [JsonPropertyName("createdUtc")]
+
+        public DateTime CreatedUtc { get; set; }
+    }
+}
