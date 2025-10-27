@@ -73,6 +73,19 @@ else
                                 Edit
                             </FluentButton>
                         }
+
+                        @if (context is { RoleName: "Owner" or "Admin" })
+                        {
+                            <FluentButton IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral" OnClick="@(async () => await DeleteProject(context))">
+                                Delete
+                            </FluentButton>
+                        }
+                        else
+                        {
+                            <FluentButton Disabled=@true Title="You must be an owner or admin of a project in order to delete it" IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral">
+                                Delete
+                            </FluentButton>
+                        }
                     </FluentStack>
                 </TemplateColumn>
             </FluentDataGrid>
@@ -85,8 +98,6 @@ else
     private bool refreshLoading = false;
     private WorkspaceState activeWorkspace = null!;
     private bool gridLoading = false;
-    private Guid? loadingWorkspaceId = null;
-    private string? loadingContext = null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -166,34 +177,44 @@ else
 
     private async Task EditProject(GetProjectsByWorkspaceIdResponseItem item)
     {
-        loadingWorkspaceId = item.Id;
-        loadingContext = "edit";
-
-        IDialogReference dialog;
-
-        try
+        var parameters = new DialogParameters()
         {
-            var parameters = new DialogParameters()
-            {
-                TrapFocus = true,
-                Modal = false
-            };
-            var data = new AddEditProjectDialogModel()
-            {
-                Id = item.Id,
-                WorkspaceId = activeWorkspace.WorkspaceId,
-                Name = item.Name,
-                Description = item.Description,
-                IsAllAccess = item.IsAllAccess
-            };
-
-            dialog = await DialogService.ShowDialogAsync<AddEditProjectDialog>(data, parameters);
-        }
-        finally
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new AddEditProjectDialogModel()
         {
-            loadingWorkspaceId = null;
-            loadingContext = null;
+            Id = item.Id,
+            WorkspaceId = activeWorkspace.WorkspaceId,
+            Description = item.Description,
+            Name = item.Name,
+            IsAllAccess = item.IsAllAccess
+        };
+
+        var dialog = await DialogService.ShowDialogAsync<AddEditProjectDialog>(data, parameters);
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await RefreshProjects();
         }
+    }
+
+    private async Task DeleteProject(GetProjectsByWorkspaceIdResponseItem item)
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new DeleteProjectDialogModel()
+        {
+            ProjectId = item.Id,
+            WorkspaceId = activeWorkspace.WorkspaceId
+        };
+
+        var dialog = await DialogService.ShowDialogAsync<DeleteProjectDialog>(data, parameters);
 
         var result = await dialog.Result;
 

@@ -45,7 +45,6 @@ else
         else
         {
             <FluentDataGrid Items="@workspaces.AsQueryable()" Style="width: 100%;" MultiLine="true" Loading="@gridLoading">
-               @*  <PropertyColumn Property="@(p => p.Id.ToString().ToUpper())" Sortable="true" Title="Workspace Id" /> *@
                 <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" Style="align-content: center;" />
                 <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" Style="align-content: center;" />
                 <PropertyColumn Property="@(p => p.RoleName)" Sortable="true" Title="Your Role" Style="align-content: center;" />
@@ -75,15 +74,28 @@ else
                             </FluentButton>
                         }
 
+                        @if (context is { RoleName: "Owner" or "Admin" })
+                        {
+                            <FluentButton IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral" OnClick="@(async () => await DeleteWorkspace(context))">
+                                Delete
+                            </FluentButton>
+                        }
+                        else
+                        {
+                            <FluentButton Disabled=@true Title="You must be an owner or admin of a workspace in order to delete it" IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral">
+                                Delete
+                            </FluentButton>
+                        }
+
                         @if (context.Id != activeWorkspace?.WorkspaceId)
                         {
-                            <FluentButton Loading="@(loadingWorkspaceId == context.Id && loadingContext == "setactive")" IconStart="@(new Icons.Regular.Size16.ArrowRight())" Appearance="Appearance.Neutral" OnClick="@(async () => await SetActiveWorkspace(context))">
+                            <FluentButton IconStart="@(new Icons.Regular.Size16.ArrowRight())" Appearance="Appearance.Neutral" OnClick="@(async () => await SetActiveWorkspace(context))">
                                 Select
                             </FluentButton>
                         }
                         else
                         {
-                            <FluentButton Loading="@(loadingWorkspaceId == context.Id && loadingContext == "removeactive")" IconStart="@(new Icons.Regular.Size16.ArrowLeft())" Appearance="Appearance.Neutral" OnClick="@(async () => await RemoveActiveWorkspace(context))">
+                            <FluentButton IconStart="@(new Icons.Regular.Size16.ArrowLeft())" Appearance="Appearance.Neutral" OnClick="@(async () => await RemoveActiveWorkspace(context))">
                                 Deselect
                             </FluentButton>
                         }
@@ -99,8 +111,6 @@ else
     private bool refreshLoading = false;
     private WorkspaceState? activeWorkspace;
     private bool gridLoading = false;
-    private Guid? loadingWorkspaceId = null;
-    private string? loadingContext = null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -184,85 +194,81 @@ else
 
     private async Task SetActiveWorkspace(GetWorkspacesResponseItem item)
     {
-        loadingWorkspaceId = item.Id;
-        loadingContext = "setactive";
-
-        try
+        activeWorkspace = new WorkspaceState()
         {
-            activeWorkspace = new WorkspaceState()
-            {
-                WorkspaceId = item.Id,
-                WorkspaceName = item.Name
-            };
+            WorkspaceId = item.Id,
+            WorkspaceName = item.Name
+        };
 
-            await WorkspaceStateService.SetSelectedWorkspaceAsync(new WorkspaceState()
-            {
-                WorkspaceId = item.Id,
-                WorkspaceName = item.Name
-            });
-
-            ToastService.ShowSuccess($"Active workspace set to '{item.Name}'.");
-        }
-        finally
+        await WorkspaceStateService.SetSelectedWorkspaceAsync(new WorkspaceState()
         {
-            loadingWorkspaceId = null;
-            loadingContext = null;
-        }
+            WorkspaceId = item.Id,
+            WorkspaceName = item.Name
+        });
+
+        ToastService.ShowSuccess($"Active workspace set to '{item.Name}'.");
     }
 
     private async Task RemoveActiveWorkspace(GetWorkspacesResponseItem item)
     {
-        loadingWorkspaceId = item.Id;
-        loadingContext = "setactive";
+        await WorkspaceStateService.RemoveSelectedWorkspaceAsync();
 
-        try
-        {
-            await WorkspaceStateService.RemoveSelectedWorkspaceAsync();
+        activeWorkspace = null;
 
-            activeWorkspace = null;
-
-            ToastService.ShowSuccess($"Workspace '{item.Name}' no longer active.");
-        }
-        finally
-        {
-            loadingWorkspaceId = null;
-            loadingContext = null;
-        }
+        ToastService.ShowSuccess($"Workspace '{item.Name}' no longer active.");
     }
 
     private async Task EditWorkspace(GetWorkspacesResponseItem item)
     {
-        loadingWorkspaceId = item.Id;
-        loadingContext = "edit";
-
-        IDialogReference dialog;
-
-        try
+        var parameters = new DialogParameters()
         {
-            var parameters = new DialogParameters()
-            {
-                TrapFocus = true,
-                Modal = false
-            };
-            var data = new AddEditWorkspaceDialogModel()
-            {
-                Id = item.Id,
-                Name = item.Name,
-                Description = item.Description
-            };
-
-            dialog = await DialogService.ShowDialogAsync<AddEditWorkspaceDialog>(data, parameters);
-        }
-        finally
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new AddEditWorkspaceDialogModel()
         {
-            loadingWorkspaceId = null;
-            loadingContext = null;
-        }
+            Id = item.Id,
+            Name = item.Name,
+            Description = item.Description
+        };
+
+        var dialog = await DialogService.ShowDialogAsync<AddEditWorkspaceDialog>(data, parameters);
 
         var result = await dialog.Result;
 
         if (result is not null && !result.Cancelled)
         {
+            await RefreshWorkspaces();
+        }
+    }
+
+    private async Task DeleteWorkspace(GetWorkspacesResponseItem item)
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new DeleteWorkspaceDialogModel()
+        {
+            WorkspaceId = item.Id
+        };
+
+        var dialog = await DialogService.ShowDialogAsync<DeleteWorkspaceDialog>(data, parameters);
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            if (activeWorkspace != null && activeWorkspace.WorkspaceId == item.Id)
+            {
+                await WorkspaceStateService.RemoveSelectedWorkspaceAsync();
+
+                activeWorkspace = null;
+
+                ToastService.ShowInfo($"Your active workspace has been deselected due to it being deleted");
+            }
+
             await RefreshWorkspaces();
         }
     }

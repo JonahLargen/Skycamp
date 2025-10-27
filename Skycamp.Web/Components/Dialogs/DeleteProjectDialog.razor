@@ -1,0 +1,77 @@
+﻿@implements IDialogContentComponent<DeleteProjectDialogModel>
+
+@inject IToastService ToastService
+@inject ApplicationApiClient ApiClient
+
+<FluentEditForm Model="@Content" OnValidSubmit="DeleteAsync">
+    <FluentDialogHeader ShowDismiss="true">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Delete())" />
+            <FluentLabel Typo="Typography.PaneHeader">
+                @(Dialog.Instance.Parameters.Title != null ? Dialog.Instance.Parameters.Title : "Delete Project")
+            </FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+
+    <FluentDialogBody>
+        <DataAnnotationsValidator />
+
+        <FluentGrid>
+            <FluentGridItem xs="12">
+                <FluentLabel style="color: red; font-weight: bold;">
+                    Are you sure you want to delete this project? This action cannot be reversed.
+                </FluentLabel>
+            </FluentGridItem>
+            <FluentGridItem xs="12">
+                <FluentCheckbox @bind-Value="confirmDelete">
+                    I understand this action cannot be reversed.
+                </FluentCheckbox>
+            </FluentGridItem>
+        </FluentGrid>
+
+        <FluentDialogFooter>
+            <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Disabled="!confirmDelete" Loading="@deleteLoading">Delete</FluentButton>
+            <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+        </FluentDialogFooter>
+    </FluentDialogBody>
+</FluentEditForm>
+
+@code {
+    [Parameter]
+    public DeleteProjectDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool confirmDelete = false;
+    private bool deleteLoading = false;
+
+    private async Task DeleteAsync()
+    {
+        try
+        {
+            deleteLoading = true;
+
+            var result = await ApiClient.DeleteProjectAsync(Content.WorkspaceId, Content.ProjectId);
+
+            if (!result.IsSuccess)
+            {
+                ToastService.ShowError($"Failed to delete project: {result.ErrorMessage}");
+            }
+            else
+            {
+                ToastService.ShowSuccess("Project deleted successfully.");
+                await Dialog.CloseAsync();
+            }
+        }
+        finally
+        {
+            deleteLoading = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CloseAsync(DialogResult.Cancel());
+    }
+}
