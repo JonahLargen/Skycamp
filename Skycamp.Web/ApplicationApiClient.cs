@@ -35,6 +35,13 @@ public class ApplicationApiClient(HttpClient httpClient)
         return await CreateApiResultAsync(response);
     }
 
+    public async Task<ApiResult> DeleteWorkspaceAsync(Guid workspaceId,CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"/projectmanagement/workspaces/{workspaceId}/v1", cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
     public async Task<ApiDataResult<CreateProjectResponse>> CreateProjectAsync(Guid workspaceId, CreateProjectRequest request, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.PostAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/projects/v1", request, cancellationToken);
@@ -45,6 +52,13 @@ public class ApplicationApiClient(HttpClient httpClient)
     public async Task<ApiResult> EditProjectAsync(Guid workspaceId, Guid projectId, EditProjectRequest request, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.PutAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/v1", request, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    public async Task<ApiResult> DeleteProjectAsync(Guid workspaceId, Guid projectId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/v1", cancellationToken);
 
         return await CreateApiResultAsync(response);
     }
