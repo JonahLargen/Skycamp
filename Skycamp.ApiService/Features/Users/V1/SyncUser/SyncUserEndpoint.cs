@@ -15,12 +15,13 @@ public class SyncUserEndpoint : EndpointWithCommandMapping<SyncUserRequest, Sync
         Post("/users/sync");
         Version(1);
 
-        AllowAnonymous();
-
         Description(b =>
         {
+            b.ExcludeFromDescription();
             b.WithName("SyncUserV1");
         });
+
+        Roles("Admin");
 
         Summary(s =>
         {

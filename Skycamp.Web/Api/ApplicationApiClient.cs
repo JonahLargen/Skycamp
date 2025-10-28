@@ -1,24 +1,14 @@
-using Microsoft.AspNetCore.Authentication;
-using System.Diagnostics.CodeAnalysis;
-using System.Net.Http.Headers;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace Skycamp.Web;
+namespace Skycamp.Web.Api;
 
-public class ApplicationApiClient(HttpClient httpClient)
+public class ApplicationApiClient(HttpClient httpClient) : BaseApiClient
 {
     public async Task<ApiDataResult<GetForecastResponse>> GetForecastAsync(string city, int days = 7, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.GetAsync($"/weather/forecasts/v2?city={city}&days={days}", cancellationToken);
 
         return await CreateApiDataResultAsync<GetForecastResponse>(response);
-    }
-
-    public async Task<ApiDataResult<SyncUserResponse>> SyncUserAsync(SyncUserRequest request, CancellationToken cancellationToken = default)
-    {
-        var response = await httpClient.PostAsJsonAsync("/users/sync/v1", request, cancellationToken);
-
-        return await CreateApiDataResultAsync<SyncUserResponse>(response);
     }
 
     public async Task<ApiDataResult<CreateWorkspaceResponse>> CreateWorkspaceAsync(CreateWorkspaceRequest request, CancellationToken cancellationToken = default)
@@ -35,7 +25,7 @@ public class ApplicationApiClient(HttpClient httpClient)
         return await CreateApiResultAsync(response);
     }
 
-    public async Task<ApiResult> DeleteWorkspaceAsync(Guid workspaceId,CancellationToken cancellationToken = default)
+    public async Task<ApiResult> DeleteWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.DeleteAsync($"/projectmanagement/workspaces/{workspaceId}/v1", cancellationToken);
 
@@ -75,82 +65,6 @@ public class ApplicationApiClient(HttpClient httpClient)
         var response = await httpClient.GetAsync($"/projectmanagement/workspaces/{workspaceId}/projects/v1", cancellationToken);
 
         return await CreateApiDataResultAsync<GetProjectsByWorkspaceIdResponse>(response);
-    }
-
-    private static async Task<ApiResult> CreateApiResultAsync(HttpResponseMessage response)
-    {
-        if (response.IsSuccessStatusCode)
-        {
-            return new ApiResult { IsSuccess = true };
-        }
-        else
-        {
-            var errorMessage = await response.Content.ReadAsStringAsync();
-
-            return new ApiResult { IsSuccess = false, ErrorMessage = errorMessage ?? "An unknown error has occured." };
-        }
-    }
-
-    private static async Task<ApiDataResult<T>> CreateApiDataResultAsync<T>(HttpResponseMessage response)
-    {
-        if (response.IsSuccessStatusCode)
-        {
-            var data = await response.Content.ReadFromJsonAsync<T>();
-
-            if (data == null)
-            {
-                return new ApiDataResult<T> { IsSuccess = false, ErrorMessage = "Failed to deserialize response data." };
-            }
-
-            return new ApiDataResult<T> { IsSuccess = true, Data = data };
-        }
-        else
-        {
-            var errorMessage = await response.Content.ReadAsStringAsync();
-
-            return new ApiDataResult<T> { IsSuccess = false, ErrorMessage = errorMessage ?? "An unknown error has occured." };
-        }
-    }
-}
-
-public class ApiResult
-{
-    [MemberNotNullWhen(false, nameof(ErrorMessage))]
-    public bool IsSuccess { get; init; }
-
-    public string? ErrorMessage { get; init; }
-}
-
-public class ApiDataResult<T>
-{
-    [MemberNotNullWhen(true, nameof(Data))]
-    [MemberNotNullWhen(false, nameof(ErrorMessage))]
-    public bool IsSuccess { get; init; }
-
-    public T? Data { get; init; }
-
-    public string? ErrorMessage { get; init; }
-}
-
-public class AccessTokenHandler : DelegatingHandler
-{
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public AccessTokenHandler(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
-
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        var accessToken = await _httpContextAccessor.HttpContext!.GetTokenAsync("access_token");
-
-        if (!string.IsNullOrEmpty(accessToken))
-        {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        }
-
-        return await base.SendAsync(request, cancellationToken);
     }
 }
 

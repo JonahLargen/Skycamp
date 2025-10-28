@@ -1,7 +1,7 @@
 using Auth0.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.FluentUI.AspNetCore.Components;
-using Skycamp.Web;
+using Skycamp.Web.Api;
 using Skycamp.Web.Components;
 using Skycamp.Web.Services;
 using System.Security.Claims;
@@ -22,6 +22,7 @@ if (string.IsNullOrEmpty(auth0Domain) || string.IsNullOrEmpty(auth0ClientId) || 
 //General services
 builder.Services.AddScoped<WorkspaceStateService>();
 builder.Services.AddScoped<TimeZoneService>();
+builder.Services.AddKeyedScoped<ITokenProvider, Auth0SuperUserTokenProvider>("Auth0SuperUser");
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<AccessTokenHandler>();
@@ -36,7 +37,7 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
     {
         OnTokenValidated = async context =>
         {
-            var apiClient = context.HttpContext.RequestServices.GetRequiredService<ApplicationApiClient>();
+            var apiClient = context.HttpContext.RequestServices.GetRequiredService<AdminApiClient>();
             var sub = context.Principal?.Claims.FirstOrDefault(c => c.Type == "sub" || c.Type == ClaimTypes.NameIdentifier)?.Value;
             var email = context.Principal?.Claims.FirstOrDefault(c => c.Type == "email" || c.Type == ClaimTypes.Email)?.Value;
             var emailVerified = context.Principal?.Claims.FirstOrDefault(c => c.Type == "email_verified")?.Value == "true";
@@ -110,11 +111,13 @@ builder.Services.AddRazorPages();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<ApplicationApiClient>(client =>
     {
-        // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
-        // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
         client.BaseAddress = new("https+http://apiservice");
     })
     .AddHttpMessageHandler<AccessTokenHandler>();
+builder.Services.AddHttpClient<AdminApiClient>(client =>
+{
+    client.BaseAddress = new("https+http://apiservice");
+});
 
 builder.Services.AddFluentUIComponents();
 

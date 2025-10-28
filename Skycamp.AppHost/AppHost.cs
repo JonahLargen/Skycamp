@@ -72,6 +72,8 @@ builder.AddProject<Projects.Skycamp_Web>("webfrontend")
     .WithEnvironment("Auth0__Domain", builder.Configuration["Auth0:Domain"])
     .WithEnvironment("Auth0__ClientId", builder.Configuration["Auth0:ClientId"])
     .WithEnvironment("Auth0__ClientSecret", builder.Configuration["Auth0:ClientSecret"])
-    .WithEnvironment("Auth0__Audience", builder.Configuration["Auth0:Audience"]);
+    .WithEnvironment("Auth0__Audience", builder.Configuration["Auth0:Audience"])
+    .WithEnvironment("Auth0__SuperUserEmail", builder.Configuration["Auth0:SuperUserEmail"])
+    .WithEnvironment("Auth0__SuperUserPassword", builder.Configuration["Auth0:SuperUserPassword"]);
 
 builder.Build().Run();

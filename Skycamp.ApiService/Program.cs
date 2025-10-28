@@ -53,15 +53,15 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddAuthenticationJwtBearer(signingOptions =>
 {
-    //signingOptions.SigningKey = "W3L8pJrXZ97bqK1e2yM5vN4sQ6tFhG0zT7cRjP8kSaVwEoU9";
-}, bearerOptions =>
+
+}, bearerOptions: bearerOptions =>
 {
     bearerOptions.Authority = $"https://{builder.Configuration["Auth0:Domain"]}/";
     bearerOptions.Audience = builder.Configuration["Auth0:Audience"];
     bearerOptions.TokenValidationParameters = new TokenValidationParameters
     {
         NameClaimType = "name",
-        RoleClaimType = "roles"
+        RoleClaimType = "https://api.skycamp.com/roles"
     };
 });
 builder.Services.AddAuthorization();
