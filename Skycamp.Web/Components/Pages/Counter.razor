@@ -1,6 +1,8 @@
 ﻿@page "/counter"
 @rendermode InteractiveServer
 
+@inject IMessageService MessageService
+
 <PageTitle>Counter</PageTitle>
 
 <h1>Counter</h1>
@@ -14,9 +16,26 @@
 @code {
     private int currentCount = 0;
 
+    ActionLink<Message> link = new()
+    {
+        Text = "Learn more",
+        Href = "https://bing.com",
+        OnClick = (e) => { return Task.CompletedTask; }
+    };
+
     private void IncrementCount()
     {
         currentCount++;
+
+        MessageService.ShowMessageBar(options =>
+        {
+            options.Intent = MessageIntent.Info;
+            options.Title = $"Counter Increase";
+            options.Body = $"The counter was increased to {currentCount}.";
+            options.Link = link;
+            options.Timestamp = DateTime.UtcNow;
+            options.Section = MessageBarSections.NOTIFICATION_CENTER;
+        });
     }
 }
 

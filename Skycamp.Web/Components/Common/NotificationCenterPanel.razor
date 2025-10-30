@@ -1,0 +1,28 @@
+﻿@implements IDialogContentComponent<GlobalState>
+@inject IMessageService MessageService
+
+<div>
+
+    <FluentStack>
+        <FluentButton IconStart="new Icons.Regular.Size16.Delete()" Appearance=Appearance.Accent OnClick="DismissAllNotifications">Dismiss All</FluentButton>
+    </FluentStack>
+
+    <br />
+
+    <FluentMessageBarProvider Section="@MessageBarSections.NOTIFICATION_CENTER" MaxMessageCount="-1" Type="@MessageType.Notification" />
+</div>
+
+@code {
+    [Parameter]
+    public GlobalState Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private async Task DismissAllNotifications()
+    {
+        MessageService.Clear(MessageBarSections.NOTIFICATION_CENTER);
+
+        await Dialog.CloseAsync();
+    }
+}
