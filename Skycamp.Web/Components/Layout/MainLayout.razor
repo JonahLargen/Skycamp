@@ -7,11 +7,13 @@
         <FluentSpacer />
 
         <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End" VerticalAlignment="VerticalAlignment.Center">
-            <FluentAnchor Appearance="Appearance.Hypertext" Style="margin-right: 4px;"
-                          Href="https://github.com/JonahLargen/Skycamp" Target="_blank" Rel="noreferrer noopener"
-                          title="Source on GitHub" aria-label="Source on GitHub">
-                <FluentIcon Value="@(new CustomIcons.Size20.GitHub())" Color="Color.FillInverse" />
-            </FluentAnchor>
+            <div style="width: 32px; display: flex; justify-content: center;">
+                <FluentAnchor Appearance="Appearance.Hypertext"
+                              Href="https://github.com/JonahLargen/Skycamp" Target="_blank" Rel="noreferrer noopener"
+                              title="Source on GitHub" aria-label="Source on GitHub">
+                    <FluentIcon Value="@(new CustomIcons.Size20.GitHub())" Color="Color.FillInverse" />
+                </FluentAnchor>
+            </div>
 
             <NotificationCenter />
 
