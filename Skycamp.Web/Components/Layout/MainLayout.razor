@@ -3,6 +3,20 @@
 <FluentLayout>
     <FluentHeader>
         Skycamp
+
+        <FluentSpacer />
+
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End" VerticalAlignment="VerticalAlignment.Center">
+            <FluentAnchor Appearance="Appearance.Hypertext" Style="margin-right: 4px;"
+                          Href="https://github.com/JonahLargen/Skycamp" Target="_blank" Rel="noreferrer noopener"
+                          title="Source on GitHub" aria-label="Source on GitHub">
+                <FluentIcon Value="@(new CustomIcons.Size20.GitHub())" Color="Color.FillInverse" />
+            </FluentAnchor>
+
+            <NotificationCenter />
+
+            <SiteSettings />
+        </FluentStack>
     </FluentHeader>
     <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
         <NavMenu />
@@ -27,5 +41,4 @@
 <FluentToastProvider @rendermode=InteractiveServer />
 <FluentDialogProvider @rendermode=InteractiveServer />
 <FluentTooltipProvider @rendermode=InteractiveServer />
-<FluentMessageBarProvider />
 <FluentMenuProvider />
