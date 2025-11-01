@@ -44,6 +44,8 @@ public class Project
 
     [ForeignKey(nameof(CreateUserId))]
     public ApplicationUser? CreateUser { get; set; } = null!;
+
+    public List<ProjectUser> Users { get; set; } = new();
 }
 
 public class ProjectConfiguration : IEntityTypeConfiguration<Project>

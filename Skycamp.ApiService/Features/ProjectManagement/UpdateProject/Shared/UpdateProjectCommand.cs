@@ -37,10 +37,10 @@ public class UpdateProjectCommandHandler : CommandHandler<UpdateProjectCommand>
             ThrowError("Project does not exist", statusCode: 404);
         } 
 
-        var workspaceUser = await _dbContext.WorkspaceUsers
-            .FirstOrDefaultAsync(wu => wu.WorkspaceId == project.WorkspaceId && wu.UserId == user.Id, ct);
+        var projectUser = await _dbContext.ProjectUsers
+            .FirstOrDefaultAsync(pu => pu.ProjectId == project.Id && pu.UserId == user.Id, ct);
 
-        if (workspaceUser is not { RoleName: "Owner" or "Admin" })
+        if (projectUser is not { RoleName: "Owner" or "Admin" })
         {
             ThrowError("You do not have access to update this project", statusCode: 403);
         }

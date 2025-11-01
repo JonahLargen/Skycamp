@@ -6,7 +6,7 @@ using Skycamp.ApiService.Features.ProjectManagement.GetProjectsByWorkspaceId.Sha
 
 namespace Skycamp.ApiService.Features.ProjectManagement.GetProjectsByWorkspaceId.V1;
 
-public class GetProjectsByWorkspaceIdEndpoint : EndpointWithCommandMapping<GetProjectsByWorkspaceIdRequest, GetProjectsByWorkspaceIdResponse, GetProjectsByWorkspaceIdCommand, GetProjectsByWorkspaceIdResult>
+public class GetProjectByIdEndpoint : EndpointWithCommandMapping<GetProjectsByWorkspaceIdRequest, GetProjectsByWorkspaceIdResponse, GetProjectByIdCommand, GetProjectsByWorkspaceIdResult>
 {
     public override void Configure()
     {
@@ -30,9 +30,9 @@ public class GetProjectsByWorkspaceIdEndpoint : EndpointWithCommandMapping<GetPr
         await SendMappedAsync(r, ct: ct);
     }
 
-    public override GetProjectsByWorkspaceIdCommand MapToCommand(GetProjectsByWorkspaceIdRequest r)
+    public override GetProjectByIdCommand MapToCommand(GetProjectsByWorkspaceIdRequest r)
     {
-        return new GetProjectsByWorkspaceIdCommand()
+        return new GetProjectByIdCommand()
         {
             UserName = User.GetRequiredUserName(),
             WorkspaceId = r.WorkspaceId

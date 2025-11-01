@@ -7,7 +7,7 @@ using Skycamp.ApiService.Data.Identity;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.GetProjectsByWorkspaceId.Shared;
 
-public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjectsByWorkspaceIdCommand, GetProjectsByWorkspaceIdResult>
+public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjectByIdCommand, GetProjectsByWorkspaceIdResult>
 {
     private readonly ILogger<GetProjectsByWorkspaceIdCommandHandler> _logger;
     private readonly ApplicationDbContext _dbContext;
@@ -20,7 +20,7 @@ public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjects
         _userManager = userManager;
     }
 
-    public override async Task<GetProjectsByWorkspaceIdResult> ExecuteAsync(GetProjectsByWorkspaceIdCommand command, CancellationToken ct = default)
+    public override async Task<GetProjectsByWorkspaceIdResult> ExecuteAsync(GetProjectByIdCommand command, CancellationToken ct = default)
     {
         var user = await _userManager.FindByNameAsync(command.UserName);
 
@@ -60,13 +60,13 @@ public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjects
     }
 }
 
-public record GetProjectsByWorkspaceIdCommand : ICommand<GetProjectsByWorkspaceIdResult>
+public record GetProjectByIdCommand : ICommand<GetProjectsByWorkspaceIdResult>
 {
     public required Guid WorkspaceId { get; init; }
     public required string UserName { get; init; }
 }
 
-public class GetProjectsByWorkspaceIdCommandValidator : AbstractValidator<GetProjectsByWorkspaceIdCommand>
+public class GetProjectsByWorkspaceIdCommandValidator : AbstractValidator<GetProjectByIdCommand>
 {
     public GetProjectsByWorkspaceIdCommandValidator()
     {
