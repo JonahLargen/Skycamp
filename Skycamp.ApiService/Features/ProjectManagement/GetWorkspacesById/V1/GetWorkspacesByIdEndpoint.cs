@@ -1,11 +1,11 @@
 ﻿using FluentValidation;
 using Skycamp.ApiService.Common.Endpoints;
 using Skycamp.ApiService.Common.Security;
-using Skycamp.ApiService.Features.ProjectManagement.GetWorkspaces.Shared;
+using Skycamp.ApiService.Features.ProjectManagement.GetWorkspacesById.Shared;
 
-namespace Skycamp.ApiService.Features.ProjectManagement.GetWorkspaces.V1;
+namespace Skycamp.ApiService.Features.ProjectManagement.GetWorkspacesById.V1;
 
-public class GetWorkspacesEndpoint : EndpointWithoutRequestWithCommandMapping<GetWorkspacesResponse, GetWorkspacesCommand, GetWorkspacesResult>
+public class GetWorkspacesByIdEndpoint : EndpointWithoutRequestWithCommandMapping<GetWorkspacesByIdResponse, GetWorkspacesByIdCommand, GetWorkspacesByIdResult>
 {
     public override void Configure()
     {
@@ -29,11 +29,11 @@ public class GetWorkspacesEndpoint : EndpointWithoutRequestWithCommandMapping<Ge
         await SendMappedAsync(ct: ct);
     }
 
-    public override GetWorkspacesResponse MapFromEntity(GetWorkspacesResult e)
+    public override GetWorkspacesByIdResponse MapFromEntity(GetWorkspacesByIdResult e)
     {
-        return new GetWorkspacesResponse
+        return new GetWorkspacesByIdResponse
         {
-            Workspaces = e.Workspaces.Select(w => new GetWorkspacesResponseItem
+            Workspaces = e.Workspaces.Select(w => new GetWorkspacesByIdResponseItem
             {
                 Id = w.Id,
                 Name = w.Name,
@@ -47,21 +47,21 @@ public class GetWorkspacesEndpoint : EndpointWithoutRequestWithCommandMapping<Ge
         };
     }
 
-    public override GetWorkspacesCommand MapToCommand()
+    public override GetWorkspacesByIdCommand MapToCommand()
     {
-        return new GetWorkspacesCommand
+        return new GetWorkspacesByIdCommand
         {
             UserName = User.GetRequiredUserName()
         };
     }
 }
 
-public record GetWorkspacesResponse
+public record GetWorkspacesByIdResponse
 {
-    public required List<GetWorkspacesResponseItem> Workspaces { get; init; }
+    public required List<GetWorkspacesByIdResponseItem> Workspaces { get; init; }
 }
 
-public record GetWorkspacesResponseItem
+public record GetWorkspacesByIdResponseItem
 {
     public required Guid Id { get; init; }
     public required string Name { get; init; }

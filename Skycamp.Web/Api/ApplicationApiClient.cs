@@ -66,6 +66,13 @@ public class ApplicationApiClient(HttpClient httpClient) : BaseApiClient
 
         return await CreateApiDataResultAsync<GetProjectsByWorkspaceIdResponse>(response);
     }
+
+    public async Task<ApiDataResult<GetProjectByIdResponse>> GetProjectByIdAsync(Guid workspaceId, Guid projectId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/v1", cancellationToken);
+
+        return await CreateApiDataResultAsync<GetProjectByIdResponse>(response);
+    }
 }
 
 public record GetForecastResponse
@@ -146,6 +153,10 @@ public record CreateProjectRequest
     public required string Name { get; init; }
     public string? Description { get; init; }
     public required bool IsAllAccess { get; init; }
+    public required decimal Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }
 
 public record EditProjectRequest
@@ -153,6 +164,10 @@ public record EditProjectRequest
     public required string Name { get; init; }
     public string? Description { get; init; }
     public required bool IsAllAccess { get; init; }
+    public required decimal Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }
 
 public record CreateProjectResponse
@@ -184,13 +199,42 @@ public record GetProjectsByWorkspaceIdResponse
 
 public record GetProjectsByWorkspaceIdResponseItem
 {
-    public required Guid Id { get; init; }
-    public required string Name { get; init; }
+    public Guid Id { get; init; }
+    public string Name { get; init; } = null!;
     public string? Description { get; init; }
-    public required string RoleName { get; init; }
-    public required bool IsAllAccess { get; init; }
+    public string RoleName { get; init; } = null!;
+    public bool IsAllAccess { get; init; }
     public string? CreateUserId { get; init; }
     public string? CreateUserDisplayName { get; init; }
     public DateTime CreatedUtc { get; init; }
     public DateTime LastUpdatedUtc { get; init; }
+    public decimal Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+}
+
+public record GetProjectByIdResponse
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = null!;
+    public string? Description { get; init; }
+    public string RoleName { get; init; } = null!;
+    public bool IsAllAccess { get; init; }
+    public string? CreateUserId { get; init; }
+    public string? CreateUserDisplayName { get; init; }
+    public DateTime CreatedUtc { get; init; }
+    public DateTime LastUpdatedUtc { get; init; }
+    public decimal Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+}
+
+public record GetProjectByIdResponseUser
+{
+    public string Id { get; init; } = null!;
+    public string? UserName { get; init; }
+    public string? DisplayName { get; init; }
+    public string RoleName { get; init; } = null!;
 }

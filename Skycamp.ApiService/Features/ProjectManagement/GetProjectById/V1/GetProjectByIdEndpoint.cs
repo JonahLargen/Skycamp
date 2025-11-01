@@ -10,7 +10,7 @@ public class GetProjectByIdEndpoint : EndpointWithCommandMapping<GetProjectByIdR
 {
     public override void Configure()
     {
-        Get("/projectmanagement/workspaces/{WorkspaceId}/project/{ProjectId}");
+        Get("/projectmanagement/workspaces/{WorkspaceId}/projects/{ProjectId}");
         Version(1);
 
         Description(b =>
@@ -56,7 +56,14 @@ public class GetProjectByIdEndpoint : EndpointWithCommandMapping<GetProjectByIdR
             Progress = e.Progress,
             ArchivedUtc = e.ArchivedUtc,
             StartDate = e.StartDate,
-            EndDate = e.EndDate
+            EndDate = e.EndDate,
+            Users = e.Users.Select(u => new GetProjectByIdResponseUser()
+            {
+                Id = u.Id,
+                UserName = u.UserName,
+                DisplayName = u.DisplayName,
+                RoleName = u.RoleName
+            }).ToList()
         };
     }
 }
@@ -94,4 +101,13 @@ public record GetProjectByIdResponse
     public DateTime? ArchivedUtc { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
+    public List<GetProjectByIdResponseUser> Users { get; init; } = [];
+}
+
+public record GetProjectByIdResponseUser
+{
+    public required string Id { get; init; }
+    public string? UserName { get; init; }
+    public string? DisplayName { get; init; }
+    public required string RoleName { get; init; }
 }
