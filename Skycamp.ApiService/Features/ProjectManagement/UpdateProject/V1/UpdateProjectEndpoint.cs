@@ -39,7 +39,11 @@ public class UpdateProjectEndpoint : EndpointWithoutResponseWithCommandMapping<U
             Name = r.Name,
             Description = r.Description,
             UpdateUserName = User.GetRequiredUserName(),
-            IsAllAccess = r.IsAllAccess
+            IsAllAccess = r.IsAllAccess,
+            Progress = r.Progress ?? 0,
+            ArchivedUtc = r.ArchivedUtc,
+            StartDate = r.StartDate,
+            EndDate = r.EndDate
         };
     }
 }
@@ -51,6 +55,10 @@ public class UpdateProjectRequest
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
     public bool IsAllAccess { get; set; }
+    public decimal? Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }
 
 public class UpdateProjectRequestValidator : Validator<UpdateProjectRequest>
@@ -73,5 +81,17 @@ public class UpdateProjectRequestValidator : Validator<UpdateProjectRequest>
 
         RuleFor(x => x.IsAllAccess)
             .NotNull();
+
+        RuleFor(x => x.Progress)
+            .InclusiveBetween(0, 1)
+            .When(x => x.Progress.HasValue);
+
+        RuleFor(x => x.EndDate)
+            .GreaterThanOrEqualTo(x => x.StartDate)
+            .When(x => x.StartDate.HasValue && x.EndDate.HasValue);
+
+        RuleFor(x => new { x.StartDate, x.EndDate })
+            .Must(dates => (dates.StartDate.HasValue && dates.EndDate.HasValue) || (!dates.StartDate.HasValue && !dates.EndDate.HasValue))
+            .WithMessage("Both StartDate and EndDate must be provided together or both must be null.");
     }
 }

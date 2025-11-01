@@ -53,7 +53,11 @@ public class GetProjectsByWorkspaceIdEndpoint : EndpointWithCommandMapping<GetPr
                 CreateUserId = w.CreateUserId,
                 CreateUserDisplayName = w.CreateUserDisplayName,
                 CreatedUtc = w.CreatedUtc,
-                LastUpdatedUtc = w.LastUpdatedUtc
+                LastUpdatedUtc = w.LastUpdatedUtc,
+                Progress = w.Progress,
+                ArchivedUtc = w.ArchivedUtc,
+                StartDate = w.StartDate,
+                EndDate = w.EndDate
             }).ToList()
         };
     }
@@ -89,4 +93,8 @@ public record GetProjectsByWorkspaceIdResponseItem
     public string? CreateUserDisplayName { get; init; }
     public DateTime CreatedUtc { get; init; }
     public DateTime LastUpdatedUtc { get; init; }
+    public required decimal Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }

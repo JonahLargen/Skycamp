@@ -7,7 +7,6 @@ using Skycamp.ApiService.Data.Identity;
 using Skycamp.ApiService.Data.Messaging;
 using Skycamp.ApiService.Data.ProjectManagement;
 using Skycamp.Contracts.Events;
-using System.Diagnostics;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.CreateProject.Shared;
 
@@ -58,6 +57,10 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
             CreatedUtc = DateTime.UtcNow,
             LastUpdatedUtc = DateTime.UtcNow,
             IsAllAccess = command.IsAllAccess,
+            Progress = command.Progress,
+            ArchivedUtc = command.ArchivedUtc,
+            StartDate = command.StartDate,
+            EndDate = command.EndDate
         }, ct);
 
         await _dbContext.ProjectUsers.AddAsync(new ProjectUser
@@ -78,17 +81,7 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
             Name = projectResult.Entity.Name,
             WorkspaceId = projectResult.Entity.WorkspaceId,
             CreateUserId = createUser.Id,
-            CreateUserDisplayName = createUser.DisplayName,
-            Users =
-            [
-                new ProjectCreatedEventV1.User
-                {
-                    UserId = createUser.Id,
-                    UserDisplayName = createUser.DisplayName,
-                    RoleName = "Owner",
-                    JoinedUtc = DateTime.UtcNow
-                }
-            ]
+            CreateUserDisplayName = createUser.DisplayName
         });
 
         await _dbContext.OutboxMessages.AddAsync(outboxMessage, ct);
@@ -108,6 +101,10 @@ public record CreateProjectCommand : ICommand<CreateProjectResult>
     public string? Description { get; set; }
     public required string CreateUserName { get; set; }
     public required bool IsAllAccess { get; set; }
+    public required decimal Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }
 
 public class CreateProjectCommandValidator : AbstractValidator<CreateProjectCommand>
@@ -130,6 +127,17 @@ public class CreateProjectCommandValidator : AbstractValidator<CreateProjectComm
 
         RuleFor(x => x.IsAllAccess)
             .NotNull();
+
+        RuleFor(x => x.Progress)
+            .InclusiveBetween(0, 1);
+
+        RuleFor(x => x.EndDate)
+            .GreaterThanOrEqualTo(x => x.StartDate)
+            .When(x => x.StartDate.HasValue && x.EndDate.HasValue);
+
+        RuleFor(x => new { x.StartDate, x.EndDate })
+           .Must(dates => (dates.StartDate.HasValue && dates.EndDate.HasValue) || (!dates.StartDate.HasValue && !dates.EndDate.HasValue))
+           .WithMessage("Both StartDate and EndDate must be provided together or both must be null.");
     }
 }
 

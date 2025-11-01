@@ -22,7 +22,6 @@ public class Project
     [MaxLength(500)]
     public string? Description { get; set; }
 
-    [DefaultValue(false)]
     public bool IsAllAccess { get; set; } = false;
 
     public string? CreateUserId { get; set; }
@@ -30,6 +29,15 @@ public class Project
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime LastUpdatedUtc { get; set; } = DateTime.UtcNow;
+
+    [Column(TypeName = "decimal(5,4)")]
+    public decimal Progress { get; set; } = 0m;
+
+    public DateTime? ArchivedUtc { get; set; }
+
+    public DateTime? StartDate { get; set; }
+
+    public DateTime? EndDate { get; set; }
 
     [ForeignKey(nameof(WorkspaceId))]
     public Workspace Workspace { get; set; } = null!;

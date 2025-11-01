@@ -49,6 +49,10 @@ public class UpdateProjectCommandHandler : CommandHandler<UpdateProjectCommand>
         project.Description = command.Description?.Trim();
         project.LastUpdatedUtc = DateTime.UtcNow;
         project.IsAllAccess = command.IsAllAccess;
+        project.Progress = command.Progress;
+        project.ArchivedUtc = command.ArchivedUtc;
+        project.StartDate = command.StartDate;
+        project.EndDate = command.EndDate;
 
         _dbContext.Projects.Update(project);
 
@@ -64,6 +68,10 @@ public record UpdateProjectCommand : ICommand
     public string? Description { get; set; }
     public required string UpdateUserName { get; set; }
     public required bool IsAllAccess { get; set; }
+    public required decimal Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }
 
 public class UpdateProjectCommandValidator : AbstractValidator<UpdateProjectCommand>
@@ -89,5 +97,16 @@ public class UpdateProjectCommandValidator : AbstractValidator<UpdateProjectComm
 
         RuleFor(x => x.IsAllAccess)
             .NotNull();
+
+        RuleFor(x => x.Progress)
+            .InclusiveBetween(0, 1);
+
+        RuleFor(x => x.EndDate)
+            .GreaterThanOrEqualTo(x => x.StartDate)
+            .When(x => x.StartDate.HasValue && x.EndDate.HasValue);
+
+        RuleFor(x => new { x.StartDate, x.EndDate })
+           .Must(dates => (dates.StartDate.HasValue && dates.EndDate.HasValue) || (!dates.StartDate.HasValue && !dates.EndDate.HasValue))
+           .WithMessage("Both StartDate and EndDate must be provided together or both must be null.");
     }
 }
