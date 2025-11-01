@@ -95,6 +95,6 @@ public record GetProjectsByWorkspaceIdResponseItem
     public DateTime LastUpdatedUtc { get; init; }
     public required decimal Progress { get; set; }
     public DateTime? ArchivedUtc { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
 }

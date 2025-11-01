@@ -46,11 +46,7 @@ public class CreateProjectEndpoint : EndpointWithCommandMapping<CreateProjectReq
             Name = r.Name,
             Description = r.Description,
             CreateUserName = User.GetRequiredUserName(),
-            IsAllAccess = r.IsAllAccess,
-            Progress = r.Progress ?? 0,
-            ArchivedUtc = r.ArchivedUtc,
-            StartDate = r.StartDate,
-            EndDate = r.EndDate
+            IsAllAccess = r.IsAllAccess
         };
     }
 }
@@ -61,10 +57,6 @@ public class CreateProjectRequest
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
     public bool IsAllAccess { get; set; }
-    public decimal? Progress { get; set; }
-    public DateTime? ArchivedUtc { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
 }
 
 public class CreateProjectRequestValidator : Validator<CreateProjectRequest>
@@ -84,18 +76,6 @@ public class CreateProjectRequestValidator : Validator<CreateProjectRequest>
 
         RuleFor(x => x.IsAllAccess)
             .NotNull();
-
-        RuleFor(x => x.Progress)
-            .InclusiveBetween(0, 1)
-            .When(x => x.Progress.HasValue);
-
-        RuleFor(x => x.EndDate)
-            .GreaterThanOrEqualTo(x => x.StartDate)
-            .When(x => x.StartDate.HasValue && x.EndDate.HasValue);
-
-        RuleFor(x => new { x.StartDate, x.EndDate })
-            .Must(dates => (dates.StartDate.HasValue && dates.EndDate.HasValue) || (!dates.StartDate.HasValue && !dates.EndDate.HasValue))
-            .WithMessage("Both StartDate and EndDate must be provided together or both must be null.");
     }
 }
 

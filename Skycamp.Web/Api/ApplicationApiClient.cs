@@ -153,10 +153,6 @@ public record CreateProjectRequest
     public required string Name { get; init; }
     public string? Description { get; init; }
     public required bool IsAllAccess { get; init; }
-    public required decimal Progress { get; set; }
-    public DateTime? ArchivedUtc { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
 }
 
 public record EditProjectRequest
@@ -164,10 +160,6 @@ public record EditProjectRequest
     public required string Name { get; init; }
     public string? Description { get; init; }
     public required bool IsAllAccess { get; init; }
-    public required decimal Progress { get; set; }
-    public DateTime? ArchivedUtc { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
 }
 
 public record CreateProjectResponse
@@ -210,8 +202,8 @@ public record GetProjectsByWorkspaceIdResponseItem
     public DateTime LastUpdatedUtc { get; init; }
     public decimal Progress { get; set; }
     public DateTime? ArchivedUtc { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
 }
 
 public record GetProjectByIdResponse

@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
 using Skycamp.ApiService.Data.Identity;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -35,9 +34,12 @@ public class Project
 
     public DateTime? ArchivedUtc { get; set; }
 
-    public DateTime? StartDate { get; set; }
+    public DateOnly? StartDate { get; set; }
 
-    public DateTime? EndDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = null!;
 
     [ForeignKey(nameof(WorkspaceId))]
     public Workspace Workspace { get; set; } = null!;

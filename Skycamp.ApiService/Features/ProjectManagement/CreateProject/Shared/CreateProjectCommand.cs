@@ -56,11 +56,7 @@ public class CreateProjectCommandHandler : CommandHandler<CreateProjectCommand, 
             CreateUserId = createUser.Id,
             CreatedUtc = DateTime.UtcNow,
             LastUpdatedUtc = DateTime.UtcNow,
-            IsAllAccess = command.IsAllAccess,
-            Progress = command.Progress,
-            ArchivedUtc = command.ArchivedUtc,
-            StartDate = command.StartDate,
-            EndDate = command.EndDate
+            IsAllAccess = command.IsAllAccess
         }, ct);
 
         await _dbContext.ProjectUsers.AddAsync(new ProjectUser
@@ -101,10 +97,6 @@ public record CreateProjectCommand : ICommand<CreateProjectResult>
     public string? Description { get; set; }
     public required string CreateUserName { get; set; }
     public required bool IsAllAccess { get; set; }
-    public required decimal Progress { get; set; }
-    public DateTime? ArchivedUtc { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
 }
 
 public class CreateProjectCommandValidator : AbstractValidator<CreateProjectCommand>
@@ -127,17 +119,6 @@ public class CreateProjectCommandValidator : AbstractValidator<CreateProjectComm
 
         RuleFor(x => x.IsAllAccess)
             .NotNull();
-
-        RuleFor(x => x.Progress)
-            .InclusiveBetween(0, 1);
-
-        RuleFor(x => x.EndDate)
-            .GreaterThanOrEqualTo(x => x.StartDate)
-            .When(x => x.StartDate.HasValue && x.EndDate.HasValue);
-
-        RuleFor(x => new { x.StartDate, x.EndDate })
-           .Must(dates => (dates.StartDate.HasValue && dates.EndDate.HasValue) || (!dates.StartDate.HasValue && !dates.EndDate.HasValue))
-           .WithMessage("Both StartDate and EndDate must be provided together or both must be null.");
     }
 }
 
