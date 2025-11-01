@@ -62,6 +62,19 @@ else
                         <FluentBadge Appearance="Appearance.Neutral">No</FluentBadge>
                     }
                 </TemplateColumn>
+                <TemplateColumn Sortable="true" Title="Progress" Style="align-content: center;">
+                    @context.Progress.ToString("P0")
+                </TemplateColumn>
+                <TemplateColumn Sortable="true" Title="Archived?" Style="align-content: center;">
+                    @if (context.ArchivedUtc != null)
+                    {
+                        <FluentBadge Appearance="Appearance.Accent">Yes</FluentBadge>
+                    }
+                    else
+                    {
+                        <FluentBadge Appearance="Appearance.Neutral">No</FluentBadge>
+                    }
+                </TemplateColumn>
                 <PropertyColumn Property="@(p => TimeZoneService.ConvertFromUtc(p.CreatedUtc))" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created" Style="align-content: center;" />
                 <TemplateColumn Title="Actions" Style="align-content: center;">
                     <FluentStack>

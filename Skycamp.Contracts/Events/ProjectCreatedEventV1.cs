@@ -11,13 +11,8 @@ public class ProjectCreatedEventV1
     public DateTime CreatedUtc { get; init; }
     public DateTime LastUpdatedUtc { get; init; }
     public bool IsAllAccess { get; init; }
-    public List<User> Users { get; init; } = [];
-
-    public class User
-    {
-        public string UserId { get; init; } = null!;
-        public string? UserDisplayName { get; init; } = null!;
-        public string RoleName { get; init; } = null!;
-        public DateTime JoinedUtc { get; init; }
-    }
+    public decimal Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }

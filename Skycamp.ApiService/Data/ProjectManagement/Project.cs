@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
 using Skycamp.ApiService.Data.Identity;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -22,7 +21,6 @@ public class Project
     [MaxLength(500)]
     public string? Description { get; set; }
 
-    [DefaultValue(false)]
     public bool IsAllAccess { get; set; } = false;
 
     public string? CreateUserId { get; set; }
@@ -31,11 +29,25 @@ public class Project
 
     public DateTime LastUpdatedUtc { get; set; } = DateTime.UtcNow;
 
+    [Column(TypeName = "decimal(5,4)")]
+    public decimal Progress { get; set; } = 0m;
+
+    public DateTime? ArchivedUtc { get; set; }
+
+    public DateOnly? StartDate { get; set; }
+
+    public DateOnly? EndDate { get; set; }
+
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = null!;
+
     [ForeignKey(nameof(WorkspaceId))]
     public Workspace Workspace { get; set; } = null!;
 
     [ForeignKey(nameof(CreateUserId))]
     public ApplicationUser? CreateUser { get; set; } = null!;
+
+    public List<ProjectUser> Users { get; set; } = new();
 }
 
 public class ProjectConfiguration : IEntityTypeConfiguration<Project>

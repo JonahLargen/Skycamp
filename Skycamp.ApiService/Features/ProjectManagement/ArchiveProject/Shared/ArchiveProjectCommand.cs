@@ -5,24 +5,24 @@ using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
 using Skycamp.ApiService.Data.Identity;
 
-namespace Skycamp.ApiService.Features.ProjectManagement.UpdateProject.Shared;
+namespace Skycamp.ApiService.Features.ProjectManagement.ArchiveProject.Shared;
 
-public class UpdateProjectCommandHandler : CommandHandler<UpdateProjectCommand>
+public class ArchiveProjectCommandHandler : CommandHandler<UpdateProjectProgressCommand>
 {
-    private readonly ILogger<UpdateProjectCommandHandler> _logger;
+    private readonly ILogger<ArchiveProjectCommandHandler> _logger;
     private readonly ApplicationDbContext _dbContext;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public UpdateProjectCommandHandler(ILogger<UpdateProjectCommandHandler> logger, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
+    public ArchiveProjectCommandHandler(ILogger<ArchiveProjectCommandHandler> logger, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
     {
         _logger = logger;
         _dbContext = dbContext;
         _userManager = userManager;
     }
 
-    public async override Task ExecuteAsync(UpdateProjectCommand command, CancellationToken ct = default)
+    public async override Task ExecuteAsync(UpdateProjectProgressCommand command, CancellationToken ct = default)
     {
-        var user = await _userManager.FindByNameAsync(command.UpdateUserName);
+        var user = await _userManager.FindByNameAsync(command.ArchiveUserName);
 
         if (user == null)
         {
@@ -37,22 +37,20 @@ public class UpdateProjectCommandHandler : CommandHandler<UpdateProjectCommand>
             ThrowError("Project does not exist", statusCode: 404);
         } 
 
+        if (project.ArchivedUtc != null)
+        {
+            ThrowError("Project is already archived", statusCode: 400);
+        }
+
         var projectUser = await _dbContext.ProjectUsers
             .FirstOrDefaultAsync(pu => pu.ProjectId == project.Id && pu.UserId == user.Id, ct);
 
         if (projectUser is not { RoleName: "Owner" or "Admin" })
         {
-            ThrowError("You do not have access to update this project", statusCode: 403);
+            ThrowError("You do not have access to archive this project", statusCode: 403);
         }
 
-        if (project.ArchivedUtc != null)
-        {
-            ThrowError("Project is archived", statusCode: 400);
-        }
-
-        project.Name = command.Name.Trim();
-        project.Description = command.Description?.Trim();
-        project.IsAllAccess = command.IsAllAccess;
+        project.ArchivedUtc = DateTime.UtcNow;
         project.LastUpdatedUtc = DateTime.UtcNow;
 
         _dbContext.Projects.Update(project);
@@ -68,19 +66,16 @@ public class UpdateProjectCommandHandler : CommandHandler<UpdateProjectCommand>
     }
 }
 
-public record UpdateProjectCommand : ICommand
+public record UpdateProjectProgressCommand : ICommand
 {
     public required Guid ProjectId { get; set; }
     public required Guid WorkspaceId { get; set; }
-    public required string Name { get; set; }
-    public string? Description { get; set; }
-    public required string UpdateUserName { get; set; }
-    public required bool IsAllAccess { get; set; }
+    public required string ArchiveUserName { get; set; }
 }
 
-public class UpdateProjectCommandValidator : AbstractValidator<UpdateProjectCommand>
+public class ArchiveProjectCommandValidator : AbstractValidator<UpdateProjectProgressCommand>
 {
-    public UpdateProjectCommandValidator()
+    public ArchiveProjectCommandValidator()
     {
         RuleFor(x => x.ProjectId)
             .NotEmpty();
@@ -88,18 +83,7 @@ public class UpdateProjectCommandValidator : AbstractValidator<UpdateProjectComm
         RuleFor(x => x.WorkspaceId)
             .NotEmpty();
 
-        RuleFor(x => x.Name)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(x => x.Description)
-            .MaximumLength(500)
-            .When(x => !string.IsNullOrEmpty(x.Description));
-
-        RuleFor(x => x.UpdateUserName)
+        RuleFor(x => x.ArchiveUserName)
             .NotEmpty();
-
-        RuleFor(x => x.IsAllAccess)
-            .NotNull();
     }
 }

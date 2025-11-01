@@ -7,7 +7,7 @@ using Skycamp.ApiService.Data.Identity;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.GetProjectsByWorkspaceId.Shared;
 
-public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjectsByWorkspaceIdCommand, GetProjectsByWorkspaceIdResult>
+public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjectByIdCommand, GetProjectsByWorkspaceIdResult>
 {
     private readonly ILogger<GetProjectsByWorkspaceIdCommandHandler> _logger;
     private readonly ApplicationDbContext _dbContext;
@@ -20,7 +20,7 @@ public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjects
         _userManager = userManager;
     }
 
-    public override async Task<GetProjectsByWorkspaceIdResult> ExecuteAsync(GetProjectsByWorkspaceIdCommand command, CancellationToken ct = default)
+    public override async Task<GetProjectsByWorkspaceIdResult> ExecuteAsync(GetProjectByIdCommand command, CancellationToken ct = default)
     {
         var user = await _userManager.FindByNameAsync(command.UserName);
 
@@ -45,7 +45,11 @@ public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjects
                 CreateUserId = pu.Project.CreateUserId,
                 CreateUserDisplayName = pu.Project.CreateUser != null ? pu.Project.CreateUser.DisplayName ?? pu.Project.CreateUser.UserName : null,
                 CreatedUtc = pu.Project.CreatedUtc,
-                LastUpdatedUtc = pu.Project.LastUpdatedUtc
+                LastUpdatedUtc = pu.Project.LastUpdatedUtc,
+                Progress = pu.Project.Progress,
+                ArchivedUtc = pu.Project.ArchivedUtc,
+                StartDate = pu.Project.StartDate,
+                EndDate = pu.Project.EndDate
             })
             .ToListAsync(cancellationToken: ct);
 
@@ -56,13 +60,13 @@ public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjects
     }
 }
 
-public record GetProjectsByWorkspaceIdCommand : ICommand<GetProjectsByWorkspaceIdResult>
+public record GetProjectByIdCommand : ICommand<GetProjectsByWorkspaceIdResult>
 {
     public required Guid WorkspaceId { get; init; }
     public required string UserName { get; init; }
 }
 
-public class GetProjectsByWorkspaceIdCommandValidator : AbstractValidator<GetProjectsByWorkspaceIdCommand>
+public class GetProjectsByWorkspaceIdCommandValidator : AbstractValidator<GetProjectByIdCommand>
 {
     public GetProjectsByWorkspaceIdCommandValidator()
     {
@@ -90,4 +94,8 @@ public record GetProjectsByWorkspaceIdResultItem
     public string? CreateUserDisplayName { get; init; }
     public DateTime CreatedUtc { get; init; }
     public DateTime LastUpdatedUtc { get; init; }
+    public required decimal Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
 }

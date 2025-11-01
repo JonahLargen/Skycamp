@@ -6,7 +6,7 @@ using Skycamp.ApiService.Features.ProjectManagement.GetProjectsByWorkspaceId.Sha
 
 namespace Skycamp.ApiService.Features.ProjectManagement.GetProjectsByWorkspaceId.V1;
 
-public class GetProjectsByWorkspaceIdEndpoint : EndpointWithCommandMapping<GetProjectsByWorkspaceIdRequest, GetProjectsByWorkspaceIdResponse, GetProjectsByWorkspaceIdCommand, GetProjectsByWorkspaceIdResult>
+public class GetProjectByIdEndpoint : EndpointWithCommandMapping<GetProjectsByWorkspaceIdRequest, GetProjectsByWorkspaceIdResponse, GetProjectByIdCommand, GetProjectsByWorkspaceIdResult>
 {
     public override void Configure()
     {
@@ -30,9 +30,9 @@ public class GetProjectsByWorkspaceIdEndpoint : EndpointWithCommandMapping<GetPr
         await SendMappedAsync(r, ct: ct);
     }
 
-    public override GetProjectsByWorkspaceIdCommand MapToCommand(GetProjectsByWorkspaceIdRequest r)
+    public override GetProjectByIdCommand MapToCommand(GetProjectsByWorkspaceIdRequest r)
     {
-        return new GetProjectsByWorkspaceIdCommand()
+        return new GetProjectByIdCommand()
         {
             UserName = User.GetRequiredUserName(),
             WorkspaceId = r.WorkspaceId
@@ -53,7 +53,11 @@ public class GetProjectsByWorkspaceIdEndpoint : EndpointWithCommandMapping<GetPr
                 CreateUserId = w.CreateUserId,
                 CreateUserDisplayName = w.CreateUserDisplayName,
                 CreatedUtc = w.CreatedUtc,
-                LastUpdatedUtc = w.LastUpdatedUtc
+                LastUpdatedUtc = w.LastUpdatedUtc,
+                Progress = w.Progress,
+                ArchivedUtc = w.ArchivedUtc,
+                StartDate = w.StartDate,
+                EndDate = w.EndDate
             }).ToList()
         };
     }
@@ -89,4 +93,8 @@ public record GetProjectsByWorkspaceIdResponseItem
     public string? CreateUserDisplayName { get; init; }
     public DateTime CreatedUtc { get; init; }
     public DateTime LastUpdatedUtc { get; init; }
+    public required decimal Progress { get; set; }
+    public DateTime? ArchivedUtc { get; set; }
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
 }

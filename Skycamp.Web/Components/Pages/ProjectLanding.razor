@@ -1,9 +1,11 @@
-﻿@page "/projects/{projectId}"
+﻿@page "/projects/{projectId:guid}"
 @rendermode InteractiveServer
 
 @inject NavigationManager NavigationManager
 @inject HttpClient HttpClient
 @inject IJSRuntime JSRuntime;
+@inject ApplicationApiClient ApplicationApiClient
+@inject WorkspaceStateService WorkspaceStateService
 
 <PageTitle>Project</PageTitle>
 
@@ -169,18 +171,25 @@
     private ProjectDetails? project;
 
     [Parameter]
-    public string? projectId { get; set; }
+    public Guid? projectId { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await Task.Delay(1000); // Simulate data fetching delay
-
-            if (!string.IsNullOrEmpty(projectId))
+            if (projectId != null)
             {
                 try
                 {
+                    var workspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
+
+                    if (workspace == null)
+                    {
+                        return;
+                    }
+
+                    var project2 = await ApplicationApiClient.GetProjectByIdAsync(workspace.WorkspaceId, projectId.Value);
+
                     project = new ProjectDetails
                     {
                         Id = "acme-rocket-42",
