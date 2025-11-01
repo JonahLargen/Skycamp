@@ -44,7 +44,11 @@ else
         else
         {
             <FluentDataGrid Items="@projects.AsQueryable()" Style="width: 100%;" MultiLine="true" Loading="@gridLoading">
-                @* <PropertyColumn Property="@(p => p.Id.ToString().ToUpper())" Sortable="true" Title="Workspace Id" Style="align-content: center;" /> *@
+                <TemplateColumn>
+                    <FluentButton IconStart="@(new Icons.Regular.Size16.Open())" Appearance="Appearance.Accent" OnClick="@(() => OpenProject(context))">
+                        Open
+                    </FluentButton>
+                </TemplateColumn>
                 <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" Style="align-content: center;" />
                 <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" Style="align-content: center;" />
                 <PropertyColumn Property="@(p => p.RoleName)" Sortable="true" Title="Your Role" Style="align-content: center;" />
@@ -173,6 +177,11 @@ else
         {
             await RefreshProjects();
         }
+    }
+
+    private void OpenProject(GetProjectsByWorkspaceIdResponseItem item)
+    {
+        NavigationManager.NavigateTo($"/projects/{item.Id}");
     }
 
     private async Task EditProject(GetProjectsByWorkspaceIdResponseItem item)

@@ -1,0 +1,274 @@
+﻿@page "/projects/{projectId}"
+@rendermode InteractiveServer
+
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+@inject IJSRuntime JSRuntime;
+
+<PageTitle>Project</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="24" Style="padding: 2rem; max-width: 1400px; margin: 0 auto;">
+    @if (project == null)
+    {
+        <FluentStack Orientation="Orientation.Vertical">
+            @for (int i = 0; i < 10; i++)
+            {
+                <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="40px" Shimmer="true" />
+            }
+        </FluentStack>
+    }
+    else
+    {
+        <!-- Header Section -->
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+            <FluentLabel Typo="Typography.H3" Style="margin: 0;">@project.Title</FluentLabel>
+            <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                @project.Description
+            </FluentLabel>
+        </FluentStack>
+
+        <!-- Progress Section -->
+        <FluentCard Style="padding: 1.5rem;">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Center">
+                    <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold">
+                        @project.StatusText
+                    </FluentLabel>
+                </FluentStack>
+
+                <FluentLabel Typo="Typography.Body" Style="text-align: center; color: var(--neutral-foreground-hint);">
+                    Updated on @project.LastUpdated.ToString("MMM dd") 📅
+                </FluentLabel>
+
+                <FluentProgress Min="0" Max="100" Value="@(Convert.ToInt32(project.Progress * 100))" Style="width: 100%;" />
+
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Style="font-size: 12px; color: var(--neutral-foreground-hint);">
+                    <span>@project.StartDate.ToString("MMM dd")</span>
+                    <span>@project.EndDate.ToString("MMM dd")</span>
+                </FluentStack>
+            </FluentStack>
+        </FluentCard>
+
+        <!-- People Section -->
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+            <FluentLabel Typo="Typography.Body">Set up people</FluentLabel>
+            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+                @foreach (var person in project.People)
+                {
+                    <FluentPersona Name="@person.Name"
+                                   Image="@person.AvatarUrl"
+                                   ImageSize="32px"
+                                   Style="cursor: pointer;" />
+                }
+                @if (project.AdditionalPeopleCount > 0)
+                {
+                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                        + @project.AdditionalPeopleCount just following
+                    </FluentLabel>
+                }
+            </FluentStack>
+        </FluentStack>
+
+        <!-- Project Items Grid -->
+        <FluentGrid Spacing="3" Style="margin-top: 1rem;">
+            <FluentGridItem xs="12" sm="6" md="3">
+                <FluentCard Style="height: 200px; cursor: pointer; padding: 1.5rem;" @onclick="@(() => NavigateToSection("chat"))">
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.ChatMultiple())" Color="Color.Accent" />
+                        <FluentLabel Typo="Typography.H6">Chat</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                            Team conversations
+                        </FluentLabel>
+                    </FluentStack>
+                </FluentCard>
+            </FluentGridItem>
+
+            <FluentGridItem xs="12" sm="6" md="3">
+                <FluentCard Style="height: 200px; cursor: pointer; padding: 1.5rem;" @onclick="@(() => NavigateToSection("docs"))">
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.Folder())" Color="Color.Accent" />
+                        <FluentLabel Typo="Typography.H6">Docs & Files</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                            Project documents
+                        </FluentLabel>
+                    </FluentStack>
+                </FluentCard>
+            </FluentGridItem>
+
+            <FluentGridItem xs="12" sm="6" md="3">
+                <FluentCard Style="height: 200px; cursor: pointer; padding: 1.5rem;" @onclick="@(() => NavigateToSection("todo"))">
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.TaskListSquareLtr())" Color="Color.Accent" />
+                        <FluentLabel Typo="Typography.H6">Todo Items</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                            Track your tasks
+                        </FluentLabel>
+                    </FluentStack>
+                </FluentCard>
+            </FluentGridItem>
+
+            <FluentGridItem xs="12" sm="6" md="3">
+                <FluentCard Style="height: 200px; cursor: pointer; padding: 1.5rem;" @onclick="@(() => NavigateToSection("kanban"))">
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.Board())" Color="Color.Accent" />
+                        <FluentLabel Typo="Typography.H6">Kanban</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                            Visual board
+                        </FluentLabel>
+                    </FluentStack>
+                </FluentCard>
+            </FluentGridItem>
+        </FluentGrid>
+
+        <!-- Project Activity Section -->
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="12" Style="margin-top: 2rem;">
+            <FluentLabel Typo="Typography.H5">Project Activity</FluentLabel>
+            <FluentCard Style="padding: 1.5rem;">
+                @if (project.Activities?.Any() == true)
+                {
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+                        @foreach (var activity in project.Activities)
+                        {
+                            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Top" HorizontalGap="12">
+                                <FluentPersona Name="@activity.UserName"
+                                               Image="@activity.UserAvatar"
+                                               ImageSize="32px" />
+                                <FluentStack Orientation="Orientation.Vertical" VerticalGap="4" Style="flex: 1;">
+                                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+                                        <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold">
+                                            @activity.UserName
+                                        </FluentLabel>
+                                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                                            @activity.Timestamp.ToString("MMM dd, h:mm tt")
+                                        </FluentLabel>
+                                    </FluentStack>
+                                    <FluentLabel Typo="Typography.Body">
+                                        @activity.Description
+                                    </FluentLabel>
+                                </FluentStack>
+                            </FluentStack>
+                            @if (activity != project.Activities.Last())
+                            {
+                                <FluentDivider Style="width: 100%;" />
+                            }
+                        }
+                    </FluentStack>
+                }
+                else
+                {
+                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                        No recent activity
+                    </FluentLabel>
+                }
+            </FluentCard>
+        </FluentStack>
+    }
+</FluentStack>
+
+@code {
+    private ProjectDetails? project;
+
+    [Parameter]
+    public string? projectId { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(1000); // Simulate data fetching delay
+
+            if (!string.IsNullOrEmpty(projectId))
+            {
+                try
+                {
+                    project = new ProjectDetails
+                    {
+                        Id = "acme-rocket-42",
+                        Title = "Acme Rocket Launch",
+                        Description = "Test project for launching Acme rockets into the upper atmosphere.",
+                        Progress = 0.23m, // 23% complete
+                        StatusText = "Planning phase",
+                        LastUpdated = DateTime.UtcNow.AddDays(-3),
+                        StartDate = DateTime.UtcNow.AddDays(-10),
+                        EndDate = DateTime.UtcNow.AddDays(60),
+                        People = new List<Person>
+                        {
+                            new Person { Name = "Alex Inventor", AvatarUrl = "https://i.pravatar.cc/150?img=12" },
+                            new Person { Name = "Sam Engineer", AvatarUrl = "https://i.pravatar.cc/150?img=15" },
+                            new Person { Name = "Morgan Pilot", AvatarUrl = "https://i.pravatar.cc/150?img=18" }
+                        },
+                        AdditionalPeopleCount = 2,
+                        Activities = new List<Activity>
+                        {
+                            new Activity
+                            {
+                                UserName = "Taylor Builder",
+                                UserAvatar = "https://i.pravatar.cc/150?img=19",
+                                Description = "Added launch pad schematics to Docs & Files.",
+                                Timestamp = DateTime.UtcNow.AddHours(-7)
+                            },
+                            new Activity
+                            {
+                                UserName = "Skyler Analyst",
+                                UserAvatar = "https://i.pravatar.cc/150?img=21",
+                                Description = "Commented on the safety checklist.",
+                                Timestamp = DateTime.UtcNow.AddDays(-1)
+                            },
+                            new Activity
+                            {
+                                UserName = "Pat Tester",
+                                UserAvatar = "https://i.pravatar.cc/150?img=24",
+                                Description = "Marked the weather monitoring task as done.",
+                                Timestamp = DateTime.UtcNow.AddDays(-2)
+                            }
+                        }
+                    };
+
+                    await InvokeAsync(StateHasChanged);
+                    await JSRuntime.InvokeVoidAsync("setDocumentTitle", project.Title);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading project: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    private void NavigateToSection(string section)
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var projectId = queryParams["id"];
+        NavigationManager.NavigateTo($"/project/{section}?id={projectId}");
+    }
+
+    public class ProjectDetails
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public decimal Progress { get; set; }
+        public string StatusText { get; set; } = string.Empty;
+        public DateTime LastUpdated { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public List<Person> People { get; set; } = new();
+        public int AdditionalPeopleCount { get; set; }
+        public List<Activity> Activities { get; set; } = new();
+    }
+
+    public class Person
+    {
+        public string Name { get; set; } = string.Empty;
+        public string AvatarUrl { get; set; } = string.Empty;
+    }
+
+    public class Activity
+    {
+        public string UserName { get; set; } = string.Empty;
+        public string UserAvatar { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
+}
