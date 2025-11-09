@@ -6,6 +6,9 @@
 @inject IJSRuntime JSRuntime;
 @inject ApplicationApiClient ApplicationApiClient
 @inject WorkspaceStateService WorkspaceStateService
+@inject TimeZoneService TimeZoneService
+@inject IToastService ToastService
+@inject IDialogService DialogService
 
 <PageTitle>Project</PageTitle>
 
@@ -38,23 +41,38 @@
                     </FluentLabel>
                 </FluentStack>
 
-                <FluentLabel Typo="Typography.Body" Style="text-align: center; color: var(--neutral-foreground-hint);">
-                    Updated on @project.LastUpdated.ToString("MMM dd") 📅
-                </FluentLabel>
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                        Last Updated on @project.LastUpdated.ToString("MMM dd") 📅
+                    </FluentLabel>
+
+                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); cursor: pointer; text-decoration: underline;" @onclick="@(async () => await OpenEditProgressDialog(project))">
+                        Update Project Progress
+                    </FluentLabel>
+                </FluentStack>
 
                 <FluentProgress Min="0" Max="100" Value="@(Convert.ToInt32(project.Progress * 100))" Style="width: 100%;" />
 
-                <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Style="font-size: 12px; color: var(--neutral-foreground-hint);">
-                    <span>@project.StartDate.ToString("MMM dd")</span>
-                    <span>@project.EndDate.ToString("MMM dd")</span>
-                </FluentStack>
+                @if (@project.StartDate != DateTime.MinValue && @project.EndDate != DateTime.MinValue)
+                {
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Style="font-size: 12px; color: var(--neutral-foreground-hint);">
+                        <span>@project.StartDate.ToString("MMM dd")</span>
+                        <span>@project.EndDate.ToString("MMM dd")</span>
+                    </FluentStack>
+                }
+                else
+                {
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Style="font-size: 12px; color: var(--neutral-foreground-hint);">
+                        No dates have been configured for this project
+                    </FluentStack>
+                }
             </FluentStack>
         </FluentCard>
 
         <!-- People Section -->
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
             <FluentLabel Typo="Typography.Body">Set up people</FluentLabel>
-            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" VerticalAlignment="VerticalAlignment.Center">
                 @foreach (var person in project.People)
                 {
                     <FluentPersona Name="@person.Name"
@@ -177,6 +195,8 @@
     {
         if (firstRender)
         {
+            await TimeZoneService.InitializeAsync();
+
             if (projectId != null)
             {
                 try
@@ -188,25 +208,31 @@
                         return;
                     }
 
-                    var project2 = await ApplicationApiClient.GetProjectByIdAsync(workspace.WorkspaceId, projectId.Value);
+                    var projectItem = await ApplicationApiClient.GetProjectByIdAsync(workspace.WorkspaceId, projectId.Value);
+
+                    if (projectItem == null || !projectItem.IsSuccess || projectItem.Data == null)
+                    {
+                        return;
+                    }
+
+                    var projectData = projectItem.Data;
 
                     project = new ProjectDetails
                     {
-                        Id = "acme-rocket-42",
-                        Title = "Acme Rocket Launch",
-                        Description = "Test project for launching Acme rockets into the upper atmosphere.",
-                        Progress = 0.23m, // 23% complete
-                        StatusText = "Planning phase",
-                        LastUpdated = DateTime.UtcNow.AddDays(-3),
-                        StartDate = DateTime.UtcNow.AddDays(-10),
-                        EndDate = DateTime.UtcNow.AddDays(60),
-                        People = new List<Person>
+                        Id = projectData.Id,
+                        Title = projectData.Name,
+                        Description = projectData.Description ?? "No Description",
+                        Progress = projectData.Progress,
+                        StatusText = projectData.ArchivedUtc.HasValue ? "Archived" : "Active",
+                        LastUpdated = TimeZoneService.ConvertFromUtc(projectData.LastUpdatedUtc),
+                        StartDate = projectData.StartDate.HasValue ? TimeZoneService.ConvertFromUtc(projectData.StartDate.Value) : DateTime.MinValue,
+                        EndDate = projectData.EndDate.HasValue ? TimeZoneService.ConvertFromUtc(projectData.EndDate.Value) : DateTime.MinValue,
+                        People = projectData.Users.Where(u => u.RoleName != "Viewer").Select(u => new Person
                         {
-                            new Person { Name = "Alex Inventor", AvatarUrl = "https://i.pravatar.cc/150?img=12" },
-                            new Person { Name = "Sam Engineer", AvatarUrl = "https://i.pravatar.cc/150?img=15" },
-                            new Person { Name = "Morgan Pilot", AvatarUrl = "https://i.pravatar.cc/150?img=18" }
-                        },
-                        AdditionalPeopleCount = 2,
+                            Name = u.DisplayName ?? "User",
+                            AvatarUrl = u.AvatarUrl ?? "https://i.pravatar.cc/150?u=2"
+                        }).ToList(),
+                        AdditionalPeopleCount = projectData.Users.Count(u => u.RoleName == "Viewer"),
                         Activities = new List<Activity>
                         {
                             new Activity
@@ -244,17 +270,67 @@
         }
     }
 
+    private async Task OpenEditProgressDialog(ProjectDetails project)
+    {
+        var workspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
+
+        if (workspace == null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new EditProjectProgressDialogModel()
+        {
+            WorkspaceId = workspace.WorkspaceId,
+            Id = project.Id,
+            Progress = Convert.ToInt32(project.Progress * 100m)
+        };
+        var dialog = await DialogService.ShowDialogAsync<EditProjectProgressDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            var newProgress = (int)result.Data!;
+
+            project.Progress = newProgress / 100m;
+        }
+    }
+
     private void NavigateToSection(string section)
     {
-        var uri = new Uri(NavigationManager.Uri);
-        var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
-        var projectId = queryParams["id"];
-        NavigationManager.NavigateTo($"/project/{section}?id={projectId}");
+        if (section == "chat")
+        {
+            ToastService.ShowWarning("Chat not implemented yet...");
+        }
+        else if (section == "docs")
+        {
+            ToastService.ShowWarning("Docs not implemented yet...");
+        }
+        else if (section == "todo")
+        {
+            var uri = new Uri(NavigationManager.Uri);
+            var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+            NavigationManager.NavigateTo($"/projects/{projectId}/todos");
+        }
+        else if (section == "kanban")
+        {
+            ToastService.ShowWarning("Kanban not implemented yet...");
+        }
+        else
+        {
+            ToastService.ShowError($"Unknown command: {section}");
+        }
     }
 
     public class ProjectDetails
     {
-        public string Id { get; set; } = string.Empty;
+        public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public decimal Progress { get; set; }

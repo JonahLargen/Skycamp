@@ -49,7 +49,15 @@ public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjectB
                 Progress = pu.Project.Progress,
                 ArchivedUtc = pu.Project.ArchivedUtc,
                 StartDate = pu.Project.StartDate,
-                EndDate = pu.Project.EndDate
+                EndDate = pu.Project.EndDate,
+                Users = pu.Project.Users.Select(u => new GetProjectsByWorkspaceIdResultItemUser
+                {
+                    Id = u.User.Id,
+                    UserName = u.User.UserName,
+                    DisplayName = u.User.DisplayName,
+                    RoleName = u.RoleName,
+                    AvatarUrl = u.User.AvatarUrl
+                }).ToList()
             })
             .ToListAsync(cancellationToken: ct);
 
@@ -98,4 +106,14 @@ public record GetProjectsByWorkspaceIdResultItem
     public DateTime? ArchivedUtc { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
+    public required List<GetProjectsByWorkspaceIdResultItemUser> Users { get; init; }
+}
+
+public record GetProjectsByWorkspaceIdResultItemUser
+{
+    public required string Id { get; init; }
+    public string? UserName { get; init; }
+    public string? DisplayName { get; init; }
+    public required string RoleName { get; init; }
+    public string? AvatarUrl { get; init; }
 }
