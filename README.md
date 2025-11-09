@@ -38,32 +38,53 @@ Skycamp/
 
 ## Getting Started
 
-### Prerequisites
-
-- [.NET 9 SDK](https://dotnet.microsoft.com/download)
-- [SQL Server](https://www.microsoft.com/en-us/sql-server) or compatible database
-- [Auth0 Account](https://auth0.com/) (for authentication)
-
 ### Setup Instructions
 
-1. **Clone the Repository**
-
+1. For best compatibility, it is recommended to run Aspire projects through Visual Studio. Be sure to download VS, SSMS, .NET 9, & Docker. Make sure web development with Aspire/Blazor packages are included. Microsoft also officially supported VS code and the CLI to run Aspire, if you wish.
+2. Clone the Repository
    ```bash
    git clone https://github.com/JonahLargen/Skycamp.git
    cd Skycamp
    ```
+3. Be sure to have docker desktop installed and running before starting the app host project. Aspire will automatically download and run the needed containers.
+4. Create an auth0 individual application (free version will suffice) and review the Blazor quickstart to see how to seed the application. You will need to set up or obtain the following:
 
-2. **Install Dependencies**
+- Domain
+- Client ID
+- Client Secret
+- Callback URL (ex. https://localhost:7128/callback)
+- Logout URL (ex. https://localhost:7128)
+- Authorize the API (to allow admin programatic login)
+- Create an 'Admin' Role
+- Create an internal superuser with the Admin role
+- On the post login event, add the roles to the claims:
 
-   ```bash
-   dotnet restore
-   ```
+```js
+exports.onExecutePostLogin = async (event, api) => {
+   const namespace = 'https://api.skycamp.com';
 
-3. **Run the Application**
+  if (event.authorization) {
+    api.accessToken.setCustomClaim(`${namespace}/roles`, event.authorization.roles);
+  }
+};
+```
 
-   ```bash
-   dotnet run --project Skycamp.AppHost
-   ```
+- In the API Authorization Settings, select Username-Password-Authentication as the default
+
+5. Inside the aspire secrets/app settings, be sure to incoporate the environment variables so they are forwarded downstream to the applications that need them:
+
+```json
+{
+...
+"Auth0:SuperUserPassword": "...",
+"Auth0:SuperUserEmail": "...",
+"Auth0:Domain": "...",
+"Auth0:ClientSecret": "...",
+"Auth0:ClientId": "...",
+"Auth0:Audience": "...",
+...
+}
+```
 
 ---
 
