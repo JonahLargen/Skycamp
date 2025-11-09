@@ -1,5 +1,3 @@
-You're absolutely right, I apologize for that. Let me get the actual information from your repository first so I can write an accurate README.You're absolutely right. Let me look at what you actually have and create something accurate based on your real project structure. Let me check a few key files:You're right, I apologize for that. Let me create a more accurate and minimal README based on what you actually have:
-
 # Skycamp
 
 Skycamp is a tongue-in-cheek, professional-grade proof-of-concept inspired by Basecamp — a modern project management tool. This repository demonstrates a template for a project management platform, built with the latest .NET and Blazor technologies.
