@@ -5,6 +5,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<NoWarn>1701;1702;IDE0305;IDE0290</NoWarn>
+		<UserSecretsId>7ab019f7-3e9e-46e0-a12c-a1e4c32d5557</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>

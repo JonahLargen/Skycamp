@@ -42,7 +42,6 @@ Skycamp/
 2. Clone the Repository
    ```bash
    git clone https://github.com/JonahLargen/Skycamp.git
-   cd Skycamp
    ```
 3. Be sure to have docker desktop installed and running before starting the app host project. Aspire will automatically download and run the needed containers.
 4. Create an auth0 individual application (free version will suffice) and review the Blazor quickstart to see how to seed the application. You will need to set up or obtain the following:
@@ -69,6 +68,8 @@ exports.onExecutePostLogin = async (event, api) => {
 
 - In the API Authorization Settings, select Username-Password-Authentication as the default
 
+**Note: Auth0 can require some tinkering depending on your application setup. Be sure to follow auth0's documentation for current best practices and setup. Skycamp requires a default blazor setup, plus a custom admin superuser for the admin client. This is because skycamp will directly access the Authentication API.**
+
 5. Inside the aspire secrets/app settings, be sure to incoporate the environment variables so they are forwarded downstream to the applications that need them:
 
 ```json
@@ -83,6 +84,26 @@ exports.onExecutePostLogin = async (event, api) => {
 ...
 }
 ```
+
+6. Run the aspire host and login! It make take a while if it is creating your containers for the first time.
+
+### Validating the Auth0 Workflow
+
+You can test you setup auth0 right by following the login Workflow:
+
+1. Go to the home page and click login.
+
+![Login](.github/internal/skycamp-login.png)
+
+2. Create an account and login, or use a social signin (if you configured them)
+
+![Auth0 Login](.github/internal/skycamp-auth0-login.png)
+
+3. After logging in, it should take you to your profile
+
+![Login Success](.github/internal/skycamp-login-success.png)
+
+You will know you also setup the admin account correctly if no errors occur. This is because the token validated event uses the admin client to sync your user against the api (ef core identity db).
 
 ---
 
