@@ -46,6 +46,20 @@ public class ApplicationApiClient(HttpClient httpClient) : BaseApiClient
         return await CreateApiResultAsync(response);
     }
 
+    public async Task<ApiResult> EditProjectDatesAsync(Guid workspaceId, Guid projectId, EditProjectDatesRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/updatedates/v1", request, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    public async Task<ApiResult> EditProjectProgressAsync(Guid workspaceId, Guid projectId, EditProjectProgressRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/updateprogress/v1", request, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
     public async Task<ApiResult> DeleteProjectAsync(Guid workspaceId, Guid projectId, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.DeleteAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/v1", cancellationToken);
@@ -162,6 +176,17 @@ public record EditProjectRequest
     public required bool IsAllAccess { get; init; }
 }
 
+public record EditProjectDatesRequest
+{
+    public required DateOnly? StartDate { get; init; }
+    public required DateOnly? EndDate { get; init; }
+}
+
+public record EditProjectProgressRequest
+{
+    public required decimal Progress { get; init; }
+}
+
 public record CreateProjectResponse
 {
     public required string Id { get; init; }
@@ -219,8 +244,9 @@ public record GetProjectByIdResponse
     public DateTime LastUpdatedUtc { get; init; }
     public decimal Progress { get; set; }
     public DateTime? ArchivedUtc { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+    public List<GetProjectByIdResponseUser> Users { get; init; } = [];
 }
 
 public record GetProjectByIdResponseUser
@@ -229,4 +255,5 @@ public record GetProjectByIdResponseUser
     public string? UserName { get; init; }
     public string? DisplayName { get; init; }
     public string RoleName { get; init; } = null!;
+    public string? AvatarUrl { get; init; }
 }

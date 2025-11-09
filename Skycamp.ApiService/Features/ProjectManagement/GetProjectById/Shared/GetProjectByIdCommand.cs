@@ -57,7 +57,8 @@ public class GetProjectByIdCommandHandler : CommandHandler<GetProjectByIdCommand
                     u.User.Id,
                     u.User.UserName,
                     u.User.DisplayName,
-                    u.RoleName
+                    u.RoleName,
+                    u.User.AvatarUrl
                 }).ToList()
             })
             .FirstOrDefaultAsync(cancellationToken: ct);
@@ -92,7 +93,8 @@ public class GetProjectByIdCommandHandler : CommandHandler<GetProjectByIdCommand
                 Id = u.Id,
                 UserName = u.UserName,
                 DisplayName = u.DisplayName,
-                RoleName = u.RoleName
+                RoleName = u.RoleName,
+                AvatarUrl = u.AvatarUrl
             }).ToList()
         };
     }
@@ -144,4 +146,5 @@ public record GetProjectByIdResultUser
     public string? UserName { get; init; }
     public string? DisplayName { get; init; }
     public required string RoleName { get; init; }
+    public string? AvatarUrl { get; init; }
 }

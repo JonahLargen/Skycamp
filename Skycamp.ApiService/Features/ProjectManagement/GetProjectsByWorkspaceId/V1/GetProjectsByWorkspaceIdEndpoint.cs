@@ -57,7 +57,15 @@ public class GetProjectByIdEndpoint : EndpointWithCommandMapping<GetProjectsByWo
                 Progress = w.Progress,
                 ArchivedUtc = w.ArchivedUtc,
                 StartDate = w.StartDate,
-                EndDate = w.EndDate
+                EndDate = w.EndDate,
+                Users = w.Users.Select(u => new GetProjectsByWorkspaceIdResponseUser
+                {
+                    Id = u.Id,
+                    UserName = u.UserName,
+                    DisplayName = u.DisplayName,
+                    RoleName = u.RoleName,
+                    AvatarUrl = u.AvatarUrl
+                }).ToList()
             }).ToList()
         };
     }
@@ -97,4 +105,14 @@ public record GetProjectsByWorkspaceIdResponseItem
     public DateTime? ArchivedUtc { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
+    public required List<GetProjectsByWorkspaceIdResponseUser> Users { get; init; }
+}
+
+public record GetProjectsByWorkspaceIdResponseUser
+{
+    public required string Id { get; init; }
+    public string? UserName { get; init; }
+    public string? DisplayName { get; init; }
+    public required string RoleName { get; init; }
+    public string? AvatarUrl { get; init; }
 }

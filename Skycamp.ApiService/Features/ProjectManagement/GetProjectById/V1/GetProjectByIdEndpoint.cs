@@ -62,7 +62,8 @@ public class GetProjectByIdEndpoint : EndpointWithCommandMapping<GetProjectByIdR
                 Id = u.Id,
                 UserName = u.UserName,
                 DisplayName = u.DisplayName,
-                RoleName = u.RoleName
+                RoleName = u.RoleName,
+                AvatarUrl = u.AvatarUrl
             }).ToList()
         };
     }
@@ -110,4 +111,5 @@ public record GetProjectByIdResponseUser
     public string? UserName { get; init; }
     public string? DisplayName { get; init; }
     public required string RoleName { get; init; }
+    public string? AvatarUrl { get; init; }
 }
