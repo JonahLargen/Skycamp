@@ -46,24 +46,24 @@
                         Last Updated on @project.LastUpdated.ToString("MMM dd") 📅
                     </FluentLabel>
 
-                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); cursor: pointer; text-decoration: underline;" @onclick="@(async () => await OpenEditProgressDialog(project))">
+                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); cursor: pointer;" @onclick="@(async () => await OpenEditProgressDialog(project))">
                         Update Project Progress
                     </FluentLabel>
                 </FluentStack>
 
                 <FluentProgress Min="0" Max="100" Value="@(Convert.ToInt32(project.Progress * 100))" Style="width: 100%;" />
 
-                @if (@project.StartDate != DateTime.MinValue && @project.EndDate != DateTime.MinValue)
+                @if (@project.StartDate != null || @project.EndDate != null)
                 {
                     <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Style="font-size: 12px; color: var(--neutral-foreground-hint);">
-                        <span>@project.StartDate.ToString("MMM dd")</span>
-                        <span>@project.EndDate.ToString("MMM dd")</span>
+                        <span style ="cursor:pointer;" @onclick ="@(async () => await OpenEditDatesDialog(project))">@(project.StartDate?.ToString("MMM dd") ?? "No Start Date")</span>
+                        <span style="cursor:pointer;" @onclick="@(async () => await OpenEditDatesDialog(project))">@(project.EndDate?.ToString("MMM dd") ?? "No End Date")</span>
                     </FluentStack>
                 }
                 else
                 {
-                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Style="font-size: 12px; color: var(--neutral-foreground-hint);">
-                        No dates have been configured for this project
+                    <FluentStack Orientation="Orientation.Horizontal" Style="font-size: 12px; color: var(--neutral-foreground-hint);">
+                        No dates have been configured for this project. <span style="cursor:pointer;" @onclick="@(async () => await OpenEditDatesDialog(project))">Configure</span>
                     </FluentStack>
                 }
             </FluentStack>
@@ -152,7 +152,8 @@
                             <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Top" HorizontalGap="12">
                                 <FluentPersona Name="@activity.UserName"
                                                Image="@activity.UserAvatar"
-                                               ImageSize="32px" />
+                                               ImageSize="32px"
+                                               Style="width: 200px; overflow-x: clip;"/>
                                 <FluentStack Orientation="Orientation.Vertical" VerticalGap="4" Style="flex: 1;">
                                     <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
                                         <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold">
@@ -225,8 +226,8 @@
                         Progress = projectData.Progress,
                         StatusText = projectData.ArchivedUtc.HasValue ? "Archived" : "Active",
                         LastUpdated = TimeZoneService.ConvertFromUtc(projectData.LastUpdatedUtc),
-                        StartDate = projectData.StartDate.HasValue ? TimeZoneService.ConvertFromUtc(projectData.StartDate.Value) : DateTime.MinValue,
-                        EndDate = projectData.EndDate.HasValue ? TimeZoneService.ConvertFromUtc(projectData.EndDate.Value) : DateTime.MinValue,
+                        StartDate = projectData.StartDate,
+                        EndDate = projectData.EndDate,
                         People = projectData.Users.Where(u => u.RoleName != "Viewer").Select(u => new Person
                         {
                             Name = u.DisplayName ?? "User",
@@ -301,6 +302,37 @@
         }
     }
 
+    private async Task OpenEditDatesDialog(ProjectDetails project)
+    {
+        var workspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
+
+        if (workspace == null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new EditProjectDatesDialogModel()
+        {
+            WorkspaceId = workspace.WorkspaceId,
+            Id = project.Id,
+            StartDate = project.StartDate.ToDateTimeNullable(),
+            EndDate = project.EndDate.ToDateTimeNullable(),
+        };
+        var dialog = await DialogService.ShowDialogAsync<EditProjectDatesDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            project.StartDate = data.StartDate == null ? null : DateOnly.FromDateTime(data.StartDate.Value);
+            project.EndDate = data.EndDate == null ? null : DateOnly.FromDateTime(data.EndDate.Value);
+        }
+    }
+
     private void NavigateToSection(string section)
     {
         if (section == "chat")
@@ -313,10 +345,7 @@
         }
         else if (section == "todo")
         {
-            var uri = new Uri(NavigationManager.Uri);
-            var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
-
-            NavigationManager.NavigateTo($"/projects/{projectId}/todos");
+            ToastService.ShowWarning("Todo not implemented yet...");
         }
         else if (section == "kanban")
         {
@@ -336,8 +365,8 @@
         public decimal Progress { get; set; }
         public string StatusText { get; set; } = string.Empty;
         public DateTime LastUpdated { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateOnly? StartDate { get; set; }
+        public DateOnly? EndDate { get; set; }
         public List<Person> People { get; set; } = new();
         public int AdditionalPeopleCount { get; set; }
         public List<Activity> Activities { get; set; } = new();

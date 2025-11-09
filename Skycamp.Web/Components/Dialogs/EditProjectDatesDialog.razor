@@ -1,0 +1,78 @@
+﻿@implements IDialogContentComponent<EditProjectDatesDialogModel>
+
+@inject IToastService ToastService
+@inject ApplicationApiClient ApiClient
+
+<FluentEditForm Model="@Content" OnValidSubmit="SaveAsync">
+    <FluentDialogHeader ShowDismiss="true">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.WindowApps())" />
+            <FluentLabel Typo="Typography.PaneHeader">
+                @(Dialog.Instance.Parameters.Title != null ? Dialog.Instance.Parameters.Title : "Edit Project Progress")
+            </FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+
+    <FluentDialogBody>
+        <DataAnnotationsValidator />
+
+        <FluentGrid>
+            <FluentGridItem xs="6">
+                <FluentDatePicker @bind-Value="@Content.StartDate" style="width: 100%;" Autofocus=true>Start Date:</FluentDatePicker>
+                <FluentValidationMessage For="@(() => Content.StartDate)" />
+            </FluentGridItem>
+            <FluentGridItem xs="6">
+                <FluentDatePicker @bind-Value="@Content.EndDate" style="width: 100%;" Autofocus=true>End Date:</FluentDatePicker>
+                <FluentValidationMessage For="@(() => Content.EndDate)" />
+            </FluentGridItem>
+        </FluentGrid>
+
+        <FluentDialogFooter>
+            <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading=@saveLoading>Save</FluentButton>
+            <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+        </FluentDialogFooter>
+    </FluentDialogBody>
+</FluentEditForm>
+
+@code {
+    [Parameter]
+    public EditProjectDatesDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool saveLoading = false;
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            saveLoading = true;
+
+            var result = await ApiClient.EditProjectDatesAsync(Content.WorkspaceId, Content.Id, new EditProjectDatesRequest
+            {
+                StartDate = Content.StartDate.HasValue ? DateOnly.FromDateTime(Content.StartDate.Value.Date) : null,
+                EndDate = Content.EndDate.HasValue ? DateOnly.FromDateTime(Content.EndDate.Value.Date) : null
+            });
+
+            if (!result.IsSuccess)
+            {
+                ToastService.ShowError($"Failed to update project dates: {result.ErrorMessage}");
+            }
+            else
+            {
+                ToastService.ShowSuccess($"Project dates updated successfully.");
+                await Dialog.CloseAsync(DialogResult.Ok(Content));
+            }
+        }
+        finally
+        {
+            saveLoading = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CloseAsync(DialogResult.Cancel());
+    }
+}

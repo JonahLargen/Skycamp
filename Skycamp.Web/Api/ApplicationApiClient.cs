@@ -244,8 +244,8 @@ public record GetProjectByIdResponse
     public DateTime LastUpdatedUtc { get; init; }
     public decimal Progress { get; set; }
     public DateTime? ArchivedUtc { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
     public List<GetProjectByIdResponseUser> Users { get; init; } = [];
 }
 
