@@ -91,6 +91,13 @@ else
                             </FluentButton>
                         }
 
+                        @if (context is { RoleName: "Owner" or "Admin", ArchivedUtc: null })
+                        {
+                            <FluentButton IconStart="@(new Icons.Regular.Size16.Archive())" Appearance="Appearance.Neutral" OnClick="@(async () => await ArchiveProject(context))">
+                                Archive
+                            </FluentButton>
+                        }
+
                         @if (context is { RoleName: "Owner" or "Admin" })
                         {
                             <FluentButton IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral" OnClick="@(async () => await DeleteProject(context))">
@@ -136,7 +143,11 @@ else
 
             if (response.IsSuccess && response.Data != null)
             {
-                projects = response.Data.Projects;
+                // Sort projects: active first, then archived at the bottom
+                projects = response.Data.Projects
+                    .OrderBy(p => p.ArchivedUtc.HasValue)
+                    .ThenByDescending(p => p.CreatedUtc)
+                    .ToList();
             }
             else
             {
@@ -158,7 +169,11 @@ else
 
             if (response.IsSuccess && response.Data != null)
             {
-                projects = response.Data.Projects;
+                // Sort projects: active first, then archived at the bottom
+                projects = response.Data.Projects
+                    .OrderBy(p => p.ArchivedUtc.HasValue)
+                    .ThenByDescending(p => p.CreatedUtc)
+                    .ToList();
             }
             else
             {
@@ -243,6 +258,28 @@ else
         if (result is not null && !result.Cancelled)
         {
             await RefreshProjects();
+        }
+    }
+
+    private async Task ArchiveProject(GetProjectsByWorkspaceIdResponseItem item)
+    {
+        try
+        {
+            var result = await ApiClient.ArchiveProjectAsync(activeWorkspace.WorkspaceId, item.Id);
+
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess($"Project '{item.Name}' has been archived.");
+                await RefreshProjects();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to archive project: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"An error occurred: {ex.Message}");
         }
     }
 }
