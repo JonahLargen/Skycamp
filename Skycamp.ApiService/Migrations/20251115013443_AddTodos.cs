@@ -49,8 +49,7 @@ namespace Skycamp.ApiService.Migrations
                         column: x => x.ProjectId,
                         principalSchema: "projectmgmt",
                         principalTable: "Projects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(

@@ -12,7 +12,7 @@ using Skycamp.ApiService.Data;
 namespace Skycamp.ApiService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251115010631_AddTodos")]
+    [Migration("20251115013443_AddTodos")]
     partial class AddTodos
     {
         /// <inheritdoc />
@@ -629,7 +629,7 @@ namespace Skycamp.ApiService.Migrations
                     b.HasOne("Skycamp.ApiService.Data.ProjectManagement.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("CreateUser");

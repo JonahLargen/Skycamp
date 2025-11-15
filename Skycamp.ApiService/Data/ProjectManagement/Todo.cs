@@ -55,6 +55,11 @@ public class TodoConfiguration : IEntityTypeConfiguration<Todo>
         builder.Property(m => m.Id)
            .HasValueGenerator<SequentialGuidValueGenerator>();
 
+        builder.HasOne(t => t.Project)
+            .WithMany()
+            .HasForeignKey(t => t.ProjectId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         builder.HasOne(t => t.PrimaryAssignee)
             .WithMany()
             .HasForeignKey(t => t.PrimaryAssigneeId)

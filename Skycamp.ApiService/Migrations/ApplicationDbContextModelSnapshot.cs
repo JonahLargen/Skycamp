@@ -626,7 +626,7 @@ namespace Skycamp.ApiService.Migrations
                     b.HasOne("Skycamp.ApiService.Data.ProjectManagement.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("CreateUser");
