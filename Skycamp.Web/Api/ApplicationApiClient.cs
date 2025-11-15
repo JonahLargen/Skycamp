@@ -378,5 +378,6 @@ public record GetProjectActivitiesResponseItem
     public required string UserName { get; init; }
     public string? UserAvatar { get; init; }
     public required string Description { get; init; }
+    public required string ActivityType { get; init; }
     public DateTime Timestamp { get; init; }
 }

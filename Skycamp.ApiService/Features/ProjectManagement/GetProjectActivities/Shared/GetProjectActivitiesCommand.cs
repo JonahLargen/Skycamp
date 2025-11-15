@@ -55,6 +55,7 @@ public class GetProjectActivitiesCommandHandler : CommandHandler<GetProjectActiv
                 UserName = pa.UserDisplayName ?? "Unknown User",
                 UserAvatar = pa.UserAvatarUrl,
                 Description = pa.Message,
+                ActivityType = pa.ActivityType,
                 Timestamp = pa.OccurredUtc
             })
             .ToListAsync(ct);
@@ -99,5 +100,6 @@ public record GetProjectActivitiesResultActivity
     public required string UserName { get; set; }
     public string? UserAvatar { get; set; }
     public required string Description { get; set; }
+    public required string ActivityType { get; set; }
     public DateTime Timestamp { get; set; }
 }

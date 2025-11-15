@@ -61,7 +61,7 @@ public class ProjectActivitySubscriber : BackgroundService
                 userName = payload.GetValueOrDefault("createUserDisplayName")?.ToString();
                 userId = payload.GetValueOrDefault("createUserId")?.ToString();
                 projectId = Guid.Parse(payload.GetValueOrDefault("projectId")?.ToString() ?? Guid.Empty.ToString());
-                description = $"created todo: {text}";
+                description = text;
                 activityType = "TodoCreated";
             }
             else if (messageType?.Contains("TodoCompletedEventV1") == true)
@@ -70,7 +70,7 @@ public class ProjectActivitySubscriber : BackgroundService
                 userName = payload.GetValueOrDefault("completedByUserDisplayName")?.ToString();
                 userId = payload.GetValueOrDefault("completedByUserId")?.ToString();
                 projectId = Guid.Parse(payload.GetValueOrDefault("projectId")?.ToString() ?? Guid.Empty.ToString());
-                description = $"completed todo: {text}";
+                description = text;
                 activityType = "TodoCompleted";
             }
             else if (messageType?.Contains("TodoUncompletedEventV1") == true)
@@ -79,7 +79,7 @@ public class ProjectActivitySubscriber : BackgroundService
                 userName = payload.GetValueOrDefault("uncompletedByUserDisplayName")?.ToString();
                 userId = payload.GetValueOrDefault("uncompletedByUserId")?.ToString();
                 projectId = Guid.Parse(payload.GetValueOrDefault("projectId")?.ToString() ?? Guid.Empty.ToString());
-                description = $"uncompleted todo: {text}";
+                description = text;
                 activityType = "TodoUncompleted";
             }
             else if (messageType?.Contains("TodoTextEditedEventV1") == true)
@@ -88,7 +88,7 @@ public class ProjectActivitySubscriber : BackgroundService
                 userName = payload.GetValueOrDefault("updateUserDisplayName")?.ToString();
                 userId = payload.GetValueOrDefault("updateUserId")?.ToString();
                 projectId = Guid.Parse(payload.GetValueOrDefault("projectId")?.ToString() ?? Guid.Empty.ToString());
-                description = $"edited todo text to: {newText}";
+                description = newText;
                 activityType = "TodoTextEdited";
             }
             else if (messageType?.Contains("TodoDueDateChangedEventV1") == true)
@@ -97,7 +97,7 @@ public class ProjectActivitySubscriber : BackgroundService
                 userName = payload.GetValueOrDefault("updateUserDisplayName")?.ToString();
                 userId = payload.GetValueOrDefault("updateUserId")?.ToString();
                 projectId = Guid.Parse(payload.GetValueOrDefault("projectId")?.ToString() ?? Guid.Empty.ToString());
-                description = $"changed due date for todo: {text}";
+                description = text;
                 activityType = "TodoDueDateChanged";
             }
             else if (messageType?.Contains("TodoDeletedEventV1") == true)
@@ -106,7 +106,7 @@ public class ProjectActivitySubscriber : BackgroundService
                 userName = payload.GetValueOrDefault("deleteUserDisplayName")?.ToString();
                 userId = payload.GetValueOrDefault("deleteUserId")?.ToString();
                 projectId = Guid.Parse(payload.GetValueOrDefault("projectId")?.ToString() ?? Guid.Empty.ToString());
-                description = $"deleted todo: {text}";
+                description = text;
                 activityType = "TodoDeleted";
             }
             else if (messageType?.Contains("ProjectCreatedEventV1") == true)
@@ -114,7 +114,7 @@ public class ProjectActivitySubscriber : BackgroundService
                 userName = payload.GetValueOrDefault("createUserDisplayName")?.ToString();
                 userId = payload.GetValueOrDefault("createUserId")?.ToString();
                 projectId = Guid.Parse(payload.GetValueOrDefault("id")?.ToString() ?? Guid.Empty.ToString());
-                description = "created the project";
+                description = "";
                 activityType = "ProjectCreated";
             }
 
