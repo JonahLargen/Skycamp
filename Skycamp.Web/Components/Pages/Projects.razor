@@ -76,41 +76,46 @@ else
                     }
                 </TemplateColumn>
                 <PropertyColumn Property="@(p => TimeZoneService.ConvertFromUtc(p.CreatedUtc))" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created" Style="align-content: center;" />
-                <TemplateColumn Title="Actions" Style="align-content: center;">
-                    <FluentStack>
+                <TemplateColumn Style="align-content: center;">
+                    <FluentMenuButton Text="Actions" OnMenuChanged="@(args => HandleMenuChanged(args, context))">
                         @if (context is { RoleName: "Owner" or "Admin" })
                         {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Neutral" OnClick="@(async () => await EditProject(context))">
+                            <FluentMenuItem Id="edit">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Slot="start" />
                                 Edit
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
                         else
                         {
-                            <FluentButton Disabled=@true Title="You must be an owner or admin of a project in order to edit it" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Neutral">
+                            <FluentMenuItem Id="edit" Disabled="true">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Slot="start" />
                                 Edit
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
 
                         @if (context is { RoleName: "Owner" or "Admin", ArchivedUtc: null })
                         {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.Archive())" Appearance="Appearance.Neutral" OnClick="@(async () => await ArchiveProject(context))">
+                            <FluentMenuItem Id="archive">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Slot="start" />
                                 Archive
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
 
                         @if (context is { RoleName: "Owner" or "Admin" })
                         {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral" OnClick="@(async () => await DeleteProject(context))">
+                            <FluentMenuItem Id="delete">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Slot="start" />
                                 Delete
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
                         else
                         {
-                            <FluentButton Disabled=@true Title="You must be an owner or admin of a project in order to delete it" IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral">
+                            <FluentMenuItem Id="delete" Disabled="true">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Slot="start" />
                                 Delete
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
-                    </FluentStack>
+                    </FluentMenuButton>
                 </TemplateColumn>
             </FluentDataGrid>
         }
@@ -155,6 +160,22 @@ else
             }
 
             StateHasChanged();
+        }
+    }
+
+    private async Task HandleMenuChanged(MenuChangeEventArgs args, GetProjectsByWorkspaceIdResponseItem item)
+    {
+        switch (args.Id)
+        {
+            case "edit":
+                await EditProject(item);
+                break;
+            case "archive":
+                await ArchiveProject(item);
+                break;
+            case "delete":
+                await DeleteProject(item);
+                break;
         }
     }
 

@@ -59,47 +59,53 @@ else
                         <FluentBadge Appearance="Appearance.Neutral">No</FluentBadge>
                     }
                 </TemplateColumn>
-                <TemplateColumn Title="Actions" Style="align-content: center;">
-                    <FluentStack>
+                <TemplateColumn Style="align-content: center;">
+                    <FluentMenuButton Text="Actions" OnMenuChanged="@(args => HandleWorkspaceMenuChanged(args, context))">
                         @if (context is { RoleName: "Owner" or "Admin" })
                         {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Neutral" OnClick="@(async () => await EditWorkspace(context))">
+                            <FluentMenuItem Id="edit">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Slot="start" />
                                 Edit
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
                         else
                         {
-                            <FluentButton Disabled=@true Title="You must be an owner or admin of a workspace in order to edit it" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Neutral">
+                            <FluentMenuItem Id="edit" Disabled="true">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Slot="start" />
                                 Edit
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
 
                         @if (context is { RoleName: "Owner" or "Admin" })
                         {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral" OnClick="@(async () => await DeleteWorkspace(context))">
+                            <FluentMenuItem Id="delete">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Slot="start" />
                                 Delete
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
                         else
                         {
-                            <FluentButton Disabled=@true Title="You must be an owner or admin of a workspace in order to delete it" IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral">
+                            <FluentMenuItem Id="delete" Disabled="true">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Slot="start" />
                                 Delete
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
 
                         @if (context.Id != activeWorkspace?.WorkspaceId)
                         {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.ArrowRight())" Appearance="Appearance.Neutral" OnClick="@(async () => await SetActiveWorkspace(context))">
+                            <FluentMenuItem Id="select">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowRight())" Slot="start" />
                                 Select
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
                         else
                         {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.ArrowLeft())" Appearance="Appearance.Neutral" OnClick="@(async () => await RemoveActiveWorkspace(context))">
+                            <FluentMenuItem Id="deselect">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowLeft())" Slot="start" />
                                 Deselect
-                            </FluentButton>
+                            </FluentMenuItem>
                         }
-                    </FluentStack>
+                    </FluentMenuButton>
                 </TemplateColumn>
             </FluentDataGrid>
         }
@@ -144,6 +150,25 @@ else
             }
 
             StateHasChanged();
+        }
+    }
+
+    private async Task HandleWorkspaceMenuChanged(MenuChangeEventArgs args, GetWorkspacesResponseItem item)
+    {
+        switch (args.Id)
+        {
+            case "edit":
+                await EditWorkspace(item);
+                break;
+            case "delete":
+                await DeleteWorkspace(item);
+                break;
+            case "select":
+                await SetActiveWorkspace(item);
+                break;
+            case "deselect":
+                await RemoveActiveWorkspace(item);
+                break;
         }
     }
 
