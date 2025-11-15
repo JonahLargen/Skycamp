@@ -233,32 +233,21 @@
                             Name = u.DisplayName ?? "User",
                             AvatarUrl = u.AvatarUrl ?? "https://i.pravatar.cc/150?u=2"
                         }).ToList(),
-                        AdditionalPeopleCount = projectData.Users.Count(u => u.RoleName == "Viewer"),
-                        Activities = new List<Activity>
-                        {
-                            new Activity
-                            {
-                                UserName = "Taylor Builder",
-                                UserAvatar = "https://i.pravatar.cc/150?img=19",
-                                Description = "Added launch pad schematics to Docs & Files.",
-                                Timestamp = DateTime.UtcNow.AddHours(-7)
-                            },
-                            new Activity
-                            {
-                                UserName = "Skyler Analyst",
-                                UserAvatar = "https://i.pravatar.cc/150?img=21",
-                                Description = "Commented on the safety checklist.",
-                                Timestamp = DateTime.UtcNow.AddDays(-1)
-                            },
-                            new Activity
-                            {
-                                UserName = "Pat Tester",
-                                UserAvatar = "https://i.pravatar.cc/150?img=24",
-                                Description = "Marked the weather monitoring task as done.",
-                                Timestamp = DateTime.UtcNow.AddDays(-2)
-                            }
-                        }
+                        AdditionalPeopleCount = projectData.Users.Count(u => u.RoleName == "Viewer")
                     };
+
+                    // Load real activities from API
+                    var activitiesResult = await ApplicationApiClient.GetProjectActivitiesAsync(projectId.Value, limit: 10);
+                    if (activitiesResult.IsSuccess && activitiesResult.Data != null)
+                    {
+                        project.Activities = activitiesResult.Data.Activities.Select(a => new Activity
+                        {
+                            UserName = a.UserName,
+                            UserAvatar = a.UserAvatar ?? "https://i.pravatar.cc/150?u=default",
+                            Description = a.Description,
+                            Timestamp = TimeZoneService.ConvertFromUtc(a.Timestamp)
+                        }).ToList();
+                    }
 
                     await InvokeAsync(StateHasChanged);
                     await JSRuntime.InvokeVoidAsync("setDocumentTitle", project.Title);
@@ -345,7 +334,7 @@
         }
         else if (section == "todo")
         {
-            ToastService.ShowWarning("Todo not implemented yet...");
+            NavigationManager.NavigateTo($"/projects/{projectId}/todos");
         }
         else if (section == "kanban")
         {

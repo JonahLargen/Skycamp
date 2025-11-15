@@ -1,0 +1,326 @@
+@page "/projects/{projectId:guid}/todos"
+@rendermode InteractiveServer
+
+@inject NavigationManager NavigationManager
+@inject ApplicationApiClient ApplicationApiClient
+@inject WorkspaceStateService WorkspaceStateService
+@inject TimeZoneService TimeZoneService
+@inject IToastService ToastService
+@inject IDialogService DialogService
+
+<PageTitle>Todos</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="24" Style="padding: 2rem; max-width: 1400px; margin: 0 auto;">
+    @if (isLoading)
+    {
+        <FluentStack Orientation="Orientation.Vertical">
+            @for (int i = 0; i < 5; i++)
+            {
+                <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="60px" Shimmer="true" />
+            }
+        </FluentStack>
+    }
+    else
+    {
+        <!-- Header Section -->
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" VerticalAlignment="VerticalAlignment.Center">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                <FluentLabel Typo="Typography.H3" Style="margin: 0;">Todo Items</FluentLabel>
+                <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                    Track your tasks and manage your project todos
+                </FluentLabel>
+            </FluentStack>
+            <FluentButton Appearance="Appearance.Accent" @onclick="OpenAddTodoDialog">
+                <FluentIcon Value="@(new Icons.Regular.Size20.Add())" Slot="start" />
+                Add Todo
+            </FluentButton>
+        </FluentStack>
+
+        <!-- Todo List -->
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+            @if (todos.Any())
+            {
+                @foreach (var todo in todos)
+                {
+                    <FluentCard Style="padding: 1.5rem;">
+                        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" VerticalAlignment="VerticalAlignment.Center">
+                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12" VerticalAlignment="VerticalAlignment.Center" Style="flex: 1;">
+                                <FluentCheckbox 
+                                    @bind-Value="@todo.IsCompleted" 
+                                    @onchange="@(async () => await ToggleTodoComplete(todo))" />
+                                
+                                <FluentStack Orientation="Orientation.Vertical" VerticalGap="4" Style="flex: 1;">
+                                    <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold" 
+                                                 Style="@(todo.IsCompleted ? "text-decoration: line-through; color: var(--neutral-foreground-hint);" : "")">
+                                        @todo.Text
+                                    </FluentLabel>
+                                    
+                                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="16">
+                                        @if (todo.DueDate.HasValue)
+                                        {
+                                            <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px;">
+                                                <FluentIcon Value="@(new Icons.Regular.Size16.Calendar())" Slot="start" />
+                                                Due: @todo.DueDate.Value.ToString("MMM dd, yyyy")
+                                            </FluentLabel>
+                                        }
+                                        
+                                        @if (!string.IsNullOrEmpty(todo.PrimaryAssigneeDisplayName))
+                                        {
+                                            <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px;">
+                                                <FluentIcon Value="@(new Icons.Regular.Size16.Person())" Slot="start" />
+                                                @todo.PrimaryAssigneeDisplayName
+                                            </FluentLabel>
+                                        }
+                                    </FluentStack>
+
+                                    @if (!string.IsNullOrEmpty(todo.Notes))
+                                    {
+                                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px; margin-top: 8px;">
+                                            @todo.Notes
+                                        </FluentLabel>
+                                    }
+                                </FluentStack>
+                            </FluentStack>
+
+                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+                                <FluentButton Appearance="Appearance.Lightweight" @onclick="@(() => OpenEditTodoDialog(todo))">
+                                    <FluentIcon Value="@(new Icons.Regular.Size20.Edit())" />
+                                </FluentButton>
+                                <FluentButton Appearance="Appearance.Lightweight" @onclick="@(() => DeleteTodo(todo))">
+                                    <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
+                                </FluentButton>
+                            </FluentStack>
+                        </FluentStack>
+                    </FluentCard>
+                }
+            }
+            else
+            {
+                <FluentCard Style="padding: 2rem; text-align: center;">
+                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                        No todos yet. Click "Add Todo" to create your first task!
+                    </FluentLabel>
+                </FluentCard>
+            }
+        </FluentStack>
+    }
+</FluentStack>
+
+<!-- Add/Edit Todo Dialog -->
+@if (showTodoDialog)
+{
+    <FluentDialog @bind-Hidden="showTodoDialog" Modal="true" TrapFocus="true">
+        <FluentDialogHeader>
+            <FluentLabel Typo="Typography.H6">@(editingTodo == null ? "Add Todo" : "Edit Todo")</FluentLabel>
+        </FluentDialogHeader>
+        <FluentDialogBody>
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+                <FluentTextField 
+                    @bind-Value="todoText" 
+                    Label="Task Description"
+                    Required="true"
+                    Style="width: 100%;" />
+                
+                <FluentDatePicker 
+                    @bind-Value="todoDueDate" 
+                    Label="Due Date"
+                    Style="width: 100%;" />
+                
+                <FluentTextArea 
+                    @bind-Value="todoNotes" 
+                    Label="Notes"
+                    Rows="3"
+                    Style="width: 100%;" />
+            </FluentStack>
+        </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentButton Appearance="Appearance.Neutral" @onclick="CloseTodoDialog">Cancel</FluentButton>
+            <FluentButton Appearance="Appearance.Accent" @onclick="SaveTodo">Save</FluentButton>
+        </FluentDialogFooter>
+    </FluentDialog>
+}
+
+@code {
+    private bool isLoading = true;
+    private List<GetTodosByProjectResponseItem> todos = new();
+    private bool showTodoDialog = false;
+    private GetTodosByProjectResponseItem? editingTodo = null;
+    private string todoText = "";
+    private DateTime? todoDueDate = null;
+    private string? todoNotes = null;
+
+    [Parameter]
+    public Guid? projectId { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await TimeZoneService.InitializeAsync();
+            await LoadTodos();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadTodos()
+    {
+        if (projectId == null) return;
+
+        try
+        {
+            isLoading = true;
+            var result = await ApplicationApiClient.GetTodosByProjectAsync(projectId.Value);
+            
+            if (result.IsSuccess && result.Data != null)
+            {
+                todos = result.Data.Todos;
+            }
+            else
+            {
+                ToastService.ShowError("Failed to load todos");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading todos: {ex.Message}");
+            ToastService.ShowError("An error occurred while loading todos");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenAddTodoDialog()
+    {
+        editingTodo = null;
+        todoText = "";
+        todoDueDate = null;
+        todoNotes = null;
+        showTodoDialog = true;
+    }
+
+    private void OpenEditTodoDialog(GetTodosByProjectResponseItem todo)
+    {
+        editingTodo = todo;
+        todoText = todo.Text;
+        todoDueDate = todo.DueDate?.ToDateTime(TimeOnly.MinValue);
+        todoNotes = todo.Notes;
+        showTodoDialog = true;
+    }
+
+    private void CloseTodoDialog()
+    {
+        showTodoDialog = false;
+        editingTodo = null;
+    }
+
+    private async Task SaveTodo()
+    {
+        if (string.IsNullOrWhiteSpace(todoText))
+        {
+            ToastService.ShowWarning("Please enter a task description");
+            return;
+        }
+
+        try
+        {
+            if (editingTodo == null)
+            {
+                // Create new todo
+                var request = new CreateTodoRequest
+                {
+                    Text = todoText,
+                    DueDate = todoDueDate.HasValue ? DateOnly.FromDateTime(todoDueDate.Value) : null,
+                    Notes = todoNotes
+                };
+
+                var result = await ApplicationApiClient.CreateTodoAsync(projectId!.Value, request);
+                
+                if (result.IsSuccess)
+                {
+                    ToastService.ShowSuccess("Todo created successfully");
+                    await LoadTodos();
+                }
+                else
+                {
+                    ToastService.ShowError("Failed to create todo");
+                }
+            }
+            else
+            {
+                // Update existing todo
+                var request = new UpdateTodoRequest
+                {
+                    Text = todoText,
+                    DueDate = todoDueDate.HasValue ? DateOnly.FromDateTime(todoDueDate.Value) : null,
+                    Notes = todoNotes
+                };
+
+                var result = await ApplicationApiClient.UpdateTodoAsync(editingTodo.Id, request);
+                
+                if (result.IsSuccess)
+                {
+                    ToastService.ShowSuccess("Todo updated successfully");
+                    await LoadTodos();
+                }
+                else
+                {
+                    ToastService.ShowError("Failed to update todo");
+                }
+            }
+
+            CloseTodoDialog();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving todo: {ex.Message}");
+            ToastService.ShowError("An error occurred while saving the todo");
+        }
+    }
+
+    private async Task ToggleTodoComplete(GetTodosByProjectResponseItem todo)
+    {
+        try
+        {
+            var result = await ApplicationApiClient.ToggleTodoCompleteAsync(todo.Id);
+            
+            if (result.IsSuccess)
+            {
+                await LoadTodos();
+            }
+            else
+            {
+                ToastService.ShowError("Failed to toggle todo completion");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling todo: {ex.Message}");
+            ToastService.ShowError("An error occurred while updating the todo");
+        }
+    }
+
+    private async Task DeleteTodo(GetTodosByProjectResponseItem todo)
+    {
+        try
+        {
+            var result = await ApplicationApiClient.DeleteTodoAsync(todo.Id);
+            
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess("Todo deleted successfully");
+                await LoadTodos();
+            }
+            else
+            {
+                ToastService.ShowError("Failed to delete todo");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting todo: {ex.Message}");
+            ToastService.ShowError("An error occurred while deleting the todo");
+        }
+    }
+}

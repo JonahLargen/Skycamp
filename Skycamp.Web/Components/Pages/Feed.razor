@@ -51,18 +51,93 @@ else
 
         _connection.On<string>("ReceiveMessage", (message) =>
         {
-            var payload = JsonSerializer.Deserialize<ProjectPayload>(message);
-
-            if (payload == null)
+            try
             {
-                return;
+                // Try to deserialize as a generic JSON object to check the type
+                var jsonDoc = JsonSerializer.Deserialize<JsonElement>(message);
+                
+                string output = "";
+                
+                // Check for project events
+                if (jsonDoc.TryGetProperty("name", out var nameProperty) && 
+                    jsonDoc.TryGetProperty("createUserDisplayName", out var createUserProperty))
+                {
+                    var payload = JsonSerializer.Deserialize<ProjectPayload>(message);
+                    if (payload != null)
+                    {
+                        output = $"{payload.CreateUserDisplayName} created project {payload.Name} at {TimeZoneService.ConvertFromUtc(payload.CreatedUtc).ToString("MM/dd/yyyy hh:mm:ss tt")}";
+                    }
+                }
+                // Check for todo created event
+                else if (jsonDoc.TryGetProperty("text", out var textProperty) && 
+                         jsonDoc.TryGetProperty("createUserDisplayName", out var todoCreateUserProperty) &&
+                         jsonDoc.TryGetProperty("projectName", out var projectNameProperty))
+                {
+                    var payload = JsonSerializer.Deserialize<TodoCreatedPayload>(message);
+                    if (payload != null)
+                    {
+                        output = $"{payload.CreateUserDisplayName} created todo '{payload.Text}' in project {payload.ProjectName} at {TimeZoneService.ConvertFromUtc(payload.CreatedUtc).ToString("MM/dd/yyyy hh:mm:ss tt")}";
+                    }
+                }
+                // Check for todo completed event
+                else if (jsonDoc.TryGetProperty("completedByUserDisplayName", out var completedByProperty))
+                {
+                    var payload = JsonSerializer.Deserialize<TodoCompletedPayload>(message);
+                    if (payload != null)
+                    {
+                        output = $"{payload.CompletedByUserDisplayName} completed todo '{payload.Text}' in project {payload.ProjectName} at {TimeZoneService.ConvertFromUtc(payload.CompletedUtc).ToString("MM/dd/yyyy hh:mm:ss tt")}";
+                    }
+                }
+                // Check for todo uncompleted event
+                else if (jsonDoc.TryGetProperty("uncompletedByUserDisplayName", out var uncompletedByProperty))
+                {
+                    var payload = JsonSerializer.Deserialize<TodoUncompletedPayload>(message);
+                    if (payload != null)
+                    {
+                        output = $"{payload.UncompletedByUserDisplayName} uncompleted todo '{payload.Text}' in project {payload.ProjectName} at {TimeZoneService.ConvertFromUtc(payload.UncompletedUtc).ToString("MM/dd/yyyy hh:mm:ss tt")}";
+                    }
+                }
+                // Check for todo text edited event
+                else if (jsonDoc.TryGetProperty("newText", out var newTextProperty) && 
+                         jsonDoc.TryGetProperty("updateUserDisplayName", out var updateUserProperty))
+                {
+                    var payload = JsonSerializer.Deserialize<TodoTextEditedPayload>(message);
+                    if (payload != null)
+                    {
+                        output = $"{payload.UpdateUserDisplayName} edited todo from '{payload.OldText}' to '{payload.NewText}' in project {payload.ProjectName} at {TimeZoneService.ConvertFromUtc(payload.UpdatedUtc).ToString("MM/dd/yyyy hh:mm:ss tt")}";
+                    }
+                }
+                // Check for todo due date changed event
+                else if (jsonDoc.TryGetProperty("newDueDate", out var newDueDateProperty))
+                {
+                    var payload = JsonSerializer.Deserialize<TodoDueDateChangedPayload>(message);
+                    if (payload != null)
+                    {
+                        var oldDateStr = payload.OldDueDate?.ToString("MM/dd/yyyy") ?? "none";
+                        var newDateStr = payload.NewDueDate?.ToString("MM/dd/yyyy") ?? "none";
+                        output = $"{payload.UpdateUserDisplayName} changed due date for todo '{payload.Text}' from {oldDateStr} to {newDateStr} in project {payload.ProjectName} at {TimeZoneService.ConvertFromUtc(payload.UpdatedUtc).ToString("MM/dd/yyyy hh:mm:ss tt")}";
+                    }
+                }
+                // Check for todo deleted event
+                else if (jsonDoc.TryGetProperty("deleteUserDisplayName", out var deleteUserProperty))
+                {
+                    var payload = JsonSerializer.Deserialize<TodoDeletedPayload>(message);
+                    if (payload != null)
+                    {
+                        output = $"{payload.DeleteUserDisplayName} deleted todo '{payload.Text}' in project {payload.ProjectName} at {TimeZoneService.ConvertFromUtc(payload.DeletedUtc).ToString("MM/dd/yyyy hh:mm:ss tt")}";
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(output))
+                {
+                    messages.Add(output);
+                    InvokeAsync(StateHasChanged);
+                }
             }
-
-            var output = $"{payload.CreateUserDisplayName} created project {payload.Name} at {TimeZoneService.ConvertFromUtc(payload.CreatedUtc).ToString("MM/dd/yyyy hh:mm:ss tt")}";
-
-            messages.Add(output);
-
-            InvokeAsync(StateHasChanged);
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing feed message: {ex.Message}");
+            }
         });
 
         await _connection.StartAsync();
@@ -79,15 +154,111 @@ else
     public class ProjectPayload
     {
         [JsonPropertyName("name")]
-
         public string Name { get; set; } = null!;
 
         [JsonPropertyName("createUserDisplayName")]
-
         public string CreateUserDisplayName { get; set; } = null!;
 
         [JsonPropertyName("createdUtc")]
-
         public DateTime CreatedUtc { get; set; }
+    }
+
+    public class TodoCreatedPayload
+    {
+        [JsonPropertyName("text")]
+        public string Text { get; set; } = null!;
+
+        [JsonPropertyName("projectName")]
+        public string ProjectName { get; set; } = null!;
+
+        [JsonPropertyName("createUserDisplayName")]
+        public string? CreateUserDisplayName { get; set; }
+
+        [JsonPropertyName("createdUtc")]
+        public DateTime CreatedUtc { get; set; }
+    }
+
+    public class TodoCompletedPayload
+    {
+        [JsonPropertyName("text")]
+        public string Text { get; set; } = null!;
+
+        [JsonPropertyName("projectName")]
+        public string ProjectName { get; set; } = null!;
+
+        [JsonPropertyName("completedByUserDisplayName")]
+        public string? CompletedByUserDisplayName { get; set; }
+
+        [JsonPropertyName("completedUtc")]
+        public DateTime CompletedUtc { get; set; }
+    }
+
+    public class TodoUncompletedPayload
+    {
+        [JsonPropertyName("text")]
+        public string Text { get; set; } = null!;
+
+        [JsonPropertyName("projectName")]
+        public string ProjectName { get; set; } = null!;
+
+        [JsonPropertyName("uncompletedByUserDisplayName")]
+        public string? UncompletedByUserDisplayName { get; set; }
+
+        [JsonPropertyName("uncompletedUtc")]
+        public DateTime UncompletedUtc { get; set; }
+    }
+
+    public class TodoTextEditedPayload
+    {
+        [JsonPropertyName("oldText")]
+        public string OldText { get; set; } = null!;
+
+        [JsonPropertyName("newText")]
+        public string NewText { get; set; } = null!;
+
+        [JsonPropertyName("projectName")]
+        public string ProjectName { get; set; } = null!;
+
+        [JsonPropertyName("updateUserDisplayName")]
+        public string? UpdateUserDisplayName { get; set; }
+
+        [JsonPropertyName("updatedUtc")]
+        public DateTime UpdatedUtc { get; set; }
+    }
+
+    public class TodoDueDateChangedPayload
+    {
+        [JsonPropertyName("text")]
+        public string Text { get; set; } = null!;
+
+        [JsonPropertyName("projectName")]
+        public string ProjectName { get; set; } = null!;
+
+        [JsonPropertyName("oldDueDate")]
+        public DateOnly? OldDueDate { get; set; }
+
+        [JsonPropertyName("newDueDate")]
+        public DateOnly? NewDueDate { get; set; }
+
+        [JsonPropertyName("updateUserDisplayName")]
+        public string? UpdateUserDisplayName { get; set; }
+
+        [JsonPropertyName("updatedUtc")]
+        public DateTime UpdatedUtc { get; set; }
+    }
+
+    public class TodoDeletedPayload
+    {
+        [JsonPropertyName("text")]
+        public string Text { get; set; } = null!;
+
+        [JsonPropertyName("projectName")]
+        public string ProjectName { get; set; } = null!;
+
+        [JsonPropertyName("deleteUserDisplayName")]
+        public string? DeleteUserDisplayName { get; set; }
+
+        [JsonPropertyName("deletedUtc")]
+        public DateTime DeletedUtc { get; set; }
     }
 }

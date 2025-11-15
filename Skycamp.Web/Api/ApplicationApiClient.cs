@@ -87,6 +87,54 @@ public class ApplicationApiClient(HttpClient httpClient) : BaseApiClient
 
         return await CreateApiDataResultAsync<GetProjectByIdResponse>(response);
     }
+
+    public async Task<ApiDataResult<GetTodosByProjectResponse>> GetTodosByProjectAsync(Guid projectId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync($"/todomanagement/projects/{projectId}/todos/v1", cancellationToken);
+
+        return await CreateApiDataResultAsync<GetTodosByProjectResponse>(response);
+    }
+
+    public async Task<ApiDataResult<CreateTodoResponse>> CreateTodoAsync(Guid projectId, CreateTodoRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"/todomanagement/projects/{projectId}/todos/v1", request, cancellationToken);
+
+        return await CreateApiDataResultAsync<CreateTodoResponse>(response);
+    }
+
+    public async Task<ApiResult> UpdateTodoAsync(Guid todoId, UpdateTodoRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"/todomanagement/todos/{todoId}/v1", request, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    public async Task<ApiResult> DeleteTodoAsync(Guid todoId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"/todomanagement/todos/{todoId}/v1", cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    public async Task<ApiDataResult<ToggleTodoCompleteResponse>> ToggleTodoCompleteAsync(Guid todoId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsync($"/todomanagement/todos/{todoId}/toggle-complete/v1", null, cancellationToken);
+
+        return await CreateApiDataResultAsync<ToggleTodoCompleteResponse>(response);
+    }
+
+    public async Task<ApiDataResult<GetProjectActivitiesResponse>> GetProjectActivitiesAsync(Guid projectId, int? limit = null, CancellationToken cancellationToken = default)
+    {
+        var url = $"/projectmanagement/projects/{projectId}/activities/v1";
+        if (limit.HasValue)
+        {
+            url += $"?limit={limit.Value}";
+        }
+
+        var response = await httpClient.GetAsync(url, cancellationToken);
+
+        return await CreateApiDataResultAsync<GetProjectActivitiesResponse>(response);
+    }
 }
 
 public record GetForecastResponse
@@ -256,4 +304,65 @@ public record GetProjectByIdResponseUser
     public string? DisplayName { get; init; }
     public string RoleName { get; init; } = null!;
     public string? AvatarUrl { get; init; }
+}
+
+public record GetTodosByProjectResponse
+{
+    public List<GetTodosByProjectResponseItem> Todos { get; init; } = [];
+}
+
+public record GetTodosByProjectResponseItem
+{
+    public Guid Id { get; set; }
+    public string Text { get; set; } = null!;
+    public DateOnly? DueDate { get; set; }
+    public string? PrimaryAssigneeId { get; set; }
+    public string? PrimaryAssigneeDisplayName { get; set; }
+    public string? PrimaryAssigneeAvatarUrl { get; set; }
+    public string? Notes { get; set; }
+    public bool IsCompleted { get; set; }
+    public DateTime? CompletedUtc { get; set; }
+    public string? CreateUserId { get; set; }
+    public string? CreateUserDisplayName { get; set; }
+    public DateTime CreatedUtc { get; set; }
+    public DateTime LastUpdatedUtc { get; set; }
+}
+
+public record CreateTodoRequest
+{
+    public required string Text { get; init; }
+    public DateOnly? DueDate { get; init; }
+    public string? PrimaryAssigneeId { get; init; }
+    public string? Notes { get; init; }
+}
+
+public record CreateTodoResponse
+{
+    public required Guid Id { get; init; }
+}
+
+public record UpdateTodoRequest
+{
+    public required string Text { get; init; }
+    public DateOnly? DueDate { get; init; }
+    public string? PrimaryAssigneeId { get; init; }
+    public string? Notes { get; init; }
+}
+
+public record ToggleTodoCompleteResponse
+{
+    public required bool IsCompleted { get; init; }
+}
+
+public record GetProjectActivitiesResponse
+{
+    public List<GetProjectActivitiesResponseItem> Activities { get; init; } = [];
+}
+
+public record GetProjectActivitiesResponseItem
+{
+    public required string UserName { get; init; }
+    public string? UserAvatar { get; init; }
+    public required string Description { get; init; }
+    public DateTime Timestamp { get; init; }
 }
