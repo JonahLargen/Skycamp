@@ -45,6 +45,18 @@ public class DeleteProjectCommandHandler : CommandHandler<DeleteProjectCommand>
             ThrowError("You do not have access to delete this project", statusCode: 403);
         }
 
+        var todos = _dbContext.Todos.Where(t => t.ProjectId == project.Id);
+
+        _dbContext.Todos.RemoveRange(todos);
+
+        var projectActivities = _dbContext.ProjectActivities.Where(pa => pa.ProjectId == project.Id);
+
+        _dbContext.ProjectActivities.RemoveRange(projectActivities);
+
+        var projectUsers = _dbContext.ProjectUsers.Where(pu => pu.ProjectId == project.Id);
+
+        _dbContext.ProjectUsers.RemoveRange(projectUsers);
+
         _dbContext.Projects.Remove(project);
 
         await _dbContext.SaveChangesAsync(ct);
