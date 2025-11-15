@@ -389,3 +389,54 @@ public record GetProjectActivitiesResponseItem
     public required string ActivityType { get; init; }
     public DateTime Timestamp { get; init; }
 }
+
+    // Notification Management
+
+    public async Task<ApiDataResult<GetUserNotificationsResponse>> GetUserNotificationsAsync(Guid workspaceId, bool includeDismissed = false, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync($"/notificationmanagement/workspaces/{workspaceId}/notifications/v1?includeDismissed={includeDismissed}", cancellationToken);
+
+        return await CreateApiDataResultAsync<GetUserNotificationsResponse>(response);
+    }
+
+    public async Task<ApiResult> DismissNotificationAsync(Guid notificationId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsync($"/notificationmanagement/notifications/{notificationId}/dismiss/v1", null, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    public async Task<ApiDataResult<DismissAllNotificationsResponse>> DismissAllNotificationsAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsync($"/notificationmanagement/workspaces/{workspaceId}/notifications/dismiss-all/v1", null, cancellationToken);
+
+        return await CreateApiDataResultAsync<DismissAllNotificationsResponse>(response);
+    }
+}
+
+public record GetUserNotificationsResponse
+{
+    public List<UserNotificationDto> Notifications { get; init; } = [];
+}
+
+public record UserNotificationDto
+{
+    public Guid Id { get; init; }
+    public Guid WorkspaceId { get; init; }
+    public Guid? ProjectId { get; init; }
+    public required string NotificationType { get; init; }
+    public required string Title { get; init; }
+    public required string Message { get; init; }
+    public string? ActorUserId { get; init; }
+    public string? ActorUserDisplayName { get; init; }
+    public string? ActorUserAvatarUrl { get; init; }
+    public DateTime OccurredUtc { get; init; }
+    public bool IsDismissed { get; init; }
+    public DateTime? DismissedUtc { get; init; }
+}
+
+public record DismissAllNotificationsResponse
+{
+    public bool Success { get; init; }
+    public int Count { get; init; }
+}
