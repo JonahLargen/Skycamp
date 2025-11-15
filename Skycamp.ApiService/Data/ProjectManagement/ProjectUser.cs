@@ -16,6 +16,8 @@ public class ProjectUser
 
     public DateTime JoinedUtc { get; set; } = DateTime.UtcNow;
 
+    public bool IsFavorite { get; set; } = false;
+
     [ForeignKey(nameof(UserId))]
     public ApplicationUser User { get; set; } = null!;
 

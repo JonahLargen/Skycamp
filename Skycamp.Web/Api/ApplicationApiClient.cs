@@ -81,6 +81,13 @@ public class ApplicationApiClient(HttpClient httpClient) : BaseApiClient
         return await CreateApiResultAsync(response);
     }
 
+    public async Task<ApiResult> ToggleProjectFavoriteAsync(Guid workspaceId, Guid projectId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/toggle-favorite/v1", null, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
     public async Task<ApiDataResult<GetWorkspacesResponse>> GetWorkspacesAsync(CancellationToken cancellationToken = default)
     {
         var response = await httpClient.GetAsync("/projectmanagement/workspaces/v1", cancellationToken);
@@ -291,6 +298,7 @@ public record GetProjectsByWorkspaceIdResponseItem
     public DateTime? ArchivedUtc { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
+    public bool IsFavorite { get; set; }
 }
 
 public record GetProjectByIdResponse
