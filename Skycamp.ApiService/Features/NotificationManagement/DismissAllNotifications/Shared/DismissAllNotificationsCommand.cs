@@ -1,45 +1,33 @@
+using FastEndpoints;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
 
 namespace Skycamp.ApiService.Features.NotificationManagement.DismissAllNotifications.Shared;
 
-public record DismissAllNotificationsRequest
-{
-    public Guid WorkspaceId { get; set; }
-    public string CurrentUserId { get; set; } = null!;
-}
-
-public record DismissAllNotificationsResponse
-{
-    public bool Success { get; set; }
-    public int Count { get; set; }
-}
-
-public class DismissAllNotificationsCommand
+public class DismissAllNotificationsCommandHandler : CommandHandler<DismissAllNotificationsCommand, DismissAllNotificationsResult>
 {
     private readonly ApplicationDbContext _dbContext;
 
-    public DismissAllNotificationsCommand(ApplicationDbContext dbContext)
+    public DismissAllNotificationsCommandHandler(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<DismissAllNotificationsResponse> ExecuteAsync(DismissAllNotificationsRequest request, CancellationToken cancellationToken = default)
+    public override async Task<DismissAllNotificationsResult> ExecuteAsync(DismissAllNotificationsCommand command, CancellationToken ct = default)
     {
-        var currentUserId = request.CurrentUserId;
-
         // Verify user has access to workspace
         var hasAccess = await _dbContext.WorkspaceUsers
-            .AnyAsync(wu => wu.WorkspaceId == request.WorkspaceId && wu.UserId == currentUserId, cancellationToken);
+            .AnyAsync(wu => wu.WorkspaceId == command.WorkspaceId && wu.UserId == command.UserId, ct);
 
         if (!hasAccess)
         {
-            throw new UnauthorizedAccessException("User does not have access to this workspace");
+            ThrowError("You do not have access to this workspace", statusCode: 403);
         }
 
         var notifications = await _dbContext.UserNotifications
-            .Where(n => n.WorkspaceId == request.WorkspaceId && n.UserId == currentUserId && !n.IsDismissed)
-            .ToListAsync(cancellationToken);
+            .Where(n => n.WorkspaceId == command.WorkspaceId && n.UserId == command.UserId && !n.IsDismissed)
+            .ToListAsync(ct);
 
         var count = notifications.Count;
         var now = DateTime.UtcNow;
@@ -50,12 +38,36 @@ public class DismissAllNotificationsCommand
             notification.DismissedUtc = now;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(ct);
 
-        return new DismissAllNotificationsResponse
+        return new DismissAllNotificationsResult
         {
             Success = true,
             Count = count
         };
     }
+}
+
+public record DismissAllNotificationsCommand : ICommand<DismissAllNotificationsResult>
+{
+    public required Guid WorkspaceId { get; set; }
+    public required string UserId { get; set; }
+}
+
+public class DismissAllNotificationsCommandValidator : AbstractValidator<DismissAllNotificationsCommand>
+{
+    public DismissAllNotificationsCommandValidator()
+    {
+        RuleFor(x => x.WorkspaceId)
+            .NotEmpty();
+
+        RuleFor(x => x.UserId)
+            .NotEmpty();
+    }
+}
+
+public record DismissAllNotificationsResult
+{
+    public bool Success { get; set; }
+    public int Count { get; set; }
 }

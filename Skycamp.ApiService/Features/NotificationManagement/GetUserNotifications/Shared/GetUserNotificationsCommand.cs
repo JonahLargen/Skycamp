@@ -1,62 +1,34 @@
+using FastEndpoints;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
 
 namespace Skycamp.ApiService.Features.NotificationManagement.GetUserNotifications.Shared;
 
-public record GetUserNotificationsRequest
-{
-    public Guid WorkspaceId { get; set; }
-    public bool IncludeDismissed { get; set; } = false;
-    public string CurrentUserId { get; set; } = null!;
-}
-
-public record GetUserNotificationsResponse
-{
-    public List<UserNotificationDto> Notifications { get; set; } = new();
-}
-
-public record UserNotificationDto
-{
-    public Guid Id { get; set; }
-    public Guid WorkspaceId { get; set; }
-    public Guid? ProjectId { get; set; }
-    public string NotificationType { get; set; } = null!;
-    public string Title { get; set; } = null!;
-    public string Message { get; set; } = null!;
-    public string? ActorUserId { get; set; }
-    public string? ActorUserDisplayName { get; set; }
-    public string? ActorUserAvatarUrl { get; set; }
-    public DateTime OccurredUtc { get; set; }
-    public bool IsDismissed { get; set; }
-    public DateTime? DismissedUtc { get; set; }
-}
-
-public class GetUserNotificationsCommand
+public class GetUserNotificationsCommandHandler : CommandHandler<GetUserNotificationsCommand, GetUserNotificationsResult>
 {
     private readonly ApplicationDbContext _dbContext;
 
-    public GetUserNotificationsCommand(ApplicationDbContext dbContext)
+    public GetUserNotificationsCommandHandler(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<GetUserNotificationsResponse> ExecuteAsync(GetUserNotificationsRequest request, CancellationToken cancellationToken = default)
+    public override async Task<GetUserNotificationsResult> ExecuteAsync(GetUserNotificationsCommand command, CancellationToken ct = default)
     {
-        var currentUserId = request.CurrentUserId;
-
         // Verify user has access to workspace
         var hasAccess = await _dbContext.WorkspaceUsers
-            .AnyAsync(wu => wu.WorkspaceId == request.WorkspaceId && wu.UserId == currentUserId, cancellationToken);
+            .AnyAsync(wu => wu.WorkspaceId == command.WorkspaceId && wu.UserId == command.UserId, ct);
 
         if (!hasAccess)
         {
-            throw new UnauthorizedAccessException("User does not have access to this workspace");
+            ThrowError("You do not have access to this workspace", statusCode: 403);
         }
 
         var query = _dbContext.UserNotifications
-            .Where(n => n.WorkspaceId == request.WorkspaceId && n.UserId == currentUserId);
+            .Where(n => n.WorkspaceId == command.WorkspaceId && n.UserId == command.UserId);
 
-        if (!request.IncludeDismissed)
+        if (!command.IncludeDismissed)
         {
             query = query.Where(n => !n.IsDismissed);
         }
@@ -79,11 +51,51 @@ public class GetUserNotificationsCommand
                 IsDismissed = n.IsDismissed,
                 DismissedUtc = n.DismissedUtc
             })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
-        return new GetUserNotificationsResponse
+        return new GetUserNotificationsResult
         {
             Notifications = notifications
         };
     }
+}
+
+public record GetUserNotificationsCommand : ICommand<GetUserNotificationsResult>
+{
+    public required Guid WorkspaceId { get; set; }
+    public bool IncludeDismissed { get; set; } = false;
+    public required string UserId { get; set; }
+}
+
+public class GetUserNotificationsCommandValidator : AbstractValidator<GetUserNotificationsCommand>
+{
+    public GetUserNotificationsCommandValidator()
+    {
+        RuleFor(x => x.WorkspaceId)
+            .NotEmpty();
+
+        RuleFor(x => x.UserId)
+            .NotEmpty();
+    }
+}
+
+public record GetUserNotificationsResult
+{
+    public List<UserNotificationDto> Notifications { get; set; } = [];
+}
+
+public record UserNotificationDto
+{
+    public Guid Id { get; set; }
+    public Guid WorkspaceId { get; set; }
+    public Guid? ProjectId { get; set; }
+    public string NotificationType { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string Message { get; set; } = null!;
+    public string? ActorUserId { get; set; }
+    public string? ActorUserDisplayName { get; set; }
+    public string? ActorUserAvatarUrl { get; set; }
+    public DateTime OccurredUtc { get; set; }
+    public bool IsDismissed { get; set; }
+    public DateTime? DismissedUtc { get; set; }
 }

@@ -1,48 +1,60 @@
+using FastEndpoints;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data;
 
 namespace Skycamp.ApiService.Features.NotificationManagement.DismissNotification.Shared;
 
-public record DismissNotificationRequest
-{
-    public Guid NotificationId { get; set; }
-    public string CurrentUserId { get; set; } = null!;
-}
-
-public record DismissNotificationResponse
-{
-    public bool Success { get; set; }
-}
-
-public class DismissNotificationCommand
+public class DismissNotificationCommandHandler : CommandHandler<DismissNotificationCommand, DismissNotificationResult>
 {
     private readonly ApplicationDbContext _dbContext;
 
-    public DismissNotificationCommand(ApplicationDbContext dbContext)
+    public DismissNotificationCommandHandler(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<DismissNotificationResponse> ExecuteAsync(DismissNotificationRequest request, CancellationToken cancellationToken = default)
+    public override async Task<DismissNotificationResult> ExecuteAsync(DismissNotificationCommand command, CancellationToken ct = default)
     {
-        var currentUserId = request.CurrentUserId;
-
         var notification = await _dbContext.UserNotifications
-            .FirstOrDefaultAsync(n => n.Id == request.NotificationId && n.UserId == currentUserId, cancellationToken);
+            .FirstOrDefaultAsync(n => n.Id == command.NotificationId && n.UserId == command.UserId, ct);
 
         if (notification == null)
         {
-            throw new UnauthorizedAccessException("Notification not found or user does not have access");
+            ThrowError("Notification not found or you do not have access", statusCode: 404);
         }
 
         notification.IsDismissed = true;
         notification.DismissedUtc = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(ct);
 
-        return new DismissNotificationResponse
+        return new DismissNotificationResult
         {
             Success = true
         };
     }
+}
+
+public record DismissNotificationCommand : ICommand<DismissNotificationResult>
+{
+    public required Guid NotificationId { get; set; }
+    public required string UserId { get; set; }
+}
+
+public class DismissNotificationCommandValidator : AbstractValidator<DismissNotificationCommand>
+{
+    public DismissNotificationCommandValidator()
+    {
+        RuleFor(x => x.NotificationId)
+            .NotEmpty();
+
+        RuleFor(x => x.UserId)
+            .NotEmpty();
+    }
+}
+
+public record DismissNotificationResult
+{
+    public bool Success { get; set; }
 }
