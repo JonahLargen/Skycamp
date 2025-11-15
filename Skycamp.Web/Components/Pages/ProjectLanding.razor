@@ -142,7 +142,7 @@
 
         <!-- Project Activity Section -->
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="12" Style="margin-top: 2rem;">
-            <FluentLabel Typo="Typography.H5">Project Activity</FluentLabel>
+            <FluentLabel Typo="Typography.H5">Recent Project Activity</FluentLabel>
             <FluentCard Style="padding: 1.5rem;">
                 @if (project.Activities?.Any() == true)
                 {
@@ -237,7 +237,7 @@
                     };
 
                     // Load real activities from API
-                    var activitiesResult = await ApplicationApiClient.GetProjectActivitiesAsync(projectId.Value, limit: 10);
+                    var activitiesResult = await ApplicationApiClient.GetProjectActivitiesAsync(projectId.Value, limit: 25);
                     if (activitiesResult.IsSuccess && activitiesResult.Data != null)
                     {
                         project.Activities = activitiesResult.Data.Activities.Select(a => new Activity
