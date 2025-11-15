@@ -116,9 +116,8 @@ builder.Services.AddCommandMiddleware(c =>
 builder.AddAzureServiceBusClient(connectionName: "sbemulatorns");
 
 //Hosted Services
-builder.Services.AddHostedService<OutboxSubscriber1>();
-builder.Services.AddHostedService<OutboxSubscriber2>();
 builder.Services.AddHostedService<FeedSubscriber>();
+builder.Services.AddHostedService<ProjectActivitySubscriber>();
 
 var app = builder.Build();
 

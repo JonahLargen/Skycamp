@@ -14,6 +14,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Workspace> Workspaces { get; set; }
     public DbSet<WorkspaceUser> WorkspaceUsers { get; set; }
     public DbSet<WorkspaceRole> WorkspaceRoles { get; set; }
+    public DbSet<Todo> Todos { get; set; }
+    public DbSet<ProjectActivity> ProjectActivities { get; set; }
     public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)

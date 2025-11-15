@@ -18,7 +18,8 @@
 
         <FluentGrid>
             <FluentGridItem xs="12">
-                <FluentNumberField @bind-Value="@Content.Progress" style="width: 100%;" Autofocus=true Min="0" Max="100">Progress:</FluentNumberField>
+                <FluentLabel>Progress: @Content.Progress.ToString("F0")%</FluentLabel>
+                <FluentSlider Min="0" Max="100" Step="5" @bind-Value="@Content.Progress" Style="width: 100%; margin-top: 0.5rem;" />
                 <FluentValidationMessage For="@(() => Content.Progress)" />
             </FluentGridItem>
         </FluentGrid>

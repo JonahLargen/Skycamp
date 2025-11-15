@@ -42,7 +42,7 @@ public class GetWorkspacesByIdCommandHandler : CommandHandler<GetWorkspacesByIdC
                 Description = wu.Workspace.Description,
                 RoleName = wu.RoleName,
                 CreateUserId = wu.Workspace.CreateUserId,
-                CreateUserDisplayName = wu.Workspace.CreateUser != null ? wu.Workspace.CreateUser.DisplayName ?? wu.Workspace.CreateUser.UserName : null,
+                CreateUserDisplayName = wu.Workspace.CreateUser.DisplayName,
                 CreatedUtc = wu.Workspace.CreatedUtc,
                 LastUpdatedUtc = wu.Workspace.LastUpdatedUtc
             })

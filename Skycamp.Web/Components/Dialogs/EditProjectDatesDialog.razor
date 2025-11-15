@@ -18,11 +18,13 @@
 
         <FluentGrid>
             <FluentGridItem xs="6">
+                <FluentLabel>Start Date:</FluentLabel>
                 <FluentDatePicker @bind-Value="@Content.StartDate" style="width: 100%;" Autofocus=true>Start Date:</FluentDatePicker>
                 <FluentValidationMessage For="@(() => Content.StartDate)" />
             </FluentGridItem>
             <FluentGridItem xs="6">
-                <FluentDatePicker @bind-Value="@Content.EndDate" style="width: 100%;" Autofocus=true>End Date:</FluentDatePicker>
+                <FluentLabel>End Date:</FluentLabel>
+                <FluentDatePicker @bind-Value="@Content.EndDate" style="width: 100%;">End Date:</FluentDatePicker>
                 <FluentValidationMessage For="@(() => Content.EndDate)" />
             </FluentGridItem>
         </FluentGrid>

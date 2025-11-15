@@ -43,13 +43,14 @@ public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjectB
                 RoleName = pu.RoleName,
                 IsAllAccess = pu.Project.IsAllAccess,
                 CreateUserId = pu.Project.CreateUserId,
-                CreateUserDisplayName = pu.Project.CreateUser != null ? pu.Project.CreateUser.DisplayName ?? pu.Project.CreateUser.UserName : null,
+                CreateUserDisplayName = pu.Project.CreateUser.DisplayName,
                 CreatedUtc = pu.Project.CreatedUtc,
                 LastUpdatedUtc = pu.Project.LastUpdatedUtc,
                 Progress = pu.Project.Progress,
                 ArchivedUtc = pu.Project.ArchivedUtc,
                 StartDate = pu.Project.StartDate,
                 EndDate = pu.Project.EndDate,
+                IsFavorite = pu.IsFavorite,
                 Users = pu.Project.Users.Select(u => new GetProjectsByWorkspaceIdResultItemUser
                 {
                     Id = u.User.Id,
@@ -106,6 +107,7 @@ public record GetProjectsByWorkspaceIdResultItem
     public DateTime? ArchivedUtc { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
+    public bool IsFavorite { get; set; }
     public required List<GetProjectsByWorkspaceIdResultItemUser> Users { get; init; }
 }
 

@@ -6,7 +6,7 @@ using Skycamp.ApiService.Features.ProjectManagement.ArchiveProject.Shared;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.ArchiveProject.V1;
 
-public class ArchiveProjectEndpoint : EndpointWithoutResponseWithCommandMapping<ArchiveProjectRequest, UpdateProjectProgressCommand>
+public class ArchiveProjectEndpoint : EndpointWithoutRequestWithCommandMapping<ArchiveProjectResponse, UpdateProjectProgressCommand, ArchiveProjectResult>
 {
     public override void Configure()
     {
@@ -20,34 +20,41 @@ public class ArchiveProjectEndpoint : EndpointWithoutResponseWithCommandMapping<
 
         Summary(s =>
         {
-            s.Summary = "Archives an a project.";
+            s.Summary = "Archive a project";
             s.Description = "Archives an existing project in the system.";
         });
     }
 
-    public override async Task HandleAsync(ArchiveProjectRequest req, CancellationToken ct)
+    public override async Task HandleAsync(CancellationToken ct)
     {
-        await SendMappedAsync(req, ct: ct);
+        await SendMappedAsync(ct: ct);
     }
 
-    public override UpdateProjectProgressCommand MapToCommand(ArchiveProjectRequest r)
+    public override ArchiveProjectResponse MapFromEntity(ArchiveProjectResult e)
+    {
+        return new ArchiveProjectResponse
+        {
+            IsArchived = e.IsArchived
+        };
+    }
+
+    public override UpdateProjectProgressCommand MapToCommand()
     {
         return new UpdateProjectProgressCommand
         {
-            ProjectId = r.ProjectId,
-            WorkspaceId = r.WorkspaceId,
+            ProjectId = Route<Guid>("ProjectId"),
+            WorkspaceId = Route<Guid>("WorkspaceId"),
             ArchiveUserName = User.GetRequiredUserName(),
         };
     }
 }
 
-public class ArchiveProjectRequest
+public class ArchiveProjectResponse
 {
-    public Guid ProjectId { get; set; }
-    public Guid WorkspaceId { get; set; }
+    public required bool IsArchived { get; set; }
 }
 
-public class ArchiveProjectRequestValidator : Validator<ArchiveProjectRequest>
+public class ArchiveProjectRequestValidator : Validator<UpdateProjectProgressCommand>
 {
     public ArchiveProjectRequestValidator()
     {

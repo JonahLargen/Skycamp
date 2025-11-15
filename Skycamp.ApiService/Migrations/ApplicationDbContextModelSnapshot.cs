@@ -273,6 +273,7 @@ namespace Skycamp.ApiService.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreateUserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedUtc")
@@ -320,6 +321,49 @@ namespace Skycamp.ApiService.Migrations
                     b.ToTable("Projects", "projectmgmt");
                 });
 
+            modelBuilder.Entity("Skycamp.ApiService.Data.ProjectManagement.ProjectActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActivityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("OccurredUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserAvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("UserDisplayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ProjectId", "OccurredUtc")
+                        .HasDatabaseName("IX_ProjectActivities_ProjectId_OccurredUtc");
+
+                    b.ToTable("ProjectActivities", "projectmgmt");
+                });
+
             modelBuilder.Entity("Skycamp.ApiService.Data.ProjectManagement.ProjectRole", b =>
                 {
                     b.Property<string>("Name")
@@ -356,6 +400,9 @@ namespace Skycamp.ApiService.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("JoinedUtc")
                         .HasColumnType("datetime2");
 
@@ -374,6 +421,62 @@ namespace Skycamp.ApiService.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ProjectUsers", "projectmgmt");
+                });
+
+            modelBuilder.Entity("Skycamp.ApiService.Data.ProjectManagement.Todo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreateUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("PrimaryAssigneeId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreateUserId");
+
+                    b.HasIndex("PrimaryAssigneeId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("Todos", "projectmgmt");
                 });
 
             modelBuilder.Entity("Skycamp.ApiService.Data.ProjectManagement.Workspace", b =>
@@ -515,7 +618,8 @@ namespace Skycamp.ApiService.Migrations
                     b.HasOne("Skycamp.ApiService.Data.Identity.ApplicationUser", "CreateUser")
                         .WithMany()
                         .HasForeignKey("CreateUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Skycamp.ApiService.Data.ProjectManagement.Workspace", "Workspace")
                         .WithMany()
@@ -526,6 +630,24 @@ namespace Skycamp.ApiService.Migrations
                     b.Navigation("CreateUser");
 
                     b.Navigation("Workspace");
+                });
+
+            modelBuilder.Entity("Skycamp.ApiService.Data.ProjectManagement.ProjectActivity", b =>
+                {
+                    b.HasOne("Skycamp.ApiService.Data.ProjectManagement.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Skycamp.ApiService.Data.Identity.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Skycamp.ApiService.Data.ProjectManagement.ProjectUser", b =>
@@ -555,12 +677,37 @@ namespace Skycamp.ApiService.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Skycamp.ApiService.Data.ProjectManagement.Todo", b =>
+                {
+                    b.HasOne("Skycamp.ApiService.Data.Identity.ApplicationUser", "CreateUser")
+                        .WithMany()
+                        .HasForeignKey("CreateUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Skycamp.ApiService.Data.Identity.ApplicationUser", "PrimaryAssignee")
+                        .WithMany()
+                        .HasForeignKey("PrimaryAssigneeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Skycamp.ApiService.Data.ProjectManagement.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreateUser");
+
+                    b.Navigation("PrimaryAssignee");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Skycamp.ApiService.Data.ProjectManagement.Workspace", b =>
                 {
                     b.HasOne("Skycamp.ApiService.Data.Identity.ApplicationUser", "CreateUser")
                         .WithMany()
                         .HasForeignKey("CreateUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreateUser");
                 });

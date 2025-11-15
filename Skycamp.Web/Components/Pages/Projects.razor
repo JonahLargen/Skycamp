@@ -24,97 +24,120 @@
 }
 else
 {
-    <FluentStack Orientation="Orientation.Vertical">
-        <FluentStack>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+        <!-- Action Bar -->
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+            <FluentSearch @bind-Value="@searchQuery" @bind-Value:after="FilterProjects" 
+                          Placeholder="Search projects..." 
+                          Style="flex: 1; max-width: 400px;" />
+            
             <FluentButton Loading=@refreshLoading IconStart="@(new Icons.Regular.Size16.ArrowRedo())" Appearance="Appearance.Neutral" OnClick="RefreshProjects">
                 Refresh
             </FluentButton>
 
             <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" Appearance="Appearance.Accent" OnClick="AddProject">
-                Add
+                Add Project
             </FluentButton>
         </FluentStack>
 
-        @if (projects.Count == 0)
+        @if (filteredProjects.Count == 0)
         {
-            <FluentMessageBar Title="No Projects Found" Intent="MessageIntent.Warning" AllowDismiss=false FadeIn=false>
-                You currently have no projects. Consider creating one to get started!
+            <FluentMessageBar Title="No Projects Found" Intent="MessageIntent.Warning" AllowDismiss=false>
+                @(string.IsNullOrWhiteSpace(searchQuery) ? "You currently have no projects. Consider creating one to get started!" : "No projects match your search criteria.")
             </FluentMessageBar>
         }
         else
         {
-            <FluentDataGrid Items="@projects.AsQueryable()" Style="width: 100%;" MultiLine="true" Loading="@gridLoading">
-                <TemplateColumn>
-                    <FluentButton IconStart="@(new Icons.Regular.Size16.Open())" Appearance="Appearance.Accent" OnClick="@(() => OpenProject(context))">
-                        Open
-                    </FluentButton>
-                </TemplateColumn>
-                <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" Style="align-content: center;" />
-                <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" Style="align-content: center;" />
-                <PropertyColumn Property="@(p => p.RoleName)" Sortable="true" Title="Your Role" Style="align-content: center;" />
-                <TemplateColumn Sortable="true" Title="All Access?" Style="align-content: center;">
-                    @if (context.IsAllAccess)
-                    {
-                        <FluentBadge Appearance="Appearance.Accent">Yes</FluentBadge>
-                    }
-                    else
-                    {
-                        <FluentBadge Appearance="Appearance.Neutral">No</FluentBadge>
-                    }
-                </TemplateColumn>
-                <TemplateColumn Sortable="true" Title="Progress" Style="align-content: center;">
-                    @context.Progress.ToString("P0")
-                </TemplateColumn>
-                <TemplateColumn Sortable="true" Title="Archived?" Style="align-content: center;">
-                    @if (context.ArchivedUtc != null)
-                    {
-                        <FluentBadge Appearance="Appearance.Accent">Yes</FluentBadge>
-                    }
-                    else
-                    {
-                        <FluentBadge Appearance="Appearance.Neutral">No</FluentBadge>
-                    }
-                </TemplateColumn>
-                <PropertyColumn Property="@(p => TimeZoneService.ConvertFromUtc(p.CreatedUtc))" Format="yyyy-MM-dd hh:mm tt" Sortable="true" Title="Created" Style="align-content: center;" />
-                <TemplateColumn Title="Actions" Style="align-content: center;">
-                    <FluentStack>
-                        @if (context is { RoleName: "Owner" or "Admin" })
-                        {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Neutral" OnClick="@(async () => await EditProject(context))">
-                                Edit
-                            </FluentButton>
-                        }
-                        else
-                        {
-                            <FluentButton Disabled=@true Title="You must be an owner or admin of a project in order to edit it" IconStart="@(new Icons.Regular.Size16.Edit())" Appearance="Appearance.Neutral">
-                                Edit
-                            </FluentButton>
-                        }
+            <!-- Projects Grid -->
+            <FluentGrid Spacing="3" Justify="JustifyContent.FlexStart" Style="width: 100%;">
+                @foreach (var project in filteredProjects)
+                {
+                    <FluentGridItem xs="12" sm="6" md="4" lg="3">
+                        <FluentCard Style="height: 100%; position: relative;">
+                            <!-- Favorite Star -->
+                            <div style="position: absolute; top: 8px; right: 8px; z-index: 10;">
+                                <FluentButton Appearance="Appearance.Lightweight" 
+                                              IconStart="@(project.IsFavorite ? new Icons.Filled.Size20.Star() : new Icons.Regular.Size20.Star())"
+                                              OnClick="@(() => ToggleFavorite(project))"
+                                              Style="@(project.IsFavorite ? "color: gold;" : "")" />
+                            </div>
 
-                        @if (context is { RoleName: "Owner" or "Admin" })
-                        {
-                            <FluentButton IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral" OnClick="@(async () => await DeleteProject(context))">
-                                Delete
-                            </FluentButton>
-                        }
-                        else
-                        {
-                            <FluentButton Disabled=@true Title="You must be an owner or admin of a project in order to delete it" IconStart="@(new Icons.Regular.Size16.Delete())" Appearance="Appearance.Neutral">
-                                Delete
-                            </FluentButton>
-                        }
-                    </FluentStack>
-                </TemplateColumn>
-            </FluentDataGrid>
+                            <div @onclick="() => OpenProject(project)" style="cursor: pointer;">
+                                <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                                    <FluentLabel Typo="Typography.H6" Style="margin: 0; padding-right: 32px;">@project.Name</FluentLabel>
+                                    
+                                    @if (!string.IsNullOrEmpty(project.Description))
+                                    {
+                                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                                            @project.Description
+                                        </FluentLabel>
+                                    }
+
+                                    <!-- Progress Bar -->
+                                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+                                        <FluentLabel Typo="Typography.Body" Style="font-size: 11px;">Progress: @project.Progress.ToString("P0")</FluentLabel>
+                                        <FluentProgress Min="0" Max="100" Value="@((int)(project.Progress * 100))" Style="width: 100%;" />
+                                    </FluentStack>
+
+                                    <!-- Badges -->
+                                    <FluentStack Orientation="Orientation.Horizontal" Wrap="true" HorizontalGap="4">
+                                        <FluentBadge Appearance="Appearance.Neutral" Style="font-size: 10px;">@project.RoleName</FluentBadge>
+                                        @if (project.ArchivedUtc != null)
+                                        {
+                                            <FluentBadge Appearance="Appearance.Accent" Style="font-size: 10px;">Archived</FluentBadge>
+                                        }
+                                        @if (project.IsAllAccess)
+                                        {
+                                            <FluentBadge Appearance="Appearance.Accent" Style="font-size: 10px;">All Access</FluentBadge>
+                                        }
+                                    </FluentStack>
+                                </FluentStack>
+                            </div>
+
+                            <!-- Actions -->
+                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="4" Style="margin-top: 8px;">
+                                @if (project.RoleName is "Owner" or "Admin")
+                                {
+                                    <FluentButton Appearance="Appearance.Lightweight" IconStart="@(new Icons.Regular.Size16.Edit())" 
+                                                  OnClick="@(() => EditProject(project))" 
+                                                  Title="Edit">
+                                    </FluentButton>
+                                    
+                                    @if (project.ArchivedUtc == null)
+                                    {
+                                        <FluentButton Appearance="Appearance.Lightweight" IconStart="@(new Icons.Regular.Size16.Archive())" 
+                                                      OnClick="@(() => ArchiveProject(project))" 
+                                                      Title="Archive">
+                                        </FluentButton>
+                                    }
+                                    else
+                                    {
+                                        <FluentButton Appearance="Appearance.Lightweight" IconStart="@(new Icons.Regular.Size16.ArrowUndo())" 
+                                                      OnClick="@(() => UnarchiveProject(project))" 
+                                                      Title="Unarchive">
+                                        </FluentButton>
+                                    }
+                                    
+                                    <FluentButton Appearance="Appearance.Lightweight" IconStart="@(new Icons.Regular.Size16.Delete())" 
+                                                  OnClick="@(() => DeleteProject(project))" 
+                                                  Title="Delete">
+                                    </FluentButton>
+                                }
+                            </FluentStack>
+                        </FluentCard>
+                    </FluentGridItem>
+                }
+            </FluentGrid>
         }
     </FluentStack>
 }
 
 @code {
     private List<GetProjectsByWorkspaceIdResponseItem>? projects;
+    private List<GetProjectsByWorkspaceIdResponseItem> filteredProjects = new();
+    private string searchQuery = "";
     private bool refreshLoading = false;
     private WorkspaceState activeWorkspace = null!;
-    private bool gridLoading = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -136,7 +159,14 @@ else
 
             if (response.IsSuccess && response.Data != null)
             {
-                projects = response.Data.Projects;
+                // Sort projects: favorites first, then active, then archived
+                projects = response.Data.Projects
+                    .OrderByDescending(p => p.IsFavorite)
+                    .ThenBy(p => p.ArchivedUtc.HasValue)
+                    .ThenByDescending(p => p.CreatedUtc)
+                    .ToList();
+
+                FilterProjects();
             }
             else
             {
@@ -147,10 +177,33 @@ else
         }
     }
 
+    private void FilterProjects()
+    {
+        if (projects == null)
+        {
+            filteredProjects = new();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            filteredProjects = projects;
+        }
+        else
+        {
+            var query = searchQuery.ToLower();
+            filteredProjects = projects
+                .Where(p => 
+                    (p.Name?.ToLower().Contains(query) ?? false) ||
+                    (p.Description?.ToLower().Contains(query) ?? false) ||
+                    (p.RoleName?.ToLower().Contains(query) ?? false))
+                .ToList();
+        }
+    }
+
     private async Task RefreshProjects()
     {
         refreshLoading = true;
-        gridLoading = true;
 
         try
         {
@@ -158,7 +211,14 @@ else
 
             if (response.IsSuccess && response.Data != null)
             {
-                projects = response.Data.Projects;
+                // Sort projects: favorites first, then active, then archived
+                projects = response.Data.Projects
+                    .OrderByDescending(p => p.IsFavorite)
+                    .ThenBy(p => p.ArchivedUtc.HasValue)
+                    .ThenByDescending(p => p.CreatedUtc)
+                    .ToList();
+
+                FilterProjects();
             }
             else
             {
@@ -168,7 +228,42 @@ else
         finally
         {
             refreshLoading = false;
-            gridLoading = false;
+        }
+    }
+
+    private async Task ToggleFavorite(GetProjectsByWorkspaceIdResponseItem project)
+    {
+        try
+        {
+            if (projects == null)
+            {
+                return;
+            }
+
+            var result = await ApiClient.ToggleProjectFavoriteAsync(activeWorkspace.WorkspaceId, project.Id);
+
+            if (result.IsSuccess)
+            {
+                project.IsFavorite = !project.IsFavorite;
+                
+                // Re-sort projects
+                projects = projects
+                    .OrderByDescending(p => p.IsFavorite)
+                    .ThenBy(p => p.ArchivedUtc.HasValue)
+                    .ThenByDescending(p => p.CreatedUtc)
+                    .ToList();
+                
+                FilterProjects();
+                StateHasChanged();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to toggle favorite: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"An error occurred: {ex.Message}");
         }
     }
 
@@ -243,6 +338,50 @@ else
         if (result is not null && !result.Cancelled)
         {
             await RefreshProjects();
+        }
+    }
+
+    private async Task ArchiveProject(GetProjectsByWorkspaceIdResponseItem item)
+    {
+        try
+        {
+            var result = await ApiClient.ArchiveProjectAsync(activeWorkspace.WorkspaceId, item.Id);
+
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess($"Project '{item.Name}' has been archived.");
+                await RefreshProjects();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to archive project: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"An error occurred: {ex.Message}");
+        }
+    }
+
+    private async Task UnarchiveProject(GetProjectsByWorkspaceIdResponseItem item)
+    {
+        try
+        {
+            var result = await ApiClient.UnarchiveProjectAsync(activeWorkspace.WorkspaceId, item.Id);
+
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess($"Project '{item.Name}' has been unarchived.");
+                await RefreshProjects();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to unarchive project: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"An error occurred: {ex.Message}");
         }
     }
 }

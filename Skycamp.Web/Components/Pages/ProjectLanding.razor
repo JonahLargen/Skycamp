@@ -24,6 +24,17 @@
     }
     else
     {
+        <!-- Breadcrumb Navigation -->
+        <FluentBreadcrumb>
+            <FluentBreadcrumbItem Href="/projects">
+                <FluentIcon Value="@(new Icons.Regular.Size16.FolderList())" Slot="start" />
+                Projects
+            </FluentBreadcrumbItem>
+            <FluentBreadcrumbItem>
+                @project.Title
+            </FluentBreadcrumbItem>
+        </FluentBreadcrumb>
+
         <!-- Header Section -->
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
             <FluentLabel Typo="Typography.H3" Style="margin: 0;">@project.Title</FluentLabel>
@@ -142,7 +153,7 @@
 
         <!-- Project Activity Section -->
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="12" Style="margin-top: 2rem;">
-            <FluentLabel Typo="Typography.H5">Project Activity</FluentLabel>
+            <FluentLabel Typo="Typography.H5">Recent Project Activity</FluentLabel>
             <FluentCard Style="padding: 1.5rem;">
                 @if (project.Activities?.Any() == true)
                 {
@@ -155,16 +166,14 @@
                                                ImageSize="32px"
                                                Style="width: 200px; overflow-x: clip;"/>
                                 <FluentStack Orientation="Orientation.Vertical" VerticalGap="4" Style="flex: 1;">
-                                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
-                                        <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold">
-                                            @activity.UserName
-                                        </FluentLabel>
-                                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
-                                            @activity.Timestamp.ToString("MMM dd, h:mm tt")
+                                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" VerticalAlignment="VerticalAlignment.Center">
+                                        <FluentLabel Typo="Typography.Body">
+                                            <strong>@activity.UserName</strong> @GetActivityVerb(activity.ActivityType) @if (!string.IsNullOrEmpty(activity.Description))
+                                            {<text>: "@activity.Description"</text>}
                                         </FluentLabel>
                                     </FluentStack>
-                                    <FluentLabel Typo="Typography.Body">
-                                        @activity.Description
+                                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px;">
+                                        @activity.Timestamp.ToString("MMM dd, h:mm tt")
                                     </FluentLabel>
                                 </FluentStack>
                             </FluentStack>
@@ -233,32 +242,22 @@
                             Name = u.DisplayName ?? "User",
                             AvatarUrl = u.AvatarUrl ?? "https://i.pravatar.cc/150?u=2"
                         }).ToList(),
-                        AdditionalPeopleCount = projectData.Users.Count(u => u.RoleName == "Viewer"),
-                        Activities = new List<Activity>
-                        {
-                            new Activity
-                            {
-                                UserName = "Taylor Builder",
-                                UserAvatar = "https://i.pravatar.cc/150?img=19",
-                                Description = "Added launch pad schematics to Docs & Files.",
-                                Timestamp = DateTime.UtcNow.AddHours(-7)
-                            },
-                            new Activity
-                            {
-                                UserName = "Skyler Analyst",
-                                UserAvatar = "https://i.pravatar.cc/150?img=21",
-                                Description = "Commented on the safety checklist.",
-                                Timestamp = DateTime.UtcNow.AddDays(-1)
-                            },
-                            new Activity
-                            {
-                                UserName = "Pat Tester",
-                                UserAvatar = "https://i.pravatar.cc/150?img=24",
-                                Description = "Marked the weather monitoring task as done.",
-                                Timestamp = DateTime.UtcNow.AddDays(-2)
-                            }
-                        }
+                        AdditionalPeopleCount = projectData.Users.Count(u => u.RoleName == "Viewer")
                     };
+
+                    // Load real activities from API
+                    var activitiesResult = await ApplicationApiClient.GetProjectActivitiesAsync(projectId.Value, limit: 25);
+                    if (activitiesResult.IsSuccess && activitiesResult.Data != null)
+                    {
+                        project.Activities = activitiesResult.Data.Activities.Select(a => new Activity
+                        {
+                            UserName = a.UserName,
+                            UserAvatar = a.UserAvatar ?? "https://i.pravatar.cc/150?u=default",
+                            Description = a.Description,
+                            ActivityType = a.ActivityType,
+                            Timestamp = TimeZoneService.ConvertFromUtc(a.Timestamp)
+                        }).ToList();
+                    }
 
                     await InvokeAsync(StateHasChanged);
                     await JSRuntime.InvokeVoidAsync("setDocumentTitle", project.Title);
@@ -345,7 +344,7 @@
         }
         else if (section == "todo")
         {
-            ToastService.ShowWarning("Todo not implemented yet...");
+            NavigationManager.NavigateTo($"/projects/{projectId}/todos");
         }
         else if (section == "kanban")
         {
@@ -383,6 +382,22 @@
         public string UserName { get; set; } = string.Empty;
         public string UserAvatar { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public string ActivityType { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
+    }
+
+    private string GetActivityVerb(string activityType)
+    {
+        return activityType switch
+        {
+            "TodoCreated" => "created todo",
+            "TodoCompleted" => "completed todo",
+            "TodoUncompleted" => "uncompleted todo",
+            "TodoTextEdited" => "edited todo",
+            "TodoDueDateChanged" => "changed due date for todo",
+            "TodoDeleted" => "deleted todo",
+            "ProjectCreated" => "created the project",
+            _ => "updated"
+        };
     }
 }

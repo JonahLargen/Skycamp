@@ -7,10 +7,10 @@ namespace Skycamp.ApiService.BackgroundServices;
 public class FeedSubscriber : BackgroundService
 {
     private readonly ServiceBusProcessor _processor;
-    private readonly ILogger<OutboxSubscriber2> _logger;
+    private readonly ILogger<FeedSubscriber> _logger;
     private readonly IHubContext<FeedHub> _hubContext;
 
-    public FeedSubscriber(ServiceBusClient client, ILogger<OutboxSubscriber2> logger, IHubContext<FeedHub> hubContext)
+    public FeedSubscriber(ServiceBusClient client, ILogger<FeedSubscriber> logger, IHubContext<FeedHub> hubContext)
     {
         _processor = client.CreateProcessor("outbox", "outbox-subscription-feed", new ServiceBusProcessorOptions());
         _logger = logger;
