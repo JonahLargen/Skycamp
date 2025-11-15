@@ -6,7 +6,7 @@ using Skycamp.ApiService.Features.TodoManagement.ToggleTodoComplete.Shared;
 
 namespace Skycamp.ApiService.Features.TodoManagement.ToggleTodoComplete.V1;
 
-public class ToggleTodoCompleteEndpoint : EndpointWithCommandMapping<ToggleTodoCompleteRequest, ToggleTodoCompleteResponse, ToggleTodoCompleteCommand, ToggleTodoCompleteResult>
+public class ToggleTodoCompleteEndpoint : EndpointWithoutRequestWithCommandMapping<ToggleTodoCompleteResponse, ToggleTodoCompleteCommand, ToggleTodoCompleteResult>
 {
     public override void Configure()
     {
@@ -25,9 +25,9 @@ public class ToggleTodoCompleteEndpoint : EndpointWithCommandMapping<ToggleTodoC
         });
     }
 
-    public override async Task HandleAsync(ToggleTodoCompleteRequest req, CancellationToken ct)
+    public override async Task HandleAsync(CancellationToken ct)
     {
-        await SendMappedAsync(req, ct: ct);
+        await SendMappedAsync(ct: ct);
     }
 
     public override ToggleTodoCompleteResponse MapFromEntity(ToggleTodoCompleteResult e)
@@ -38,27 +38,13 @@ public class ToggleTodoCompleteEndpoint : EndpointWithCommandMapping<ToggleTodoC
         };
     }
 
-    public override ToggleTodoCompleteCommand MapToCommand(ToggleTodoCompleteRequest r)
+    public override ToggleTodoCompleteCommand MapToCommand()
     {
         return new ToggleTodoCompleteCommand
         {
-            TodoId = r.TodoId,
-            UserName = User.GetRequiredUserName()
+            TodoId = Route<Guid>("TodoId"),
+            UserName = User.GetUserName()!
         };
-    }
-}
-
-public record ToggleTodoCompleteRequest
-{
-    public Guid TodoId { get; init; }
-}
-
-public class ToggleTodoCompleteRequestValidator : Validator<ToggleTodoCompleteRequest>
-{
-    public ToggleTodoCompleteRequestValidator()
-    {
-        RuleFor(x => x.TodoId)
-            .NotEmpty();
     }
 }
 

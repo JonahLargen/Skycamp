@@ -51,7 +51,7 @@ public class GetTodosByProjectCommandHandler : CommandHandler<GetTodosByProjectC
             .Include(t => t.CreateUser)
             .Where(t => t.ProjectId == command.ProjectId)
             .OrderBy(t => t.IsCompleted)
-            .ThenByDescending(t => t.CreatedUtc)
+            .ThenBy(t => t.Text)
             .Select(t => new GetTodosByProjectResultTodo
             {
                 Id = t.Id,

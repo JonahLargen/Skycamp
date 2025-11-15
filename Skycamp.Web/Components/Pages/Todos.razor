@@ -41,44 +41,41 @@
             {
                 @foreach (var todo in todos)
                 {
-                    <FluentCard Style="padding: 1.5rem;">
-                        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" VerticalAlignment="VerticalAlignment.Center">
-                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12" VerticalAlignment="VerticalAlignment.Center" Style="flex: 1;">
-                                <FluentCheckbox 
-                                    @bind-Value="@todo.IsCompleted" 
-                                    @onchange="@(async () => await ToggleTodoComplete(todo))" />
-                                
-                                <FluentStack Orientation="Orientation.Vertical" VerticalGap="4" Style="flex: 1;">
-                                    <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold" 
-                                                 Style="@(todo.IsCompleted ? "text-decoration: line-through; color: var(--neutral-foreground-hint);" : "")">
-                                        @todo.Text
-                                    </FluentLabel>
-                                    
-                                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="16">
-                                        @if (todo.DueDate.HasValue)
-                                        {
-                                            <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px;">
-                                                <FluentIcon Value="@(new Icons.Regular.Size16.Calendar())" Slot="start" />
-                                                Due: @todo.DueDate.Value.ToString("MMM dd, yyyy")
-                                            </FluentLabel>
-                                        }
-                                        
-                                        @if (!string.IsNullOrEmpty(todo.PrimaryAssigneeDisplayName))
-                                        {
-                                            <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px;">
-                                                <FluentIcon Value="@(new Icons.Regular.Size16.Person())" Slot="start" />
-                                                @todo.PrimaryAssigneeDisplayName
-                                            </FluentLabel>
-                                        }
-                                    </FluentStack>
+                    <FluentCard @key=todo.Id Style="padding: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start;">
+                            <FluentCheckbox @bind-Value="@todo.IsCompleted"
+                                            @onchange="@(async () => await ToggleTodoComplete(todo))" />
 
-                                    @if (!string.IsNullOrEmpty(todo.Notes))
+                            <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+                                <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold"
+                                             Style="@(todo.IsCompleted ? "text-decoration: line-through; color: var(--neutral-foreground-hint);" : "")">
+                                    @todo.Text
+                                </FluentLabel>
+
+                                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="16">
+                                    @if (todo.DueDate.HasValue)
                                     {
-                                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px; margin-top: 8px;">
-                                            @todo.Notes
+                                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px; display: flex; gap: 2px;">
+                                            <FluentIcon Value="@(new Icons.Regular.Size16.Calendar())" Slot="start" />
+                                            Due: @todo.DueDate.Value.ToString("MMM dd, yyyy")
+                                        </FluentLabel>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(todo.PrimaryAssigneeDisplayName))
+                                    {
+                                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px;">
+                                            <FluentIcon Value="@(new Icons.Regular.Size16.Person())" Slot="start" />
+                                            @todo.PrimaryAssigneeDisplayName
                                         </FluentLabel>
                                     }
                                 </FluentStack>
+
+                                @if (!string.IsNullOrEmpty(todo.Notes))
+                                {
+                                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px; margin-top: 8px;">
+                                        @todo.Notes
+                                    </FluentLabel>
+                                }
                             </FluentStack>
 
                             <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
@@ -89,7 +86,7 @@
                                     <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
                                 </FluentButton>
                             </FluentStack>
-                        </FluentStack>
+                        </div>
                     </FluentCard>
                 }
             }
@@ -130,7 +127,7 @@
         {
             isLoading = true;
             var result = await ApplicationApiClient.GetTodosByProjectAsync(projectId.Value);
-            
+
             if (result.IsSuccess && result.Data != null)
             {
                 todos = result.Data.Todos;
@@ -201,7 +198,7 @@
         try
         {
             var result = await ApplicationApiClient.ToggleTodoCompleteAsync(todo.Id);
-            
+
             if (result.IsSuccess)
             {
                 await LoadTodos();
@@ -223,7 +220,7 @@
         try
         {
             var result = await ApplicationApiClient.DeleteTodoAsync(todo.Id);
-            
+
             if (result.IsSuccess)
             {
                 ToastService.ShowSuccess("Todo deleted successfully");
