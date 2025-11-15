@@ -6,11 +6,32 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Skycamp.ApiService.Migrations
 {
     /// <inheritdoc />
-    public partial class AddTodos : Migration
+    public partial class Todos : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Projects_AspNetUsers_CreateUserId",
+                schema: "projectmgmt",
+                table: "Projects");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Workspaces_AspNetUsers_CreateUserId",
+                schema: "projectmgmt",
+                table: "Workspaces");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "CreateUserId",
+                schema: "projectmgmt",
+                table: "Projects",
+                type: "nvarchar(450)",
+                nullable: false,
+                defaultValue: "",
+                oldClrType: typeof(string),
+                oldType: "nvarchar(450)",
+                oldNullable: true);
+
             migrationBuilder.CreateTable(
                 name: "Todos",
                 schema: "projectmgmt",
@@ -37,19 +58,20 @@ namespace Skycamp.ApiService.Migrations
                         column: x => x.CreateUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Todos_AspNetUsers_PrimaryAssigneeId",
                         column: x => x.PrimaryAssigneeId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Todos_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalSchema: "projectmgmt",
                         principalTable: "Projects",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -69,14 +91,69 @@ namespace Skycamp.ApiService.Migrations
                 schema: "projectmgmt",
                 table: "Todos",
                 column: "ProjectId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Projects_AspNetUsers_CreateUserId",
+                schema: "projectmgmt",
+                table: "Projects",
+                column: "CreateUserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Workspaces_AspNetUsers_CreateUserId",
+                schema: "projectmgmt",
+                table: "Workspaces",
+                column: "CreateUserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Projects_AspNetUsers_CreateUserId",
+                schema: "projectmgmt",
+                table: "Projects");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Workspaces_AspNetUsers_CreateUserId",
+                schema: "projectmgmt",
+                table: "Workspaces");
+
             migrationBuilder.DropTable(
                 name: "Todos",
                 schema: "projectmgmt");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "CreateUserId",
+                schema: "projectmgmt",
+                table: "Projects",
+                type: "nvarchar(450)",
+                nullable: true,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(450)");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Projects_AspNetUsers_CreateUserId",
+                schema: "projectmgmt",
+                table: "Projects",
+                column: "CreateUserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Workspaces_AspNetUsers_CreateUserId",
+                schema: "projectmgmt",
+                table: "Workspaces",
+                column: "CreateUserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
         }
     }
 }

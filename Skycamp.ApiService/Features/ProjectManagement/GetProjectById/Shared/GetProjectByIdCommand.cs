@@ -45,7 +45,7 @@ public class GetProjectByIdCommandHandler : CommandHandler<GetProjectByIdCommand
                     .FirstOrDefault(),
                 p.IsAllAccess,
                 p.CreateUserId,
-                CreateUserDisplayName = p.CreateUser != null ? p.CreateUser.DisplayName : null,
+                CreateUserDisplayName = p.CreateUser.DisplayName,
                 p.CreatedUtc,
                 p.LastUpdatedUtc,
                 p.Progress,

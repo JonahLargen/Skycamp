@@ -42,10 +42,10 @@ public class Todo
     public Project Project { get; set; } = null!;
 
     [ForeignKey(nameof(PrimaryAssigneeId))]
-    public ApplicationUser? PrimaryAssignee { get; set; }
+    public ApplicationUser PrimaryAssignee { get; set; } = null!;
 
     [ForeignKey(nameof(CreateUserId))]
-    public ApplicationUser? CreateUser { get; set; }
+    public ApplicationUser CreateUser { get; set; } = null!;
 }
 
 public class TodoConfiguration : IEntityTypeConfiguration<Todo>
@@ -58,16 +58,16 @@ public class TodoConfiguration : IEntityTypeConfiguration<Todo>
         builder.HasOne(t => t.Project)
             .WithMany()
             .HasForeignKey(t => t.ProjectId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(t => t.PrimaryAssignee)
             .WithMany()
             .HasForeignKey(t => t.PrimaryAssigneeId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(t => t.CreateUser)
             .WithMany()
             .HasForeignKey(t => t.CreateUserId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

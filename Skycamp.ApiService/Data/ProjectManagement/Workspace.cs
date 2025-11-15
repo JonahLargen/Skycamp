@@ -26,7 +26,7 @@ public class Workspace
     public DateTime LastUpdatedUtc { get; set; } = DateTime.UtcNow;
 
     [ForeignKey(nameof(CreateUserId))]
-    public ApplicationUser? CreateUser { get; set; } = null!;
+    public ApplicationUser CreateUser { get; set; } = null!;
 }
 
 public class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
@@ -39,6 +39,6 @@ public class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
         builder.HasOne(w => w.CreateUser)
            .WithMany()
            .HasForeignKey(w => w.CreateUserId)
-           .OnDelete(DeleteBehavior.SetNull);
+           .OnDelete(DeleteBehavior.Restrict);
     }
 }

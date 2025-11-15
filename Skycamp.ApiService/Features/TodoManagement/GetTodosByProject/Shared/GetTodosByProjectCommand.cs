@@ -58,13 +58,13 @@ public class GetTodosByProjectCommandHandler : CommandHandler<GetTodosByProjectC
                 Text = t.Text,
                 DueDate = t.DueDate,
                 PrimaryAssigneeId = t.PrimaryAssigneeId,
-                PrimaryAssigneeDisplayName = t.PrimaryAssignee != null ? t.PrimaryAssignee.DisplayName : null,
-                PrimaryAssigneeAvatarUrl = t.PrimaryAssignee != null ? t.PrimaryAssignee.AvatarUrl : null,
+                PrimaryAssigneeDisplayName = t.PrimaryAssignee.DisplayName,
+                PrimaryAssigneeAvatarUrl = t.PrimaryAssignee.AvatarUrl,
                 Notes = t.Notes,
                 IsCompleted = t.IsCompleted,
                 CompletedUtc = t.CompletedUtc,
                 CreateUserId = t.CreateUserId,
-                CreateUserDisplayName = t.CreateUser != null ? t.CreateUser.DisplayName : null,
+                CreateUserDisplayName = t.CreateUser.DisplayName,
                 CreatedUtc = t.CreatedUtc,
                 LastUpdatedUtc = t.LastUpdatedUtc
             })

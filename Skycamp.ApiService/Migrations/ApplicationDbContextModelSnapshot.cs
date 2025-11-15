@@ -273,6 +273,7 @@ namespace Skycamp.ApiService.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreateUserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedUtc")
@@ -571,7 +572,8 @@ namespace Skycamp.ApiService.Migrations
                     b.HasOne("Skycamp.ApiService.Data.Identity.ApplicationUser", "CreateUser")
                         .WithMany()
                         .HasForeignKey("CreateUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Skycamp.ApiService.Data.ProjectManagement.Workspace", "Workspace")
                         .WithMany()
@@ -616,17 +618,17 @@ namespace Skycamp.ApiService.Migrations
                     b.HasOne("Skycamp.ApiService.Data.Identity.ApplicationUser", "CreateUser")
                         .WithMany()
                         .HasForeignKey("CreateUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Skycamp.ApiService.Data.Identity.ApplicationUser", "PrimaryAssignee")
                         .WithMany()
                         .HasForeignKey("PrimaryAssigneeId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Skycamp.ApiService.Data.ProjectManagement.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("CreateUser");
@@ -641,7 +643,7 @@ namespace Skycamp.ApiService.Migrations
                     b.HasOne("Skycamp.ApiService.Data.Identity.ApplicationUser", "CreateUser")
                         .WithMany()
                         .HasForeignKey("CreateUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreateUser");
                 });

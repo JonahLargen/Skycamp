@@ -30,8 +30,7 @@
                     Track your tasks and manage your project todos
                 </FluentLabel>
             </FluentStack>
-            <FluentButton Appearance="Appearance.Accent" @onclick="OpenAddTodoDialog">
-                <FluentIcon Value="@(new Icons.Regular.Size20.Add())" Slot="start" />
+            <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" Appearance="Appearance.Accent" @onclick="OpenAddTodoDialog">
                 Add Todo
             </FluentButton>
         </FluentStack>

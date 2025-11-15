@@ -23,7 +23,7 @@ public class Project
 
     public bool IsAllAccess { get; set; } = false;
 
-    public string? CreateUserId { get; set; }
+    public string CreateUserId { get; set; } = null!;
 
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 
@@ -45,7 +45,7 @@ public class Project
     public Workspace Workspace { get; set; } = null!;
 
     [ForeignKey(nameof(CreateUserId))]
-    public ApplicationUser? CreateUser { get; set; } = null!;
+    public ApplicationUser CreateUser { get; set; } = null!;
 
     public List<ProjectUser> Users { get; set; } = new();
 }
@@ -60,6 +60,6 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.HasOne(p => p.CreateUser)
             .WithMany()
             .HasForeignKey(p => p.CreateUserId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
