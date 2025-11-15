@@ -30,7 +30,7 @@
                     Track your tasks and manage your project todos
                 </FluentLabel>
             </FluentStack>
-            <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" Appearance="Appearance.Accent" @onclick="OpenAddTodoDialog">
+            <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" Appearance="Appearance.Accent" OnClick="AddTodo">
                 Add Todo
             </FluentButton>
         </FluentStack>
@@ -82,10 +82,10 @@
                             </FluentStack>
 
                             <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
-                                <FluentButton Appearance="Appearance.Lightweight" @onclick="@(() => OpenEditTodoDialog(todo))">
+                                <FluentButton Appearance="Appearance.Lightweight" OnClick="@(async () => await EditTodo(todo))">
                                     <FluentIcon Value="@(new Icons.Regular.Size20.Edit())" />
                                 </FluentButton>
-                                <FluentButton Appearance="Appearance.Lightweight" @onclick="@(() => DeleteTodo(todo))">
+                                <FluentButton Appearance="Appearance.Lightweight" OnClick="@(async () => await DeleteTodo(todo))">
                                     <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
                                 </FluentButton>
                             </FluentStack>
@@ -105,48 +105,9 @@
     }
 </FluentStack>
 
-<!-- Add/Edit Todo Dialog -->
-@if (showTodoDialog)
-{
-    <FluentDialog @bind-Hidden="showTodoDialog" Modal="true" TrapFocus="true">
-        <FluentDialogHeader>
-            <FluentLabel Typo="Typography.H6">@(editingTodo == null ? "Add Todo" : "Edit Todo")</FluentLabel>
-        </FluentDialogHeader>
-        <FluentDialogBody>
-            <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
-                <FluentTextField 
-                    @bind-Value="todoText" 
-                    Label="Task Description"
-                    Required="true"
-                    Style="width: 100%;" />
-                
-                <FluentDatePicker 
-                    @bind-Value="todoDueDate" 
-                    Label="Due Date"
-                    Style="width: 100%;" />
-                
-                <FluentTextArea 
-                    @bind-Value="todoNotes" 
-                    Label="Notes"
-                    Rows="3"
-                    Style="width: 100%;" />
-            </FluentStack>
-        </FluentDialogBody>
-        <FluentDialogFooter>
-            <FluentButton Appearance="Appearance.Neutral" @onclick="CloseTodoDialog">Cancel</FluentButton>
-            <FluentButton Appearance="Appearance.Accent" @onclick="SaveTodo">Save</FluentButton>
-        </FluentDialogFooter>
-    </FluentDialog>
-}
-
 @code {
     private bool isLoading = true;
     private List<GetTodosByProjectResponseItem> todos = new();
-    private bool showTodoDialog = false;
-    private GetTodosByProjectResponseItem? editingTodo = null;
-    private string todoText = "";
-    private DateTime? todoDueDate = null;
-    private string? todoNotes = null;
 
     [Parameter]
     public Guid? projectId { get; set; }
@@ -190,91 +151,48 @@
         }
     }
 
-    private void OpenAddTodoDialog()
+    private async Task AddTodo()
     {
-        editingTodo = null;
-        todoText = "";
-        todoDueDate = null;
-        todoNotes = null;
-        showTodoDialog = true;
-    }
-
-    private void OpenEditTodoDialog(GetTodosByProjectResponseItem todo)
-    {
-        editingTodo = todo;
-        todoText = todo.Text;
-        todoDueDate = todo.DueDate?.ToDateTime(TimeOnly.MinValue);
-        todoNotes = todo.Notes;
-        showTodoDialog = true;
-    }
-
-    private void CloseTodoDialog()
-    {
-        showTodoDialog = false;
-        editingTodo = null;
-    }
-
-    private async Task SaveTodo()
-    {
-        if (string.IsNullOrWhiteSpace(todoText))
+        var parameters = new DialogParameters()
         {
-            ToastService.ShowWarning("Please enter a task description");
-            return;
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new AddEditTodoDialogModel()
+        {
+            ProjectId = projectId!.Value
+        };
+        var dialog = await DialogService.ShowDialogAsync<AddEditTodoDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await LoadTodos();
         }
+    }
 
-        try
+    private async Task EditTodo(GetTodosByProjectResponseItem todo)
+    {
+        var parameters = new DialogParameters()
         {
-            if (editingTodo == null)
-            {
-                // Create new todo
-                var request = new CreateTodoRequest
-                {
-                    Text = todoText,
-                    DueDate = todoDueDate.HasValue ? DateOnly.FromDateTime(todoDueDate.Value) : null,
-                    Notes = todoNotes
-                };
-
-                var result = await ApplicationApiClient.CreateTodoAsync(projectId!.Value, request);
-                
-                if (result.IsSuccess)
-                {
-                    ToastService.ShowSuccess("Todo created successfully");
-                    await LoadTodos();
-                }
-                else
-                {
-                    ToastService.ShowError("Failed to create todo");
-                }
-            }
-            else
-            {
-                // Update existing todo
-                var request = new UpdateTodoRequest
-                {
-                    Text = todoText,
-                    DueDate = todoDueDate.HasValue ? DateOnly.FromDateTime(todoDueDate.Value) : null,
-                    Notes = todoNotes
-                };
-
-                var result = await ApplicationApiClient.UpdateTodoAsync(editingTodo.Id, request);
-                
-                if (result.IsSuccess)
-                {
-                    ToastService.ShowSuccess("Todo updated successfully");
-                    await LoadTodos();
-                }
-                else
-                {
-                    ToastService.ShowError("Failed to update todo");
-                }
-            }
-
-            CloseTodoDialog();
-        }
-        catch (Exception ex)
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new AddEditTodoDialogModel()
         {
-            Console.WriteLine($"Error saving todo: {ex.Message}");
-            ToastService.ShowError("An error occurred while saving the todo");
+            Id = todo.Id,
+            ProjectId = projectId!.Value,
+            Text = todo.Text,
+            DueDate = todo.DueDate?.ToDateTime(TimeOnly.MinValue),
+            PrimaryAssigneeId = todo.PrimaryAssigneeId,
+            Notes = todo.Notes
+        };
+        var dialog = await DialogService.ShowDialogAsync<AddEditTodoDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await LoadTodos();
         }
     }
 

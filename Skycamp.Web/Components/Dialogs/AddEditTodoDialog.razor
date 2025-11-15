@@ -1,0 +1,107 @@
+@implements IDialogContentComponent<AddEditTodoDialogModel>
+
+@inject IToastService ToastService
+@inject ApplicationApiClient ApiClient
+
+<FluentEditForm Model="@Content" OnValidSubmit="SaveAsync">
+    <FluentDialogHeader ShowDismiss="true">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.TaskListSquareLtr())" />
+            <FluentLabel Typo="Typography.PaneHeader">
+                @(Dialog.Instance.Parameters.Title != null ? Dialog.Instance.Parameters.Title : (Content.Id == null ? "Add New Todo" : "Edit Todo"))
+            </FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+
+    <FluentDialogBody>
+        <DataAnnotationsValidator />
+
+        <FluentGrid>
+            <FluentGridItem xs="12">
+                <FluentTextField @bind-Value="@Content.Text" style="width: 100%;" Autofocus=true>Task Description:</FluentTextField>
+                <FluentValidationMessage For="@(() => Content.Text)" />
+            </FluentGridItem>
+            <FluentGridItem xs="12">
+                <FluentDatePicker @bind-Value="@Content.DueDate" style="width: 100%;">Due Date:</FluentDatePicker>
+                <FluentValidationMessage For="@(() => Content.DueDate)" />
+            </FluentGridItem>
+            <FluentGridItem xs="12">
+                <FluentTextArea @bind-Value="@Content.Notes" style="width: 100%;" Rows="3">Notes:</FluentTextArea>
+                <FluentValidationMessage For="@(() => Content.Notes)" />
+            </FluentGridItem>
+        </FluentGrid>
+
+        <FluentDialogFooter>
+            <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading=@saveLoading>Save</FluentButton>
+            <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+        </FluentDialogFooter>
+    </FluentDialogBody>
+</FluentEditForm>
+
+@code {
+    [Parameter]
+    public AddEditTodoDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool saveLoading = false;
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            saveLoading = true;
+
+            if (Content.Id == null)
+            {
+                var result = await ApiClient.CreateTodoAsync(Content.ProjectId, new CreateTodoRequest
+                {
+                    Text = Content.Text,
+                    DueDate = Content.DueDate.HasValue ? DateOnly.FromDateTime(Content.DueDate.Value) : null,
+                    PrimaryAssigneeId = Content.PrimaryAssigneeId,
+                    Notes = Content.Notes
+                });
+
+                if (!result.IsSuccess)
+                {
+                    ToastService.ShowError($"Failed to create todo: {result.ErrorMessage}");
+                }
+                else
+                {
+                    ToastService.ShowSuccess($"Todo created successfully.");
+                    await Dialog.CloseAsync();
+                }
+            }
+            else
+            {
+                var result = await ApiClient.UpdateTodoAsync(Content.Id.Value, new UpdateTodoRequest
+                {
+                    Text = Content.Text,
+                    DueDate = Content.DueDate.HasValue ? DateOnly.FromDateTime(Content.DueDate.Value) : null,
+                    PrimaryAssigneeId = Content.PrimaryAssigneeId,
+                    Notes = Content.Notes
+                });
+
+                if (!result.IsSuccess)
+                {
+                    ToastService.ShowError($"Failed to update todo: {result.ErrorMessage}");
+                }
+                else
+                {
+                    ToastService.ShowSuccess($"Todo updated successfully.");
+                    await Dialog.CloseAsync();
+                }
+            }
+        }
+        finally
+        {
+            saveLoading = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CloseAsync(DialogResult.Cancel());
+    }
+}
