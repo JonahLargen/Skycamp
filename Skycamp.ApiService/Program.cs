@@ -118,6 +118,7 @@ builder.AddAzureServiceBusClient(connectionName: "sbemulatorns");
 //Hosted Services
 builder.Services.AddHostedService<FeedSubscriber>();
 builder.Services.AddHostedService<ProjectActivitySubscriber>();
+builder.Services.AddHostedService<NotificationSubscriber>();
 
 var app = builder.Build();
 

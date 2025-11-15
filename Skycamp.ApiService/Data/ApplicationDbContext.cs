@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Skycamp.ApiService.Data.Identity;
 using Skycamp.ApiService.Data.Messaging;
+using Skycamp.ApiService.Data.Notifications;
 using Skycamp.ApiService.Data.ProjectManagement;
 
 namespace Skycamp.ApiService.Data;
@@ -16,6 +17,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<WorkspaceRole> WorkspaceRoles { get; set; }
     public DbSet<Todo> Todos { get; set; }
     public DbSet<ProjectActivity> ProjectActivities { get; set; }
+    public DbSet<UserNotification> UserNotifications { get; set; }
     public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)

@@ -48,6 +48,7 @@ var serviceBus = builder.AddAzureServiceBus(isDevelopment ? "sbemulatorns" : "me
 var outboxTopic = serviceBus.AddServiceBusTopic("outbox");
 var feedSubscription = outboxTopic.AddServiceBusSubscription("outbox-subscription-feed");
 var activitySubscription = outboxTopic.AddServiceBusSubscription("outbox-subscription-activity");
+var notificationSubscription = outboxTopic.AddServiceBusSubscription("outbox-subscription-notifications");
 
 var apiService = builder.AddProject<Projects.Skycamp_ApiService>("apiservice")
     .WithReference(db)
