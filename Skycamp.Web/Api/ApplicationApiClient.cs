@@ -74,6 +74,13 @@ public class ApplicationApiClient(HttpClient httpClient) : BaseApiClient
         return await CreateApiResultAsync(response);
     }
 
+    public async Task<ApiResult> UnarchiveProjectAsync(Guid workspaceId, Guid projectId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/unarchive/v1", null, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
     public async Task<ApiDataResult<GetWorkspacesResponse>> GetWorkspacesAsync(CancellationToken cancellationToken = default)
     {
         var response = await httpClient.GetAsync("/projectmanagement/workspaces/v1", cancellationToken);

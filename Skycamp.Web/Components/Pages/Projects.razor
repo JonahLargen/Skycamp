@@ -101,6 +101,14 @@ else
                             </FluentMenuItem>
                         }
 
+                        @if (context is { RoleName: "Owner" or "Admin", ArchivedUtc: not null })
+                        {
+                            <FluentMenuItem Id="unarchive">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowUndo())" Slot="start" />
+                                Unarchive
+                            </FluentMenuItem>
+                        }
+
                         @if (context is { RoleName: "Owner" or "Admin" })
                         {
                             <FluentMenuItem Id="delete">
@@ -172,6 +180,9 @@ else
                 break;
             case "archive":
                 await ArchiveProject(item);
+                break;
+            case "unarchive":
+                await UnarchiveProject(item);
                 break;
             case "delete":
                 await DeleteProject(item);
@@ -296,6 +307,28 @@ else
             else
             {
                 ToastService.ShowError($"Failed to archive project: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"An error occurred: {ex.Message}");
+        }
+    }
+
+    private async Task UnarchiveProject(GetProjectsByWorkspaceIdResponseItem item)
+    {
+        try
+        {
+            var result = await ApiClient.UnarchiveProjectAsync(activeWorkspace.WorkspaceId, item.Id);
+
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess($"Project '{item.Name}' has been unarchived.");
+                await RefreshProjects();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to unarchive project: {result.ErrorMessage}");
             }
         }
         catch (Exception ex)
