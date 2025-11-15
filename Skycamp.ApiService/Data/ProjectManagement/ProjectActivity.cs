@@ -48,12 +48,12 @@ public class ProjectActivityConfiguration : IEntityTypeConfiguration<ProjectActi
         builder.HasOne(pa => pa.Project)
             .WithMany()
             .HasForeignKey(pa => pa.ProjectId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(pa => pa.User)
             .WithMany()
             .HasForeignKey(pa => pa.UserId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(pa => new { pa.ProjectId, pa.OccurredUtc })
             .HasDatabaseName("IX_ProjectActivities_ProjectId_OccurredUtc");
