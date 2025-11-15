@@ -49,7 +49,7 @@ else
         else
         {
             <!-- Projects Grid -->
-            <FluentGrid Spacing="3" Justify="JustifyContent.FlexStart">
+            <FluentGrid Spacing="3" Justify="JustifyContent.FlexStart" Style="width: 100%;">
                 @foreach (var project in filteredProjects)
                 {
                     <FluentGridItem xs="12" sm="6" md="4" lg="3">
@@ -165,7 +165,7 @@ else
                     .ThenBy(p => p.ArchivedUtc.HasValue)
                     .ThenByDescending(p => p.CreatedUtc)
                     .ToList();
-                
+
                 FilterProjects();
             }
             else
@@ -217,7 +217,7 @@ else
                     .ThenBy(p => p.ArchivedUtc.HasValue)
                     .ThenByDescending(p => p.CreatedUtc)
                     .ToList();
-                
+
                 FilterProjects();
             }
             else
@@ -235,6 +235,11 @@ else
     {
         try
         {
+            if (projects == null)
+            {
+                return;
+            }
+
             var result = await ApiClient.ToggleProjectFavoriteAsync(activeWorkspace.WorkspaceId, project.Id);
 
             if (result.IsSuccess)

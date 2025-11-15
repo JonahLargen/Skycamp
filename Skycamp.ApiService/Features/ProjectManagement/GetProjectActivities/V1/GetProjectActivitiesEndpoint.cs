@@ -39,6 +39,7 @@ public class GetProjectActivitiesEndpoint : EndpointWithCommandMapping<GetProjec
                 UserName = a.UserName,
                 UserAvatar = a.UserAvatar,
                 Description = a.Description,
+                ActivityType = a.ActivityType,
                 Timestamp = a.Timestamp
             }).ToList()
         };
@@ -85,5 +86,6 @@ public record GetProjectActivitiesResponseActivity
     public required string UserName { get; set; }
     public string? UserAvatar { get; set; }
     public required string Description { get; set; }
+    public required string ActivityType { get; init; }
     public DateTime Timestamp { get; set; }
 }

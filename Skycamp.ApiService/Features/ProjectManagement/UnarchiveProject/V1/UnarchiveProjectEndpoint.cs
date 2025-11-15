@@ -1,4 +1,3 @@
-using FastEndpoints;
 using FluentValidation;
 using Skycamp.ApiService.Common.Endpoints;
 using Skycamp.ApiService.Common.Security;
@@ -6,7 +5,7 @@ using Skycamp.ApiService.Features.ProjectManagement.UnarchiveProject.Shared;
 
 namespace Skycamp.ApiService.Features.ProjectManagement.UnarchiveProject.V1;
 
-public class UnarchiveProjectEndpoint : EndpointWithCommandMapping<UnarchiveProjectRequest, UnarchiveProjectResponse, UnarchiveProjectCommand, UnarchiveProjectResult>
+public class UnarchiveProjectEndpoint : EndpointWithoutRequestWithCommandMapping<UnarchiveProjectResponse, UnarchiveProjectCommand, UnarchiveProjectResult>
 {
     public override void Configure()
     {
@@ -25,9 +24,9 @@ public class UnarchiveProjectEndpoint : EndpointWithCommandMapping<UnarchiveProj
         });
     }
 
-    public override async Task HandleAsync(UnarchiveProjectRequest req, CancellationToken ct)
+    public override async Task HandleAsync(CancellationToken ct)
     {
-        await SendMappedAsync(req, ct: ct);
+        await SendMappedAsync(ct: ct);
     }
 
     public override UnarchiveProjectResponse MapFromEntity(UnarchiveProjectResult e)
@@ -38,32 +37,14 @@ public class UnarchiveProjectEndpoint : EndpointWithCommandMapping<UnarchiveProj
         };
     }
 
-    public override UnarchiveProjectCommand MapToCommand(UnarchiveProjectRequest r)
+    public override UnarchiveProjectCommand MapToCommand()
     {
         return new UnarchiveProjectCommand
         {
-            ProjectId = r.ProjectId,
-            WorkspaceId = r.WorkspaceId,
+            ProjectId = Route<Guid>("ProjectId"),
+            WorkspaceId = Route<Guid>("WorkspaceId"),
             UnarchiveUserName = User.GetRequiredUserName(),
         };
-    }
-}
-
-public class UnarchiveProjectRequest
-{
-    public Guid ProjectId { get; set; }
-    public Guid WorkspaceId { get; set; }
-}
-
-public class UnarchiveProjectRequestValidator : Validator<UnarchiveProjectRequest>
-{
-    public UnarchiveProjectRequestValidator()
-    {
-        RuleFor(x => x.ProjectId)
-            .NotEmpty();
-
-        RuleFor(x => x.WorkspaceId)
-           .NotEmpty();
     }
 }
 

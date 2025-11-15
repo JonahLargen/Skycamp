@@ -22,12 +22,13 @@
                 <FluentValidationMessage For="@(() => Content.Text)" />
             </FluentGridItem>
             <FluentGridItem xs="12">
+                <FluentLabel>Due Date:</FluentLabel>
                 <FluentDatePicker @bind-Value="@Content.DueDate" style="width: 100%;">Due Date:</FluentDatePicker>
                 <FluentValidationMessage For="@(() => Content.DueDate)" />
             </FluentGridItem>
             <FluentGridItem xs="12">
+                <FluentLabel>Primary Assignee:</FluentLabel>
                 <FluentSelect TOption="string" @bind-Value="@Content.PrimaryAssigneeId" style="width: 100%;">
-                    <FluentLabel>Primary Assignee:</FluentLabel>
                     <FluentOption TOption="string" Value="">-- None --</FluentOption>
                     @foreach (var user in Content.ProjectUsers)
                     {

@@ -1,4 +1,3 @@
-using FastEndpoints;
 using FluentValidation;
 using Skycamp.ApiService.Common.Endpoints;
 using Skycamp.ApiService.Common.Security;
@@ -6,7 +5,7 @@ using Skycamp.ApiService.Features.ProjectManagement.ToggleProjectFavorite.Shared
 
 namespace Skycamp.ApiService.Features.ProjectManagement.ToggleProjectFavorite.V1;
 
-public class ToggleProjectFavoriteEndpoint : EndpointWithCommandMapping<ToggleProjectFavoriteRequest, ToggleProjectFavoriteResponse, ToggleProjectFavoriteCommand, ToggleProjectFavoriteResult>
+public class ToggleProjectFavoriteEndpoint : EndpointWithoutRequestWithCommandMapping<ToggleProjectFavoriteResponse, ToggleProjectFavoriteCommand, ToggleProjectFavoriteResult>
 {
     public override void Configure()
     {
@@ -25,9 +24,9 @@ public class ToggleProjectFavoriteEndpoint : EndpointWithCommandMapping<TogglePr
         });
     }
 
-    public override async Task HandleAsync(ToggleProjectFavoriteRequest req, CancellationToken ct)
+    public override async Task HandleAsync(CancellationToken ct)
     {
-        await SendMappedAsync(req, ct: ct);
+        await SendMappedAsync(ct: ct);
     }
 
     public override ToggleProjectFavoriteResponse MapFromEntity(ToggleProjectFavoriteResult e)
@@ -38,32 +37,14 @@ public class ToggleProjectFavoriteEndpoint : EndpointWithCommandMapping<TogglePr
         };
     }
 
-    public override ToggleProjectFavoriteCommand MapToCommand(ToggleProjectFavoriteRequest r)
+    public override ToggleProjectFavoriteCommand MapToCommand()
     {
         return new ToggleProjectFavoriteCommand
         {
-            ProjectId = r.ProjectId,
-            WorkspaceId = r.WorkspaceId,
+            ProjectId = Route<Guid>("ProjectId"),
+            WorkspaceId = Route<Guid>("WorkspaceId"),
             UserName = User.GetRequiredUserName(),
         };
-    }
-}
-
-public class ToggleProjectFavoriteRequest
-{
-    public Guid ProjectId { get; set; }
-    public Guid WorkspaceId { get; set; }
-}
-
-public class ToggleProjectFavoriteRequestValidator : Validator<ToggleProjectFavoriteRequest>
-{
-    public ToggleProjectFavoriteRequestValidator()
-    {
-        RuleFor(x => x.ProjectId)
-            .NotEmpty();
-
-        RuleFor(x => x.WorkspaceId)
-           .NotEmpty();
     }
 }
 

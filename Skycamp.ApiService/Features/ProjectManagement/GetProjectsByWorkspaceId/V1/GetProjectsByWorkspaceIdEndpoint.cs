@@ -58,6 +58,7 @@ public class GetProjectByIdEndpoint : EndpointWithCommandMapping<GetProjectsByWo
                 ArchivedUtc = w.ArchivedUtc,
                 StartDate = w.StartDate,
                 EndDate = w.EndDate,
+                IsFavorite = w.IsFavorite,
                 Users = w.Users.Select(u => new GetProjectsByWorkspaceIdResponseUser
                 {
                     Id = u.Id,
@@ -105,6 +106,7 @@ public record GetProjectsByWorkspaceIdResponseItem
     public DateTime? ArchivedUtc { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
+    public bool IsFavorite { get; set; }
     public required List<GetProjectsByWorkspaceIdResponseUser> Users { get; init; }
 }
 
