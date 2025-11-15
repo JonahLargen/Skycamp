@@ -68,7 +68,7 @@ exports.onExecutePostLogin = async (event, api) => {
 
 - In the API Authorization Settings, select Username-Password-Authentication as the default
 
-**Note: Auth0 can require some tinkering depending on your application setup. Be sure to follow auth0's documentation for current best practices and setup. Skycamp requires a default blazor setup, plus a custom admin superuser for the admin client. This is because skycamp will directly access the Authentication API.**
+*Note: Auth0 can require some tinkering depending on your application setup. Be sure to follow auth0's documentation for current best practices and setup. Skycamp requires a default blazor setup, plus a custom admin superuser for the admin client. This is because skycamp will directly access the Authentication API.*
 
 5. Inside the aspire secrets/app settings, be sure to incoporate the environment variables so they are forwarded downstream to the applications that need them:
 
