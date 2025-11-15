@@ -24,6 +24,17 @@
     }
     else
     {
+        <!-- Breadcrumb Navigation -->
+        <FluentBreadcrumb>
+            <FluentBreadcrumbItem Href="/projects">
+                <FluentIcon Value="@(new Icons.Regular.Size16.FolderList())" Slot="start" />
+                Projects
+            </FluentBreadcrumbItem>
+            <FluentBreadcrumbItem>
+                @project.Title
+            </FluentBreadcrumbItem>
+        </FluentBreadcrumb>
+
         <!-- Header Section -->
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
             <FluentLabel Typo="Typography.H3" Style="margin: 0;">@project.Title</FluentLabel>

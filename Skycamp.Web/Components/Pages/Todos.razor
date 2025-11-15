@@ -22,6 +22,20 @@
     }
     else
     {
+        <!-- Breadcrumb Navigation -->
+        <FluentBreadcrumb>
+            <FluentBreadcrumbItem Href="/projects">
+                <FluentIcon Value="@(new Icons.Regular.Size16.FolderList())" Slot="start" />
+                Projects
+            </FluentBreadcrumbItem>
+            <FluentBreadcrumbItem Href="@($"/projects/{projectId}")">
+                Project
+            </FluentBreadcrumbItem>
+            <FluentBreadcrumbItem>
+                Todo Items
+            </FluentBreadcrumbItem>
+        </FluentBreadcrumb>
+
         <!-- Header Section -->
         <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" VerticalAlignment="VerticalAlignment.Center">
             <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
