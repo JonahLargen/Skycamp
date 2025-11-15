@@ -105,6 +105,8 @@
 @code {
     private bool isLoading = true;
     private List<GetTodosByProjectResponseItem> todos = new();
+    private Guid? workspaceId = null;
+    private List<GetProjectByIdResponseUser> projectUsers = new();
 
     [Parameter]
     public Guid? projectId { get; set; }
@@ -114,8 +116,32 @@
         if (firstRender)
         {
             await TimeZoneService.InitializeAsync();
+            await LoadProjectDetails();
             await LoadTodos();
             await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadProjectDetails()
+    {
+        if (projectId == null) return;
+
+        try
+        {
+            var selectedWorkspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
+            if (selectedWorkspace == null) return;
+
+            workspaceId = selectedWorkspace.WorkspaceId;
+
+            var result = await ApplicationApiClient.GetProjectByIdAsync(workspaceId.Value, projectId.Value);
+            if (result.IsSuccess && result.Data != null)
+            {
+                projectUsers = result.Data.Users;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading project details: {ex.Message}");
         }
     }
 
@@ -150,6 +176,8 @@
 
     private async Task AddTodo()
     {
+        if (workspaceId == null) return;
+
         var parameters = new DialogParameters()
         {
             TrapFocus = true,
@@ -157,7 +185,13 @@
         };
         var data = new AddEditTodoDialogModel()
         {
-            ProjectId = projectId!.Value
+            ProjectId = projectId!.Value,
+            WorkspaceId = workspaceId.Value,
+            ProjectUsers = projectUsers.Select(u => new ProjectUser
+            {
+                Id = u.Id,
+                DisplayName = u.DisplayName
+            }).ToList()
         };
         var dialog = await DialogService.ShowDialogAsync<AddEditTodoDialog>(data, parameters);
         var result = await dialog.Result;
@@ -170,6 +204,8 @@
 
     private async Task EditTodo(GetTodosByProjectResponseItem todo)
     {
+        if (workspaceId == null) return;
+
         var parameters = new DialogParameters()
         {
             TrapFocus = true,
@@ -179,10 +215,16 @@
         {
             Id = todo.Id,
             ProjectId = projectId!.Value,
+            WorkspaceId = workspaceId.Value,
             Text = todo.Text,
             DueDate = todo.DueDate?.ToDateTime(TimeOnly.MinValue),
             PrimaryAssigneeId = todo.PrimaryAssigneeId,
-            Notes = todo.Notes
+            Notes = todo.Notes,
+            ProjectUsers = projectUsers.Select(u => new ProjectUser
+            {
+                Id = u.Id,
+                DisplayName = u.DisplayName
+            }).ToList()
         };
         var dialog = await DialogService.ShowDialogAsync<AddEditTodoDialog>(data, parameters);
         var result = await dialog.Result;

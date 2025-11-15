@@ -8,6 +8,8 @@ public class AddEditTodoDialogModel
 
     public Guid ProjectId { get; set; }
 
+    public Guid WorkspaceId { get; set; }
+
     [Required]
     [MaxLength(500)]
     public string Text { get; set; } = null!;
@@ -18,4 +20,12 @@ public class AddEditTodoDialogModel
 
     [MaxLength(2000)]
     public string? Notes { get; set; }
+
+    public List<ProjectUser> ProjectUsers { get; set; } = [];
+}
+
+public class ProjectUser
+{
+    public string Id { get; set; } = null!;
+    public string? DisplayName { get; set; }
 }

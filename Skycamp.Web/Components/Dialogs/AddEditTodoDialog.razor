@@ -26,6 +26,17 @@
                 <FluentValidationMessage For="@(() => Content.DueDate)" />
             </FluentGridItem>
             <FluentGridItem xs="12">
+                <FluentSelect TOption="string" @bind-Value="@Content.PrimaryAssigneeId" style="width: 100%;">
+                    <FluentLabel>Primary Assignee:</FluentLabel>
+                    <FluentOption TOption="string" Value="">-- None --</FluentOption>
+                    @foreach (var user in Content.ProjectUsers)
+                    {
+                        <FluentOption TOption="string" Value="@user.Id">@(user.DisplayName ?? "Unknown")</FluentOption>
+                    }
+                </FluentSelect>
+                <FluentValidationMessage For="@(() => Content.PrimaryAssigneeId)" />
+            </FluentGridItem>
+            <FluentGridItem xs="12">
                 <FluentTextArea @bind-Value="@Content.Notes" style="width: 100%;" Rows="3">Notes:</FluentTextArea>
                 <FluentValidationMessage For="@(() => Content.Notes)" />
             </FluentGridItem>
