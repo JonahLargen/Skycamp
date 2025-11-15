@@ -9,8 +9,11 @@
 @inject TimeZoneService TimeZoneService
 @inject IToastService ToastService
 @inject IDialogService DialogService
+@inject AdminApiClient AdminApiClient
 
 <PageTitle>Project</PageTitle>
+
+<UserProfileDialog @ref="userProfileDialog" />
 
 <FluentStack Orientation="Orientation.Vertical" VerticalGap="24" Style="padding: 2rem; max-width: 1400px; margin: 0 auto;">
     @if (project == null)
@@ -161,10 +164,12 @@
                         @foreach (var activity in project.Activities)
                         {
                             <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Top" HorizontalGap="12">
-                                <FluentPersona Name="@activity.UserName"
-                                               Image="@activity.UserAvatar"
-                                               ImageSize="32px"
-                                               Style="width: 200px; overflow-x: clip;"/>
+                                <div @onclick="@(() => ShowUserProfile(activity.UserId))" style="cursor: pointer;">
+                                    <FluentPersona Name="@activity.UserName"
+                                                   Image="@activity.UserAvatar"
+                                                   ImageSize="32px"
+                                                   Style="width: 200px; overflow-x: clip;"/>
+                                </div>
                                 <FluentStack Orientation="Orientation.Vertical" VerticalGap="4" Style="flex: 1;">
                                     <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" VerticalAlignment="VerticalAlignment.Center">
                                         <FluentLabel Typo="Typography.Body">
@@ -379,11 +384,22 @@
 
     public class Activity
     {
+        public string UserId { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
         public string UserAvatar { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string ActivityType { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
+    }
+
+    private UserProfileDialog? userProfileDialog;
+
+    private async Task ShowUserProfile(string userId)
+    {
+        if (userProfileDialog != null && !string.IsNullOrEmpty(userId))
+        {
+            await userProfileDialog.ShowAsync(userId);
+        }
     }
 
     private string GetActivityVerb(string activityType)

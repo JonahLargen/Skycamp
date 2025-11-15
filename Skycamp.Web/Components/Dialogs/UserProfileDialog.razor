@@ -1,0 +1,100 @@
+@inject AdminApiClient AdminApiClient
+
+<FluentDialog @ref="Dialog" @bind-Hidden="@Hidden" Modal="true" TrapFocus="true" PreventScroll="true">
+    <DialogContent>
+        <FluentDialogHeader ShowDismiss="true">
+            <FluentStack VerticalAlignment="VerticalAlignment.Center">
+                <FluentIcon Value="@(new Icons.Regular.Size24.Person())" />
+                <FluentLabel Typo="Typography.PaneHeader">
+                    User Profile
+                </FluentLabel>
+            </FluentStack>
+        </FluentDialogHeader>
+
+        <FluentDialogBody>
+            @if (isLoading)
+            {
+                <FluentProgressRing />
+                <FluentLabel>Loading user information...</FluentLabel>
+            }
+            else if (user != null)
+            {
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+                    <FluentPersona Name="@user.DisplayName"
+                                   Image="@user.AvatarUrl"
+                                   ImageSize="100px"
+                                   Status="PresenceStatus.Available" />
+                    
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                        <FluentLabel Typo="Typography.Body">
+                            <strong>Display Name:</strong> @user.DisplayName
+                        </FluentLabel>
+                        <FluentLabel Typo="Typography.Body">
+                            <strong>Username:</strong> @user.UserName
+                        </FluentLabel>
+                        <FluentLabel Typo="Typography.Body">
+                            <strong>Email:</strong> @user.Email
+                        </FluentLabel>
+                    </FluentStack>
+                </FluentStack>
+            }
+            else if (errorMessage != null)
+            {
+                <FluentMessageBar Intent="MessageIntent.Error">
+                    @errorMessage
+                </FluentMessageBar>
+            }
+        </FluentDialogBody>
+
+        <FluentDialogFooter>
+            <FluentButton Appearance="Appearance.Accent" @onclick="CloseDialog">
+                Close
+            </FluentButton>
+        </FluentDialogFooter>
+    </DialogContent>
+</FluentDialog>
+
+@code {
+    private FluentDialog? Dialog;
+    private bool Hidden = true;
+    private bool isLoading = false;
+    private string? errorMessage = null;
+    private GetUserByIdResponse? user = null;
+
+    public async Task ShowAsync(string userId)
+    {
+        Hidden = false;
+        isLoading = true;
+        errorMessage = null;
+        user = null;
+
+        StateHasChanged();
+
+        try
+        {
+            var result = await AdminApiClient.GetUserByIdAsync(userId);
+            if (result.IsSuccess && result.Data != null)
+            {
+                user = result.Data;
+            }
+            else
+            {
+                errorMessage = result.ErrorMessage ?? "Failed to load user information.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading user: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CloseDialog()
+    {
+        Hidden = true;
+    }
+}

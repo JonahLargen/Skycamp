@@ -21,6 +21,14 @@ public class AdminApiClient : BaseApiClient
         return await CreateApiDataResultAsync<SyncUserResponse>(response);
     }
 
+    public async Task<ApiDataResult<GetUserByIdResponse>> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        var httpRequest = await BuildHttpRequest(HttpMethod.Get, $"/users/{userId}/v1", null, cancellationToken);
+        var response = await httpClient.SendAsync(httpRequest, cancellationToken);
+
+        return await CreateApiDataResultAsync<GetUserByIdResponse>(response);
+    }
+
     private async Task<HttpRequestMessage> BuildHttpRequest(HttpMethod method, string url, object? content = null, CancellationToken cancellationToken = default)
     {
         var token = await tokenProvider.GetAccessTokenAsync(cancellationToken);
@@ -36,4 +44,13 @@ public class AdminApiClient : BaseApiClient
 
         return request;
     }
+}
+
+public record GetUserByIdResponse
+{
+    public required string UserId { get; init; }
+    public string? UserName { get; init; }
+    public string? Email { get; init; }
+    public string? DisplayName { get; init; }
+    public string? AvatarUrl { get; init; }
 }

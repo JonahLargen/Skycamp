@@ -156,6 +156,29 @@ public class ApplicationApiClient(HttpClient httpClient) : BaseApiClient
 
         return await CreateApiDataResultAsync<GetProjectActivitiesResponse>(response);
     }
+
+    // Notification Management
+
+    public async Task<ApiDataResult<GetUserNotificationsResponse>> GetUserNotificationsAsync(Guid workspaceId, bool includeDismissed = false, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync($"/notificationmanagement/workspaces/{workspaceId}/notifications/v1?includeDismissed={includeDismissed}", cancellationToken);
+
+        return await CreateApiDataResultAsync<GetUserNotificationsResponse>(response);
+    }
+
+    public async Task<ApiResult> DismissNotificationAsync(Guid notificationId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsync($"/notificationmanagement/notifications/{notificationId}/dismiss/v1", null, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    public async Task<ApiDataResult<DismissAllNotificationsResponse>> DismissAllNotificationsAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsync($"/notificationmanagement/workspaces/{workspaceId}/notifications/dismiss-all/v1", null, cancellationToken);
+
+        return await CreateApiDataResultAsync<DismissAllNotificationsResponse>(response);
+    }
 }
 
 public record GetForecastResponse
@@ -383,6 +406,7 @@ public record GetProjectActivitiesResponse
 
 public record GetProjectActivitiesResponseItem
 {
+    public required string UserId { get; init; }
     public required string UserName { get; init; }
     public string? UserAvatar { get; init; }
     public required string Description { get; init; }
@@ -390,29 +414,6 @@ public record GetProjectActivitiesResponseItem
     public DateTime Timestamp { get; init; }
 }
 
-    // Notification Management
-
-    public async Task<ApiDataResult<GetUserNotificationsResponse>> GetUserNotificationsAsync(Guid workspaceId, bool includeDismissed = false, CancellationToken cancellationToken = default)
-    {
-        var response = await httpClient.GetAsync($"/notificationmanagement/workspaces/{workspaceId}/notifications/v1?includeDismissed={includeDismissed}", cancellationToken);
-
-        return await CreateApiDataResultAsync<GetUserNotificationsResponse>(response);
-    }
-
-    public async Task<ApiResult> DismissNotificationAsync(Guid notificationId, CancellationToken cancellationToken = default)
-    {
-        var response = await httpClient.PostAsync($"/notificationmanagement/notifications/{notificationId}/dismiss/v1", null, cancellationToken);
-
-        return await CreateApiResultAsync(response);
-    }
-
-    public async Task<ApiDataResult<DismissAllNotificationsResponse>> DismissAllNotificationsAsync(Guid workspaceId, CancellationToken cancellationToken = default)
-    {
-        var response = await httpClient.PostAsync($"/notificationmanagement/workspaces/{workspaceId}/notifications/dismiss-all/v1", null, cancellationToken);
-
-        return await CreateApiDataResultAsync<DismissAllNotificationsResponse>(response);
-    }
-}
 
 public record GetUserNotificationsResponse
 {

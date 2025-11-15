@@ -52,6 +52,7 @@ public class GetProjectActivitiesCommandHandler : CommandHandler<GetProjectActiv
             .Take(command.Limit)
             .Select(pa => new GetProjectActivitiesResultActivity
             {
+                UserId = pa.UserId,
                 UserName = pa.UserDisplayName ?? "Unknown User",
                 UserAvatar = pa.UserAvatarUrl,
                 Description = pa.Message,
@@ -97,6 +98,7 @@ public record GetProjectActivitiesResult
 
 public record GetProjectActivitiesResultActivity
 {
+    public required string UserId { get; set; }
     public required string UserName { get; set; }
     public string? UserAvatar { get; set; }
     public required string Description { get; set; }
