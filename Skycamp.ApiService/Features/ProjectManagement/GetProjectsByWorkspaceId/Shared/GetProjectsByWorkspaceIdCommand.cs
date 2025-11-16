@@ -34,7 +34,9 @@ public class GetProjectsByWorkspaceIdCommandHandler : CommandHandler<GetProjectB
             .Include(p => p.Project)
             .ThenInclude(p => p.CreateUser)
             .Where(pu => pu.UserId == user.Id && pu.Project.WorkspaceId == command.WorkspaceId)
-            .OrderBy(pu => pu.Project.Name)
+            .OrderBy(pu => pu.Project.ArchivedUtc.HasValue)
+            .ThenByDescending(pu => pu.IsFavorite)
+            .ThenBy(pu => pu.Project.Name)
             .Select(pu => new GetProjectsByWorkspaceIdResultItem
             {
                 Id = pu.Project.Id,
