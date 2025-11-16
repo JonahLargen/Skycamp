@@ -38,5 +38,20 @@ public class ProjectUserConfiguration : IEntityTypeConfiguration<ProjectUser>
         builder.HasIndex(pu => pu.UserId);
         builder.HasIndex(pu => pu.RoleName);
         builder.HasIndex(pu => pu.JoinedUtc);
+
+        builder.HasOne(pu => pu.User)
+            .WithMany()
+            .HasForeignKey(pu => pu.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(pu => pu.Project)
+            .WithMany(p => p.Users)
+            .HasForeignKey(pu => pu.ProjectId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(pu => pu.Role)
+            .WithMany()
+            .HasForeignKey(pu => pu.RoleName)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
