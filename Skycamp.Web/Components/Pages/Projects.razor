@@ -35,6 +35,10 @@ else
                 Refresh
             </FluentButton>
 
+            <FluentButton IconStart="@(new Icons.Regular.Size16.Globe())" Appearance="Appearance.Neutral" OnClick="ShowAllAccessProjects">
+                Browse All Access Projects
+            </FluentButton>
+
             <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" Appearance="Appearance.Accent" OnClick="AddProject">
                 Add Project
             </FluentButton>
@@ -435,5 +439,27 @@ else
             UserId = userId
         };
         await DialogService.ShowDialogAsync<UserProfileDialog>(data, parameters);
+    }
+
+    private async Task ShowAllAccessProjects()
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false,
+            Width = "700px"
+        };
+        var data = new AllAccessProjectsDialogModel()
+        {
+            WorkspaceId = activeWorkspace.WorkspaceId
+        };
+        var dialog = await DialogService.ShowDialogAsync<AllAccessProjectsDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            // Refresh projects if user joined any
+            await RefreshProjects();
+        }
     }
 }

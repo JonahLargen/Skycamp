@@ -22,3 +22,8 @@ public class RemoveProjectUserDialogModel
     public required string UserId { get; set; }
     public required string DisplayName { get; set; }
 }
+
+public class AllAccessProjectsDialogModel
+{
+    public required Guid WorkspaceId { get; set; }
+}
