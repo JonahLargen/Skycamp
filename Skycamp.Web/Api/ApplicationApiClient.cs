@@ -156,6 +156,72 @@ public class ApplicationApiClient(HttpClient httpClient) : BaseApiClient
 
         return await CreateApiDataResultAsync<GetProjectActivitiesResponse>(response);
     }
+
+    // Workspace User Management
+    public async Task<ApiDataResult<GetWorkspaceUsersResponse>> GetWorkspaceUsersAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync($"/projectmanagement/workspaces/{workspaceId}/users/v1", cancellationToken);
+
+        return await CreateApiDataResultAsync<GetWorkspaceUsersResponse>(response);
+    }
+
+    public async Task<ApiResult> AddWorkspaceUserAsync(Guid workspaceId, AddWorkspaceUserRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/users/v1", request, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    public async Task<ApiResult> UpdateWorkspaceUserAsync(Guid workspaceId, string userId, UpdateWorkspaceUserRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/users/{userId}/v1", request, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    public async Task<ApiResult> RemoveWorkspaceUserAsync(Guid workspaceId, string userId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"/projectmanagement/workspaces/{workspaceId}/users/{userId}/v1", cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    // Project User Management
+    public async Task<ApiResult> AddProjectUserAsync(Guid workspaceId, Guid projectId, AddProjectUserRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/users/v1", request, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    public async Task<ApiResult> UpdateProjectUserAsync(Guid workspaceId, Guid projectId, string userId, UpdateProjectUserRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/users/{userId}/v1", request, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    public async Task<ApiResult> RemoveProjectUserAsync(Guid workspaceId, Guid projectId, string userId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/users/{userId}/v1", cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
+
+    // All Access Projects
+    public async Task<ApiDataResult<GetAllAccessProjectsResponse>> GetAllAccessProjectsAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync($"/projectmanagement/workspaces/{workspaceId}/all-access-projects/v1", cancellationToken);
+
+        return await CreateApiDataResultAsync<GetAllAccessProjectsResponse>(response);
+    }
+
+    public async Task<ApiResult> JoinAllAccessProjectAsync(Guid workspaceId, Guid projectId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsync($"/projectmanagement/workspaces/{workspaceId}/projects/{projectId}/join/v1", null, cancellationToken);
+
+        return await CreateApiResultAsync(response);
+    }
 }
 
 public record GetForecastResponse
@@ -276,6 +342,7 @@ public record GetWorkspacesResponseItem
     public string? CreateUserDisplayName { get; init; }
     public DateTime CreatedUtc { get; init; }
     public DateTime LastUpdatedUtc { get; init; }
+    public int MemberCount { get; init; }
 }
 
 public record GetProjectsByWorkspaceIdResponse
@@ -388,4 +455,60 @@ public record GetProjectActivitiesResponseItem
     public required string Description { get; init; }
     public required string ActivityType { get; init; }
     public DateTime Timestamp { get; init; }
+}
+
+// Workspace User Management
+public record GetWorkspaceUsersResponse
+{
+    public List<GetWorkspaceUsersResponseUser> Users { get; init; } = [];
+}
+
+public record GetWorkspaceUsersResponseUser
+{
+    public required string UserId { get; init; }
+    public string? UserName { get; init; }
+    public string? DisplayName { get; init; }
+    public string? Email { get; init; }
+    public string? AvatarUrl { get; init; }
+    public required string RoleName { get; init; }
+    public DateTime JoinedUtc { get; init; }
+}
+
+public record AddWorkspaceUserRequest
+{
+    public required string UserId { get; init; }
+    public required string RoleName { get; init; }
+}
+
+public record UpdateWorkspaceUserRequest
+{
+    public required string RoleName { get; init; }
+}
+
+// Project User Management
+public record AddProjectUserRequest
+{
+    public required string UserId { get; init; }
+    public required string RoleName { get; init; }
+}
+
+public record UpdateProjectUserRequest
+{
+    public required string RoleName { get; init; }
+}
+
+// All Access Projects
+public record GetAllAccessProjectsResponse
+{
+    public List<GetAllAccessProjectsResponseProject> Projects { get; init; } = [];
+}
+
+public record GetAllAccessProjectsResponseProject
+{
+    public required Guid Id { get; init; }
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+    public decimal Progress { get; init; }
+    public DateTime CreatedUtc { get; init; }
+    public DateTime? ArchivedUtc { get; init; }
 }

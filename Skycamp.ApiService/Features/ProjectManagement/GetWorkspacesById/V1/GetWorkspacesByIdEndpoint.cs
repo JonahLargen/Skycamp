@@ -42,7 +42,8 @@ public class GetWorkspacesByIdEndpoint : EndpointWithoutRequestWithCommandMappin
                 CreateUserId = w.CreateUserId,
                 CreateUserDisplayName = w.CreateUserDisplayName,
                 CreatedUtc = w.CreatedUtc,
-                LastUpdatedUtc = w.LastUpdatedUtc
+                LastUpdatedUtc = w.LastUpdatedUtc,
+                MemberCount = w.MemberCount
             }).ToList()
         };
     }
@@ -71,4 +72,5 @@ public record GetWorkspacesByIdResponseItem
     public string? CreateUserDisplayName { get; init; }
     public DateTime CreatedUtc { get; init; }
     public DateTime LastUpdatedUtc { get; init; }
+    public int MemberCount { get; init; }
 }

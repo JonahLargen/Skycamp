@@ -44,7 +44,8 @@ public class GetWorkspacesByIdCommandHandler : CommandHandler<GetWorkspacesByIdC
                 CreateUserId = wu.Workspace.CreateUserId,
                 CreateUserDisplayName = wu.Workspace.CreateUser.DisplayName,
                 CreatedUtc = wu.Workspace.CreatedUtc,
-                LastUpdatedUtc = wu.Workspace.LastUpdatedUtc
+                LastUpdatedUtc = wu.Workspace.LastUpdatedUtc,
+                MemberCount = _dbContext.WorkspaceUsers.Count(u => u.WorkspaceId == wu.WorkspaceId)
             })
             .ToListAsync(cancellationToken: ct);
 
@@ -84,4 +85,5 @@ public record GetWorkspacesByIdResultItem
     public string? CreateUserDisplayName { get; init; }
     public DateTime CreatedUtc { get; init; }
     public DateTime LastUpdatedUtc { get; init; }
+    public int MemberCount { get; init; }
 }

@@ -26,6 +26,11 @@
                         </FluentLabel>
 
                         <FluentLabel Typo="Typography.Body">
+                            <strong>User ID (Share Code):</strong>
+                            @userId
+                        </FluentLabel>
+
+                        <FluentLabel Typo="Typography.Body">
                             <strong>Authenticated:</strong> @(auth.User.Identity?.IsAuthenticated == true ? "Yes" : "No")
                         </FluentLabel>
 
@@ -78,6 +83,7 @@
 @code {
     private List<Claim> ClaimsList = new();
     private List<string> Roles = new();
+    private string? userId;
 
     [Inject] private NavigationManager Nav { get; set; } = default!;
 
@@ -90,6 +96,7 @@
         {
             ClaimsList = user.Claims.OrderBy(c => c.Type).ToList();
             Roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value).Distinct().OrderBy(r => r).ToList();
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
     }
 
