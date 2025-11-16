@@ -175,11 +175,11 @@ else
 
             if (response.IsSuccess && response.Data != null)
             {
-                // Sort projects: favorites first, then active, then archived
+                // Sort projects: active first, then favorites, then by name
                 projects = response.Data.Projects
-                    .OrderByDescending(p => p.IsFavorite)
-                    .ThenBy(p => p.ArchivedUtc.HasValue)
-                    .ThenByDescending(p => p.CreatedUtc)
+                    .OrderBy(p => p.ArchivedUtc.HasValue)
+                    .ThenByDescending(p => p.IsFavorite)
+                    .ThenBy(p => p.Name)
                     .ToList();
 
                 FilterProjects();
