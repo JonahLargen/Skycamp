@@ -82,7 +82,9 @@
 
         <!-- People Section -->
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
-            <FluentLabel Typo="Typography.Body">Set up people</FluentLabel>
+            <FluentButton Appearance="Appearance.Lightweight" IconStart="@(new Icons.Regular.Size16.People())" OnClick="@ManageProjectPeople">
+                Set up people
+            </FluentButton>
             <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" VerticalAlignment="VerticalAlignment.Center">
                 @foreach (var person in project.People)
                 {
@@ -399,5 +401,33 @@
             "ProjectCreated" => "created the project",
             _ => "updated"
         };
+    }
+
+    private async Task ManageProjectPeople()
+    {
+        var workspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
+
+        if (workspace == null || projectId == null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false,
+            Width = "600px"
+        };
+        var data = new ManageProjectPeopleDialogModel()
+        {
+            WorkspaceId = workspace.WorkspaceId,
+            ProjectId = projectId.Value
+        };
+        var dialog = await DialogService.ShowDialogAsync<ManageProjectPeopleDialog>(data, parameters);
+        await dialog.Result;
+
+        // Refresh project data after closing dialog
+        // Re-trigger OnAfterRenderAsync by navigating to same page
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
     }
 }

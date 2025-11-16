@@ -106,6 +106,28 @@ else
                                                 <FluentBadge Appearance="Appearance.Accent" Style="font-size: 10px;">All Access</FluentBadge>
                                             }
                                         </FluentStack>
+
+                                        <!-- Project Members -->
+                                        @if (project.Users?.Any() == true)
+                                        {
+                                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="4" VerticalAlignment="VerticalAlignment.Center">
+                                                <FluentLabel Typo="Typography.Body" Style="font-size: 10px; color: var(--neutral-foreground-hint);">Members:</FluentLabel>
+                                                @foreach (var user in project.Users.Take(3))
+                                                {
+                                                    <div @onclick="@(() => ShowUserProfile(user.Id))" @onclick:stopPropagation="true" style="cursor: pointer;">
+                                                        <FluentPersona Name="@user.DisplayName"
+                                                                       Image="@user.AvatarUrl"
+                                                                       ImageSize="20px" />
+                                                    </div>
+                                                }
+                                                @if (project.Users.Count > 3)
+                                                {
+                                                    <FluentLabel Typo="Typography.Body" Style="font-size: 10px; color: var(--neutral-foreground-hint);">
+                                                        +@(project.Users.Count - 3)
+                                                    </FluentLabel>
+                                                }
+                                            </FluentStack>
+                                        }
                                     </FluentStack>
                                 </div>
 
@@ -399,5 +421,19 @@ else
         {
             ToastService.ShowError($"An error occurred: {ex.Message}");
         }
+    }
+
+    private async Task ShowUserProfile(string userId)
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new UserProfileDialogModel()
+        {
+            UserId = userId
+        };
+        await DialogService.ShowDialogAsync<UserProfileDialog>(data, parameters);
     }
 }

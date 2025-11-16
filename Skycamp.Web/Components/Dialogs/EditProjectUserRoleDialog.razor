@@ -1,0 +1,98 @@
+@implements IDialogContentComponent<EditProjectUserRoleDialogModel>
+
+@inject IToastService ToastService
+@inject ApplicationApiClient ApiClient
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.Edit())" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            Change Member Role
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+        <FluentLabel Typo="Typography.Body">
+            Change the role for <strong>@Content.DisplayName</strong>
+        </FluentLabel>
+
+        <FluentSelect TOption="string" @bind-Value="@selectedRole" style="width: 100%;">
+            <FluentOption TOption="string" Value="Owner">Owner</FluentOption>
+            <FluentOption TOption="string" Value="Admin">Admin</FluentOption>
+            <FluentOption TOption="string" Value="Member">Member</FluentOption>
+            <FluentOption TOption="string" Value="Viewer">Viewer</FluentOption>
+        </FluentSelect>
+    </FluentStack>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Accent" 
+                      OnClick="@SaveAsync" 
+                      Loading="@saveLoading">
+            Save
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+    </FluentDialogFooter>
+</FluentDialogBody>
+
+@code {
+    [Parameter]
+    public EditProjectUserRoleDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool saveLoading = false;
+    private string selectedRole = "";
+
+    protected override void OnInitialized()
+    {
+        selectedRole = Content.CurrentRole;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (selectedRole == Content.CurrentRole)
+        {
+            ToastService.ShowInfo("No changes made");
+            await Dialog.CancelAsync();
+            return;
+        }
+
+        saveLoading = true;
+
+        try
+        {
+            var request = new UpdateProjectUserRequest
+            {
+                RoleName = selectedRole
+            };
+
+            var result = await ApiClient.UpdateProjectUserAsync(Content.WorkspaceId, Content.ProjectId, Content.UserId, request);
+
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess("Member role updated successfully");
+                await Dialog.CloseAsync();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to update member role: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error updating member role: {ex.Message}");
+        }
+        finally
+        {
+            saveLoading = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+}

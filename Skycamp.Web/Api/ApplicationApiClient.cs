@@ -366,6 +366,16 @@ public record GetProjectsByWorkspaceIdResponseItem
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
     public bool IsFavorite { get; set; }
+    public List<GetProjectsByWorkspaceIdResponseUser> Users { get; init; } = [];
+}
+
+public record GetProjectsByWorkspaceIdResponseUser
+{
+    public required string Id { get; init; }
+    public string? UserName { get; init; }
+    public string? DisplayName { get; init; }
+    public required string RoleName { get; init; }
+    public string? AvatarUrl { get; init; }
 }
 
 public record GetProjectByIdResponse
