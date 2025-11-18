@@ -207,14 +207,6 @@ This gallery demonstrates key architectural features:
 
 ---
 
-## 📚 Additional Resources
-
-- [Main README](../README.md) - Project overview and setup instructions
-- [Architecture Documentation](../README.md#-architecture--design-decisions) - Deep dive into architectural patterns
-- [Getting Started Guide](../README.md#-getting-started) - Setup and configuration
-
----
-
 <div align="center">
 
 **⭐ Showcasing modern .NET architecture and cloud-native patterns**
