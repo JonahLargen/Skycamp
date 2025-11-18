@@ -404,7 +404,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**⭐ If you find this project helpful, please consider giving it a star!**
+**⭐ If you find this project helpful, please consider giving it a star! ⭐**
 
 Built with ❤️ using .NET 9 and Aspire
 
