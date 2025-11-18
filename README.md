@@ -8,7 +8,7 @@
 
 [![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4?style=flat&logo=dotnet)](https://dotnet.microsoft.com/)
 [![Blazor](https://img.shields.io/badge/Blazor-Server-512BD4?style=flat&logo=blazor)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
-[![Aspire](https://img.shields.io/badge/Aspire-Cloud--Native-0078D4?style=flat)](https://learn.microsoft.com/dotnet/aspire)
+[![Aspire](https://img.shields.io/badge/Aspire-Cloud--Native-0078D4?style=flat)](https://aspire.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 </div>
