@@ -26,7 +26,7 @@
                         </FluentLabel>
 
                         <FluentLabel Typo="Typography.Body">
-                            <strong>User ID (Share Code):</strong>
+                            <strong>Share Code:</strong>
                             @userId
                         </FluentLabel>
 
@@ -96,7 +96,7 @@
         {
             ClaimsList = user.Claims.OrderBy(c => c.Type).ToList();
             Roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value).Distinct().OrderBy(r => r).ToList();
-            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            userId = user.FindFirst("app_user_id")?.Value;
         }
     }
 

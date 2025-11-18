@@ -56,7 +56,7 @@
             }
             else
             {
-                <FluentDataGrid Items="@members.AsQueryable()" Style="width: 100%;">
+                <FluentDataGrid Items="@members.AsQueryable()" Style="width: 100%;" RowSize="DataGridRowSize.Large">
                     <TemplateColumn Title="User" Style="align-content: center;">
                         <FluentPersona Name="@context.DisplayName"
                                        SecondaryText="@context.Email"
