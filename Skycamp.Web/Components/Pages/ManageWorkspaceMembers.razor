@@ -1,0 +1,250 @@
+@page "/workspaces/{workspaceId:guid}/members"
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@inject ApplicationApiClient ApiClient
+@inject AdminApiClient AdminApiClient
+@inject IToastService ToastService
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@inject WorkspaceStateService WorkspaceStateService
+
+<PageTitle>Manage Workspace Members</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+    <FluentBreadcrumb>
+        <FluentBreadcrumbItem Href="/workspaces">
+            <FluentIcon Value="@(new Icons.Regular.Size16.WindowApps())" Slot="start" />
+            Workspaces
+        </FluentBreadcrumbItem>
+        <FluentBreadcrumbItem>
+            Manage Members
+        </FluentBreadcrumbItem>
+    </FluentBreadcrumb>
+
+    <h1>Manage Workspace Members</h1>
+
+    @if (members == null || currentUserRole == null)
+    {
+        <FluentStack Orientation="Orientation.Vertical">
+            @for (int i = 0; i < 5; i++)
+            {
+                <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="60px" Shimmer="true" />
+            }
+        </FluentStack>
+    }
+    else
+    {
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            @if (currentUserRole is "Owner" or "Admin")
+            {
+                <FluentStack>
+                    <FluentButton IconStart="@(new Icons.Regular.Size16.PersonAdd())" Appearance="Appearance.Accent" OnClick="AddMember">
+                        Add Member
+                    </FluentButton>
+                    <FluentButton IconStart="@(new Icons.Regular.Size16.ArrowRedo())" Appearance="Appearance.Neutral" OnClick="RefreshMembers" Loading="@refreshLoading">
+                        Refresh
+                    </FluentButton>
+                </FluentStack>
+            }
+
+            @if (members.Count == 0)
+            {
+                <FluentMessageBar Title="No Members Found" Intent="MessageIntent.Warning" AllowDismiss="false">
+                    This workspace has no members.
+                </FluentMessageBar>
+            }
+            else
+            {
+                <FluentDataGrid Items="@members.AsQueryable()" Style="width: 100%;" RowSize="DataGridRowSize.Large">
+                    <TemplateColumn Title="User" Style="align-content: center;">
+                        <FluentPersona Name="@context.DisplayName"
+                                       SecondaryText="@context.Email"
+                                       Image="@context.AvatarUrl"
+                                       ImageSize="32px"
+                                       Style="cursor: pointer;"
+                                       @onclick="@(() => ShowUserProfile(context.UserId))" />
+                    </TemplateColumn>
+                    <PropertyColumn Property="@(m => m.RoleName)" Sortable="true" Title="Role" Style="align-content: center;" />
+                    <PropertyColumn Property="@(m => m.JoinedUtc)" Format="yyyy-MM-dd" Sortable="true" Title="Joined" Style="align-content: center;" />
+                    <TemplateColumn Style="align-content: center;">
+                        @if (currentUserRole is "Owner" or "Admin")
+                        {
+                            @if (context.RoleName == "Owner" && currentUserRole != "Owner")
+                            {
+                                <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-style: italic;">
+                                    Cannot modify owner
+                                </FluentLabel>
+                            }
+                            else
+                            {
+                                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+                                    <FluentButton Appearance="Appearance.Lightweight" 
+                                                  IconStart="@(new Icons.Regular.Size16.Edit())" 
+                                                  OnClick="@(() => EditMemberRole(context))"
+                                                  Title="Change Role">
+                                    </FluentButton>
+                                    <FluentButton Appearance="Appearance.Lightweight" 
+                                                  IconStart="@(new Icons.Regular.Size16.Delete())" 
+                                                  OnClick="@(() => RemoveMember(context))"
+                                                  Title="Remove">
+                                    </FluentButton>
+                                </FluentStack>
+                            }
+                        }
+                    </TemplateColumn>
+                </FluentDataGrid>
+            }
+        </FluentStack>
+    }
+</FluentStack>
+
+@code {
+    [Parameter]
+    public Guid? workspaceId { get; set; }
+
+    private List<GetWorkspaceUsersResponseUser>? members;
+    private string? currentUserRole;
+    private bool refreshLoading = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (workspaceId == null)
+            {
+                ToastService.ShowError("Invalid workspace ID");
+                NavigationManager.NavigateTo("/workspaces");
+                return;
+            }
+
+            await LoadMembers();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadMembers()
+    {
+        try
+        {
+            var result = await ApiClient.GetWorkspaceUsersAsync(workspaceId!.Value);
+
+            if (result.IsSuccess && result.Data != null)
+            {
+                members = result.Data.Users;
+                
+                // Get current user's role
+                var workspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
+                var workspaceResult = await ApiClient.GetWorkspacesAsync();
+                if (workspaceResult.IsSuccess && workspaceResult.Data != null)
+                {
+                    var currentWorkspace = workspaceResult.Data.Workspaces.FirstOrDefault(w => w.Id == workspaceId);
+                    currentUserRole = currentWorkspace?.RoleName;
+                }
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to load members: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error loading members: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshMembers()
+    {
+        refreshLoading = true;
+        try
+        {
+            await LoadMembers();
+        }
+        finally
+        {
+            refreshLoading = false;
+        }
+    }
+
+    private async Task ShowUserProfile(string userId)
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new UserProfileDialogModel()
+        {
+            UserId = userId
+        };
+        await DialogService.ShowDialogAsync<UserProfileDialog>(data, parameters);
+    }
+
+    private async Task AddMember()
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false,
+            Width = "500px"
+        };
+        var data = new AddWorkspaceMemberDialogModel()
+        {
+            WorkspaceId = workspaceId!.Value
+        };
+        var dialog = await DialogService.ShowDialogAsync<AddWorkspaceMemberDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await RefreshMembers();
+        }
+    }
+
+    private async Task EditMemberRole(GetWorkspaceUsersResponseUser member)
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false,
+            Width = "400px"
+        };
+        var data = new EditWorkspaceMemberRoleDialogModel()
+        {
+            WorkspaceId = workspaceId!.Value,
+            UserId = member.UserId,
+            DisplayName = member.DisplayName ?? member.Email ?? member.UserId,
+            CurrentRole = member.RoleName
+        };
+        var dialog = await DialogService.ShowDialogAsync<EditWorkspaceMemberRoleDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await RefreshMembers();
+        }
+    }
+
+    private async Task RemoveMember(GetWorkspaceUsersResponseUser member)
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false,
+            Width = "400px"
+        };
+        var data = new RemoveWorkspaceMemberDialogModel()
+        {
+            WorkspaceId = workspaceId!.Value,
+            UserId = member.UserId,
+            DisplayName = member.DisplayName ?? member.Email ?? member.UserId
+        };
+        var dialog = await DialogService.ShowDialogAsync<RemoveWorkspaceMemberDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await RefreshMembers();
+        }
+    }
+}

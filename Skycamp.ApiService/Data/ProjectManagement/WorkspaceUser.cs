@@ -31,5 +31,20 @@ public class WorkspaceUserConfiguration : IEntityTypeConfiguration<WorkspaceUser
     public void Configure(EntityTypeBuilder<WorkspaceUser> builder)
     {
         builder.HasKey(wu => new { wu.WorkspaceId, wu.UserId });
+
+        builder.HasOne(wu => wu.User)
+            .WithMany()
+            .HasForeignKey(wu => wu.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(wu => wu.Workspace)
+            .WithMany()
+            .HasForeignKey(wu => wu.WorkspaceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(wu => wu.Role)
+            .WithMany()
+            .HasForeignKey(wu => wu.RoleName)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

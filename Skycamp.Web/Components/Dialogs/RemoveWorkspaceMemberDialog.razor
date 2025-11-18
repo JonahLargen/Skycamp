@@ -1,0 +1,77 @@
+@implements IDialogContentComponent<RemoveWorkspaceMemberDialogModel>
+
+@inject IToastService ToastService
+@inject ApplicationApiClient ApiClient
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.Delete())" Color="Color.Error" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            Remove Member
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+        <FluentLabel Typo="Typography.Body">
+            Are you sure you want to remove <strong>@Content.DisplayName</strong> from this workspace?
+        </FluentLabel>
+
+        <FluentMessageBar Intent="MessageIntent.Warning" AllowDismiss="false">
+            This will also remove them from all projects in this workspace.
+        </FluentMessageBar>
+    </FluentStack>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Accent" 
+                      OnClick="@RemoveAsync" 
+                      Loading="@removeLoading">
+            Remove
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+    </FluentDialogFooter>
+</FluentDialogBody>
+
+@code {
+    [Parameter]
+    public RemoveWorkspaceMemberDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool removeLoading = false;
+
+    private async Task RemoveAsync()
+    {
+        removeLoading = true;
+
+        try
+        {
+            var result = await ApiClient.RemoveWorkspaceUserAsync(Content.WorkspaceId, Content.UserId);
+
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess("Member removed successfully");
+                await Dialog.CloseAsync();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to remove member: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error removing member: {ex.Message}");
+        }
+        finally
+        {
+            removeLoading = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+}

@@ -35,6 +35,10 @@ else
                 Refresh
             </FluentButton>
 
+            <FluentButton IconStart="@(new Icons.Regular.Size16.Globe())" Appearance="Appearance.Neutral" OnClick="ShowAllAccessProjects">
+                Browse All Access Projects
+            </FluentButton>
+
             <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" Appearance="Appearance.Accent" OnClick="AddProject">
                 Add Project
             </FluentButton>
@@ -106,6 +110,28 @@ else
                                                 <FluentBadge Appearance="Appearance.Accent" Style="font-size: 10px;">All Access</FluentBadge>
                                             }
                                         </FluentStack>
+
+                                        <!-- Project Members -->
+                                        @if (project.Users?.Any() == true)
+                                        {
+                                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="4" VerticalAlignment="VerticalAlignment.Center">
+                                                <FluentLabel Typo="Typography.Body" Style="font-size: 10px; color: var(--neutral-foreground-hint);">Members:</FluentLabel>
+                                                @foreach (var user in project.Users.Take(3))
+                                                {
+                                                    <div @onclick="@(() => ShowUserProfile(user.Id))" @onclick:stopPropagation="true" style="cursor: pointer;">
+                                                        <FluentPersona Name="@user.DisplayName"
+                                                                       Image="@user.AvatarUrl"
+                                                                       ImageSize="20px" />
+                                                    </div>
+                                                }
+                                                @if (project.Users.Count > 3)
+                                                {
+                                                    <FluentLabel Typo="Typography.Body" Style="font-size: 10px; color: var(--neutral-foreground-hint);">
+                                                        +@(project.Users.Count - 3)
+                                                    </FluentLabel>
+                                                }
+                                            </FluentStack>
+                                        }
                                     </FluentStack>
                                 </div>
 
@@ -398,6 +424,42 @@ else
         catch (Exception ex)
         {
             ToastService.ShowError($"An error occurred: {ex.Message}");
+        }
+    }
+
+    private async Task ShowUserProfile(string userId)
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new UserProfileDialogModel()
+        {
+            UserId = userId
+        };
+        await DialogService.ShowDialogAsync<UserProfileDialog>(data, parameters);
+    }
+
+    private async Task ShowAllAccessProjects()
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false,
+            Width = "700px"
+        };
+        var data = new AllAccessProjectsDialogModel()
+        {
+            WorkspaceId = activeWorkspace.WorkspaceId
+        };
+        var dialog = await DialogService.ShowDialogAsync<AllAccessProjectsDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            // Refresh projects if user joined any
+            await RefreshProjects();
         }
     }
 }

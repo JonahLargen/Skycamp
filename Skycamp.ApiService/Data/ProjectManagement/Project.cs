@@ -61,5 +61,10 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .WithMany()
             .HasForeignKey(p => p.CreateUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(p => p.Workspace)
+            .WithMany()
+            .HasForeignKey(p => p.WorkspaceId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

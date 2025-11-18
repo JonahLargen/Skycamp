@@ -1,0 +1,286 @@
+@implements IDialogContentComponent<ManageProjectPeopleDialogModel>
+
+@inject ApplicationApiClient ApiClient
+@inject IToastService ToastService
+@inject IDialogService DialogService
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.People())" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            Manage Project People
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    @if (loading)
+    {
+        <FluentStack Orientation="Orientation.Vertical">
+            @for (int i = 0; i < 3; i++)
+            {
+                <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="60px" Shimmer="true" />
+            }
+        </FluentStack>
+    }
+    else
+    {
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            <!-- Current Project Members -->
+            <FluentLabel Typo="Typography.H6">Current Members</FluentLabel>
+
+            @if (projectUsers?.Any() == true)
+            {
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                    @foreach (var user in projectUsers)
+                    {
+                        <FluentCard>
+                            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                                <FluentPersona Name="@user.DisplayName"
+                                               SecondaryText="@user.RoleName"
+                                               Image="@user.AvatarUrl"
+                                               ImageSize="32px"
+                                               Style="cursor: pointer;"
+                                               @onclick="@(() => ShowUserProfile(user.Id))" />
+
+                                @if (currentUserRole is "Owner" or "Admin")
+                                {
+                                    @if (user.RoleName == "Owner" && currentUserRole != "Owner")
+                                    {
+                                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-style: italic; font-size: 12px;">
+                                            Cannot modify owner
+                                        </FluentLabel>
+                                    }
+                                    else
+                                    {
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+                                            <FluentButton Appearance="Appearance.Lightweight" 
+                                                          IconStart="@(new Icons.Regular.Size16.Edit())" 
+                                                          OnClick="@(() => EditUserRole(user))"
+                                                          Title="Change Role">
+                                            </FluentButton>
+                                            <FluentButton Appearance="Appearance.Lightweight" 
+                                                          IconStart="@(new Icons.Regular.Size16.Delete())" 
+                                                          OnClick="@(() => RemoveUser(user))"
+                                                          Title="Remove">
+                                            </FluentButton>
+                                        </FluentStack>
+                                    }
+                                }
+                            </FluentStack>
+                        </FluentCard>
+                    }
+                </FluentStack>
+            }
+            else
+            {
+                <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">No members yet</FluentLabel>
+            }
+
+            <!-- Add Member Section -->
+            @if (currentUserRole is "Owner" or "Admin")
+            {
+                <FluentDivider />
+                <FluentLabel Typo="Typography.H6">Add Member</FluentLabel>
+
+                @if (availableUsers?.Any() == true)
+                {
+                    <FluentSelect TOption="string" @bind-Value="@selectedUserId" Placeholder="Select a workspace member..." style="width: 100%;">
+                        <FluentOption TOption="string" Value="">-- Select User --</FluentOption>
+                        @foreach (var user in availableUsers)
+                        {
+                            <FluentOption TOption="string" Value="@user.UserId">@(user.DisplayName ?? user.UserName ?? user.UserId)</FluentOption>
+                        }
+                    </FluentSelect>
+
+                    @if (!string.IsNullOrEmpty(selectedUserId))
+                    {
+                        <FluentSelect TOption="string" @bind-Value="@selectedRole" style="width: 100%;">
+                            <FluentOption TOption="string" Value="Owner">Owner</FluentOption>
+                            <FluentOption TOption="string" Value="Admin">Admin</FluentOption>
+                            <FluentOption TOption="string" Value="Member" Selected="true">Member</FluentOption>
+                            <FluentOption TOption="string" Value="Viewer">Viewer</FluentOption>
+                        </FluentSelect>
+
+                        <FluentButton Appearance="Appearance.Accent" OnClick="@AddUser" Loading="@addingUser">
+                            Add Member
+                        </FluentButton>
+                    }
+                }
+                else
+                {
+                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint);">
+                        All workspace members are already part of this project
+                    </FluentLabel>
+                }
+            }
+        </FluentStack>
+    }
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Neutral" OnClick="@CloseAsync">Close</FluentButton>
+    </FluentDialogFooter>
+</FluentDialogBody>
+
+@code {
+    [Parameter]
+    public ManageProjectPeopleDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool loading = true;
+    private bool addingUser = false;
+    private List<GetProjectByIdResponseUser>? projectUsers;
+    private List<GetWorkspaceUsersResponseUser>? availableUsers;
+    private string? currentUserRole;
+    private string selectedUserId = "";
+    private string selectedRole = "Member";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        loading = true;
+        try
+        {
+            // Get project details with users
+            var projectResult = await ApiClient.GetProjectByIdAsync(Content.WorkspaceId, Content.ProjectId);
+            if (projectResult.IsSuccess && projectResult.Data != null)
+            {
+                projectUsers = projectResult.Data.Users;
+                currentUserRole = projectResult.Data.RoleName;
+            }
+
+            // Get workspace users
+            var workspaceUsersResult = await ApiClient.GetWorkspaceUsersAsync(Content.WorkspaceId);
+            if (workspaceUsersResult.IsSuccess && workspaceUsersResult.Data != null)
+            {
+                // Filter out users who are already in the project
+                var projectUserIds = projectUsers?.Select(u => u.Id).ToHashSet() ?? new HashSet<string>();
+                availableUsers = workspaceUsersResult.Data.Users
+                    .Where(u => !projectUserIds.Contains(u.UserId))
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error loading data: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task ShowUserProfile(string userId)
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false
+        };
+        var data = new UserProfileDialogModel()
+        {
+            UserId = userId
+        };
+        await DialogService.ShowDialogAsync<UserProfileDialog>(data, parameters);
+    }
+
+    private async Task AddUser()
+    {
+        if (string.IsNullOrEmpty(selectedUserId))
+        {
+            return;
+        }
+
+        addingUser = true;
+        try
+        {
+            var request = new AddProjectUserRequest
+            {
+                UserId = selectedUserId,
+                RoleName = selectedRole
+            };
+
+            var result = await ApiClient.AddProjectUserAsync(Content.WorkspaceId, Content.ProjectId, request);
+
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess("User added successfully");
+                selectedUserId = "";
+                selectedRole = "Member";
+                await LoadData();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to add user: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error adding user: {ex.Message}");
+        }
+        finally
+        {
+            addingUser = false;
+        }
+    }
+
+    private async Task EditUserRole(GetProjectByIdResponseUser user)
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false,
+            Width = "400px"
+        };
+        var data = new EditProjectUserRoleDialogModel()
+        {
+            WorkspaceId = Content.WorkspaceId,
+            ProjectId = Content.ProjectId,
+            UserId = user.Id,
+            DisplayName = user.DisplayName ?? user.UserName ?? user.Id,
+            CurrentRole = user.RoleName
+        };
+        var dialog = await DialogService.ShowDialogAsync<EditProjectUserRoleDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task RemoveUser(GetProjectByIdResponseUser user)
+    {
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false,
+            Width = "400px"
+        };
+        var data = new RemoveProjectUserDialogModel()
+        {
+            WorkspaceId = Content.WorkspaceId,
+            ProjectId = Content.ProjectId,
+            UserId = user.Id,
+            DisplayName = user.DisplayName ?? user.UserName ?? user.Id
+        };
+        var dialog = await DialogService.ShowDialogAsync<RemoveProjectUserDialog>(data, parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Cancelled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+}

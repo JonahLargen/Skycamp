@@ -1,0 +1,170 @@
+@implements IDialogContentComponent<AllAccessProjectsDialogModel>
+
+@inject ApplicationApiClient ApiClient
+@inject IToastService ToastService
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.Globe())" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            All Access Projects
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    @if (loading)
+    {
+        <FluentStack Orientation="Orientation.Vertical">
+            @for (int i = 0; i < 3; i++)
+            {
+                <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="100px" Shimmer="true" />
+            }
+        </FluentStack>
+    }
+    else
+    {
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            <FluentLabel Typo="Typography.Body">
+                These projects are marked as "All Access" and can be joined by any workspace member. Join a project to start viewing and contributing!
+            </FluentLabel>
+
+            @if (allAccessProjects?.Any() == true)
+            {
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+                    @foreach (var project in allAccessProjects)
+                    {
+                        <FluentCard>
+                            <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                                <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" VerticalAlignment="VerticalAlignment.Center">
+                                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="4" Style="flex: 1;">
+                                        <FluentLabel Typo="Typography.H6">@project.Name</FluentLabel>
+                                        @if (!string.IsNullOrEmpty(project.Description))
+                                        {
+                                            <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); font-size: 12px;">
+                                                @project.Description
+                                            </FluentLabel>
+                                        }
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+                                            <FluentBadge Appearance="Appearance.Accent" Style="font-size: 10px;">All Access</FluentBadge>
+                                            <FluentLabel Typo="Typography.Body" Style="font-size: 11px; color: var(--neutral-foreground-hint);">
+                                                Progress: @project.Progress.ToString("P0")
+                                            </FluentLabel>
+                                            @if (project.ArchivedUtc != null)
+                                            {
+                                                <FluentBadge Appearance="Appearance.Neutral" Style="font-size: 10px;">Archived</FluentBadge>
+                                            }
+                                        </FluentStack>
+                                    </FluentStack>
+
+                                    @if (joiningProjects.Contains(project.Id))
+                                    {
+                                        <FluentButton Appearance="Appearance.Accent" Loading="true">
+                                            Joining...
+                                        </FluentButton>
+                                    }
+                                    else
+                                    {
+                                        <FluentButton Appearance="Appearance.Accent" OnClick="@(() => JoinProject(project))" IconStart="@(new Icons.Regular.Size16.PersonAdd())">
+                                            Join
+                                        </FluentButton>
+                                    }
+                                </FluentStack>
+                            </FluentStack>
+                        </FluentCard>
+                    }
+                </FluentStack>
+            }
+            else
+            {
+                <FluentMessageBar Intent="MessageIntent.Info" AllowDismiss="false">
+                    No all-access projects are currently available in this workspace.
+                </FluentMessageBar>
+            }
+        </FluentStack>
+    }
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Neutral" OnClick="@CloseAsync">Close</FluentButton>
+    </FluentDialogFooter>
+</FluentDialogBody>
+
+@code {
+    [Parameter]
+    public AllAccessProjectsDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool loading = true;
+    private List<GetAllAccessProjectsResponseProject>? allAccessProjects;
+    private HashSet<Guid> joiningProjects = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProjects();
+    }
+
+    private async Task LoadProjects()
+    {
+        loading = true;
+        try
+        {
+            var result = await ApiClient.GetAllAccessProjectsAsync(Content.WorkspaceId);
+
+            if (result.IsSuccess && result.Data != null)
+            {
+                allAccessProjects = result.Data.Projects;
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to load all-access projects: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error loading projects: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task JoinProject(GetAllAccessProjectsResponseProject project)
+    {
+        joiningProjects.Add(project.Id);
+        try
+        {
+            var result = await ApiClient.JoinAllAccessProjectAsync(Content.WorkspaceId, project.Id);
+
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess($"Successfully joined project '{project.Name}'");
+                
+                // Remove from list
+                allAccessProjects?.Remove(project);
+                
+                // Signal that projects should be refreshed
+                await Dialog.CloseAsync();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to join project: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error joining project: {ex.Message}");
+        }
+        finally
+        {
+            joiningProjects.Remove(project.Id);
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+}

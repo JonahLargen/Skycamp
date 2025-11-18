@@ -1,0 +1,102 @@
+@implements IDialogContentComponent<UserProfileDialogModel>
+
+@inject AdminApiClient AdminApiClient
+@inject IToastService ToastService
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.Person())" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            User Profile
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    @if (loading)
+    {
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+            <FluentSkeleton Shape="SkeletonShape.Circle" Width="100px" Height="100px" Shimmer="true" Style="margin: 0 auto;" />
+            <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="40px" Shimmer="true" />
+            <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="40px" Shimmer="true" />
+        </FluentStack>
+    }
+    else if (userProfile == null)
+    {
+        <FluentMessageBar Intent="MessageIntent.Error" AllowDismiss="false">
+            Failed to load user profile
+        </FluentMessageBar>
+    }
+    else
+    {
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            <FluentPersona Name="@userProfile.DisplayName"
+                          Image="@userProfile.AvatarUrl"
+                          ImageSize="100px"
+                          Style="justify-content: center;" />
+
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                <FluentLabel Typo="Typography.Body">
+                    <strong>Display Name:</strong> @userProfile.DisplayName
+                </FluentLabel>
+
+                <FluentLabel Typo="Typography.Body">
+                    <strong>Email:</strong> @userProfile.Email
+                </FluentLabel>
+
+                <FluentLabel Typo="Typography.Body">
+                    <strong>User ID:</strong> @userProfile.Id
+                </FluentLabel>
+
+                <FluentLabel Typo="Typography.Body">
+                    <strong>Member Since:</strong> @userProfile.CreatedUtc.ToString("yyyy-MM-dd")
+                </FluentLabel>
+            </FluentStack>
+        </FluentStack>
+    }
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Close</FluentButton>
+    </FluentDialogFooter>
+</FluentDialogBody>
+
+@code {
+    [Parameter]
+    public UserProfileDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool loading = true;
+    private GetUserByIdResponse? userProfile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var result = await AdminApiClient.GetUserByIdAsync(Content.UserId);
+            
+            if (result.IsSuccess && result.Data != null)
+            {
+                userProfile = result.Data;
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to load user profile: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error loading user profile: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+}

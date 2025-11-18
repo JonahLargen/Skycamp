@@ -1,0 +1,172 @@
+@implements IDialogContentComponent<AddWorkspaceMemberDialogModel>
+
+@inject IToastService ToastService
+@inject ApplicationApiClient ApiClient
+@inject AdminApiClient AdminApiClient
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.PersonAdd())" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            Add Workspace Member
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+        <FluentLabel Typo="Typography.Body">
+            Enter the user's share code (User ID) to add them to this workspace.
+        </FluentLabel>
+
+        <FluentTextField @bind-Value="@userIdToAdd" 
+                         style="width: 100%;" 
+                         Placeholder="User ID / Share Code"
+                         Autofocus="true"
+                         @bind-Value:after="OnUserIdChanged">
+            User ID:
+        </FluentTextField>
+
+        @if (loadingUser)
+        {
+            <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="80px" Shimmer="true" />
+        }
+        else if (userProfile != null)
+        {
+            <FluentCard>
+                <FluentPersona Name="@userProfile.DisplayName"
+                               SecondaryText="@userProfile.Email"
+                               Image="@userProfile.AvatarUrl"
+                               ImageSize="48px" />
+            </FluentCard>
+
+            <FluentSelect TOption="string" @bind-Value="@selectedRole" style="width: 100%;">
+                <FluentOption TOption="string" Value="Owner">Owner</FluentOption>
+                <FluentOption TOption="string" Value="Admin">Admin</FluentOption>
+                <FluentOption TOption="string" Value="Member" Selected="true">Member</FluentOption>
+                <FluentOption TOption="string" Value="Viewer">Viewer</FluentOption>
+            </FluentSelect>
+        }
+        else if (!string.IsNullOrWhiteSpace(userIdToAdd))
+        {
+            <FluentMessageBar Intent="MessageIntent.Warning" AllowDismiss="false">
+                User not found. Please check the User ID.
+            </FluentMessageBar>
+        }
+    </FluentStack>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Accent" 
+                      OnClick="@SaveAsync" 
+                      Loading="@saveLoading"
+                      Disabled="@(userProfile == null)">
+            Add Member
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+    </FluentDialogFooter>
+</FluentDialogBody>
+
+@code {
+    [Parameter]
+    public AddWorkspaceMemberDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private bool saveLoading = false;
+    private bool loadingUser = false;
+    private string userIdToAdd = "";
+    private string selectedRole = "Member";
+    private GetUserByIdResponse? userProfile;
+    private System.Threading.Timer? debounceTimer;
+
+    private void OnUserIdChanged()
+    {
+        // Debounce user lookup
+        debounceTimer?.Dispose();
+        debounceTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadUser();
+                StateHasChanged();
+            });
+        }, null, 500, Timeout.Infinite);
+    }
+
+    private async Task LoadUser()
+    {
+        if (string.IsNullOrWhiteSpace(userIdToAdd))
+        {
+            userProfile = null;
+            return;
+        }
+
+        loadingUser = true;
+        try
+        {
+            var result = await AdminApiClient.GetUserByIdAsync(userIdToAdd);
+            
+            if (result.IsSuccess && result.Data != null)
+            {
+                userProfile = result.Data;
+            }
+            else
+            {
+                userProfile = null;
+            }
+        }
+        catch
+        {
+            userProfile = null;
+        }
+        finally
+        {
+            loadingUser = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        saveLoading = true;
+
+        try
+        {
+            var request = new AddWorkspaceUserRequest
+            {
+                UserId = userIdToAdd,
+                RoleName = selectedRole
+            };
+
+            var result = await ApiClient.AddWorkspaceUserAsync(Content.WorkspaceId, request);
+
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess("Member added successfully");
+                await Dialog.CloseAsync();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to add member: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error adding member: {ex.Message}");
+        }
+        finally
+        {
+            saveLoading = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+
+    public void Dispose()
+    {
+        debounceTimer?.Dispose();
+    }
+}

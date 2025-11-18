@@ -57,9 +57,12 @@
                         Last Updated on @project.LastUpdated.ToString("MMM dd") 📅
                     </FluentLabel>
 
-                    <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); cursor: pointer;" @onclick="@(async () => await OpenEditProgressDialog(project))">
-                        Update Project Progress
-                    </FluentLabel>
+                    @if (project.RoleName is "Owner" or "Admin")
+                    {
+                        <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-foreground-hint); cursor: pointer;" @onclick="@(async () => await OpenEditProgressDialog(project))">
+                            Update Project Progress
+                        </FluentLabel>
+                    }
                 </FluentStack>
 
                 <FluentProgress Min="0" Max="100" Value="@(Convert.ToInt32(project.Progress * 100))" Style="width: 100%;" />
@@ -67,14 +70,28 @@
                 @if (@project.StartDate != null || @project.EndDate != null)
                 {
                     <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Style="font-size: 12px; color: var(--neutral-foreground-hint);">
-                        <span style ="cursor:pointer;" @onclick ="@(async () => await OpenEditDatesDialog(project))">@(project.StartDate?.ToString("MMM dd") ?? "No Start Date")</span>
-                        <span style="cursor:pointer;" @onclick="@(async () => await OpenEditDatesDialog(project))">@(project.EndDate?.ToString("MMM dd") ?? "No End Date")</span>
+                        @if (project.RoleName is "Owner" or "Admin")
+                        {
+                            <span style ="cursor:pointer;" @onclick ="@(async () => await OpenEditDatesDialog(project))">@(project.StartDate?.ToString("MMM dd") ?? "No Start Date")</span>
+                            <span style="cursor:pointer;" @onclick="@(async () => await OpenEditDatesDialog(project))">@(project.EndDate?.ToString("MMM dd") ?? "No End Date")</span>
+                        }
+                        else
+                        {
+                            <span>@(project.StartDate?.ToString("MMM dd") ?? "No Start Date")</span>
+                            <span>@(project.EndDate?.ToString("MMM dd") ?? "No End Date")</span>
+                        }
+                    </FluentStack>
+                }
+                else if (project.RoleName is "Owner" or "Admin")
+                {
+                    <FluentStack Orientation="Orientation.Horizontal" Style="font-size: 12px; color: var(--neutral-foreground-hint);">
+                        No dates have been configured for this project. <span style="cursor:pointer;" @onclick="@(async () => await OpenEditDatesDialog(project))">Configure</span>
                     </FluentStack>
                 }
                 else
                 {
                     <FluentStack Orientation="Orientation.Horizontal" Style="font-size: 12px; color: var(--neutral-foreground-hint);">
-                        No dates have been configured for this project. <span style="cursor:pointer;" @onclick="@(async () => await OpenEditDatesDialog(project))">Configure</span>
+                        No dates have been configured for this project.
                     </FluentStack>
                 }
             </FluentStack>
@@ -82,7 +99,16 @@
 
         <!-- People Section -->
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
-            <FluentLabel Typo="Typography.Body">Set up people</FluentLabel>
+            @if (project.RoleName is "Owner" or "Admin")
+            {
+                <FluentButton Appearance="Appearance.Lightweight" IconStart="@(new Icons.Regular.Size16.People())" OnClick="@ManageProjectPeople">
+                    Set up people
+                </FluentButton>
+            }
+            else
+            {
+                <FluentLabel Typo="Typography.Body">People:</FluentLabel>
+            }
             <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" VerticalAlignment="VerticalAlignment.Center">
                 @foreach (var person in project.People)
                 {
@@ -237,6 +263,7 @@
                         LastUpdated = TimeZoneService.ConvertFromUtc(projectData.LastUpdatedUtc),
                         StartDate = projectData.StartDate,
                         EndDate = projectData.EndDate,
+                        RoleName = projectData.RoleName,
                         People = projectData.Users.Where(u => u.RoleName != "Viewer").Select(u => new Person
                         {
                             Name = u.DisplayName ?? "User",
@@ -369,6 +396,7 @@
         public List<Person> People { get; set; } = new();
         public int AdditionalPeopleCount { get; set; }
         public List<Activity> Activities { get; set; } = new();
+        public string RoleName { get; set; } = string.Empty;
     }
 
     public class Person
@@ -399,5 +427,33 @@
             "ProjectCreated" => "created the project",
             _ => "updated"
         };
+    }
+
+    private async Task ManageProjectPeople()
+    {
+        var workspace = await WorkspaceStateService.GetSelectedWorkspaceAsync();
+
+        if (workspace == null || projectId == null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters()
+        {
+            TrapFocus = true,
+            Modal = false,
+            Width = "600px"
+        };
+        var data = new ManageProjectPeopleDialogModel()
+        {
+            WorkspaceId = workspace.WorkspaceId,
+            ProjectId = projectId.Value
+        };
+        var dialog = await DialogService.ShowDialogAsync<ManageProjectPeopleDialog>(data, parameters);
+        await dialog.Result;
+
+        // Refresh project data after closing dialog
+        // Re-trigger OnAfterRenderAsync by navigating to same page
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
     }
 }
