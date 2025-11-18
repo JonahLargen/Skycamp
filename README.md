@@ -87,7 +87,7 @@ Aspire orchestrates the entire distributed application:
 ## 🚀 Key Technologies
 
 ### Core Stack
-- **.NET 9**: Latest LTS version with performance improvements and native AOT support
+- **.NET 9**: Latest LTS version with performance improvements and native AOT support (requires switch to web assembly for AOT))
 - **Blazor Server**: Component-based UI framework with server-side rendering
 - **FastEndpoints**: High-performance, REPR pattern alternative to MVC controllers
 - **Entity Framework Core 9**: Modern ORM with advanced query capabilities and migrations
@@ -308,18 +308,11 @@ When you first log in:
 
 ## 🧪 Testing
 
-The project includes integration tests using Aspire's testing framework:
+The project supports unit and integration tests using Aspire's testing framework:
 
 ```bash
 dotnet test
 ```
-
-Tests verify:
-- Service health endpoints
-- API authentication and authorization
-- Database connectivity
-- Message bus integration
-- End-to-end workflows
 
 ---
 
@@ -392,30 +385,13 @@ To understand the patterns and technologies used:
 
 ## 🤝 Contributing
 
-This project is primarily a portfolio piece, but feedback and suggestions are welcome! Please feel free to:
-
-- Open issues for bugs or feature suggestions
-- Submit pull requests with improvements
-- Share your thoughts on the architecture
+This project is primarily a portfolio piece and will not incorporate external contributions. It does not claim to be a production-ready application but serves as a demonstration of good development practices in .NET. Fork and explore at your own risk!
 
 ---
 
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👨‍💻 Author
-
-**Jonah Largen**
-
-This project showcases my expertise in:
-- Modern .NET development and cloud-native architectures
-- Distributed systems design and microservices patterns
-- Enterprise application development best practices
-- Full-stack development with Blazor and ASP.NET Core
-- DevOps practices including containerization and orchestration
 
 ---
 
