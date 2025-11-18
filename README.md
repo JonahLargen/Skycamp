@@ -277,32 +277,39 @@ When you first log in:
 
 ## 📸 Screenshots
 
-### Aspire Dashboard - Service Orchestration
-![Aspire Dashboard](.github/internal/skycamp-aspire.png)
-*Real-time monitoring of all services, containers, and dependencies*
+### Aspire Dashboard - Resource Graph View
+![Aspire Dashboard Graph](.github/internal/skycamp_aspire_graph.png)
+*Visual dependency graph showing service orchestration and resource connections*
+
+### Aspire Dashboard - Table View
+![Aspire Dashboard Table](.github/internal/skycamp_aspire_table.png)
+*Comprehensive table view of all services, containers, and health status*
+
+### Workspaces Overview
+![Workspaces](.github/internal/skycamp_workspaces.png)
+*Organize projects into logical workspaces with role-based access control*
+
+### Projects Dashboard
+![Projects](.github/internal/skycamp_projects.png)
+*Project management dashboard with deadlines and status tracking*
 
 ### Project Landing Page
-![Project Landing](.github/internal/skycamp-landing.png)
+![Project Landing](.github/internal/skycamp_project_landing.png)
 *Clean, modern UI built with Fluent Design principles*
 
-### Project Management View
-![Edit Project](.github/internal/skycamp-project.png)
-*Comprehensive project details with role-based access control*
+### Live Activity Feed
+![Live Feed](.github/internal/skycamp_live_feed.png)
+*Real-time activity updates with SignalR integration*
 
-### API Documentation
-![Swagger](.github/internal/skycamp-swagger.png)
-*Auto-generated Swagger UI with versioned endpoints*
+### Todo Management
+![Todo Management](.github/internal/skycamp_project_todo.png)
+*Task tracking with real-time updates and validation*
 
-### Authentication Flow
+### Project Settings
+![Project Edit](.github/internal/skycamp_project_edit.png)
+*Comprehensive project configuration with role-based access control*
 
-**Login Screen**
-![Login](.github/internal/skycamp-login.png)
-
-**Auth0 Integration**
-![Auth0 Login](.github/internal/skycamp-auth0-login.png)
-
-**Post-Login Success**
-![Login Success](.github/internal/skycamp-login-success.png)
+> 📚 **See more screenshots** in the [complete gallery](docs/gallery.md)
 
 ---
 
