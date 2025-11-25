@@ -274,8 +274,9 @@ Skycamp requires several prerequisites to run locally, as it is a full-stack app
    ```
 
 7. **Access the Application**
-   - **Web Frontend**: Automatically opens in your browser
-   - **Aspire Dashboard**: `https://localhost:17000` (check console output)
+
+   - **Aspire Dashboard**: Automatically opens in your browser
+   - **Web Frontend**: Navigate to API service URL from Aspire Dashboard
    - **API Swagger**: Navigate to API service URL from Aspire Dashboard
 
 ### Usage
