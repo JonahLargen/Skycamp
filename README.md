@@ -248,7 +248,19 @@ Skycamp requires several prerequisites to run locally, as it is a full-stack app
    }
    ```
 
-5. **Run the Application**
+5. **Run Migrations**
+
+   Install ef core tools globally if not already installed:
+   ```bash
+   dotnet tool install --global dotnet-ef 
+   ```
+
+   Run the following command within the API project to apply database migration to the latest version:
+   ```bash
+   dotnet ef database update
+   ```
+
+6. **Run the Application**
 
    Open `Skycamp.sln` in Visual Studio and:
    - Set `Skycamp.AppHost` as the startup project
@@ -261,14 +273,14 @@ Skycamp requires several prerequisites to run locally, as it is a full-stack app
    dotnet run
    ```
 
-6. **Access the Application**
+7. **Access the Application**
    - **Web Frontend**: Automatically opens in your browser
    - **Aspire Dashboard**: `https://localhost:17000` (check console output)
    - **API Swagger**: Navigate to API service URL from Aspire Dashboard
 
 ### Usage
 
-When you first log in:
+When you first start the app:
 1. Click "Login" on the home page
 2. Create a new account via Auth0 (or use social login if configured)
 3. The system automatically syncs your user to the local database
