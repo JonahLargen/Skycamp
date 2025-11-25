@@ -15,9 +15,9 @@
 
 ---
 
-## 🎯 Overview
+## 🎯 Motivation
 
-Skycamp is a project management tool inspired by Basecamp, showcasing best practices in building scalable, maintainable, and secure distributed web applications. Skycamp serves as a comprehensive demonstration of modern .NET architecture patterns, cloud-native design principles, and enterprise development practices.
+Skycamp aims to address the challenges faced by starting a distributed web application from scratch in .NET. It provides a solid foundation for developers to learn and implement best practices in building scalable, maintainable, and secure applications using modern .NET technologies. It is a clone of popular project management tool basecamp.
 
 ### What Makes Skycamp Special
 
@@ -125,7 +125,7 @@ Aspire orchestrates the entire distributed application:
 ## 🚀 Key Technologies
 
 ### Core Stack
-- **.NET 9**: Latest LTS version with performance improvements and native AOT support (requires switch to web assembly for AOT))
+- **.NET 9**: Latest LTS version with performance improvements
 - **Blazor Server**: Component-based UI framework with server-side rendering
 - **FastEndpoints**: High-performance, REPR pattern alternative to MVC controllers
 - **Entity Framework Core 9**: Modern ORM with advanced query capabilities and migrations
@@ -154,54 +154,6 @@ Aspire orchestrates the entire distributed application:
 
 ---
 
-## 📁 Project Structure
-
-```
-Skycamp/
-│
-├── Skycamp.AppHost/                  # Aspire orchestration layer
-│   ├── AppHost.cs                    # Service composition and configuration
-│   └── appsettings.json              # Environment-specific settings
-│
-├── Skycamp.ApiService/               # RESTful API service
-│   ├── Features/                     # Vertical slices by domain
-│   │   ├── ProjectManagement/        # Project/workspace operations
-│   │   └── Weather/                  # Sample feature with versioning
-│   ├── Data/                         # EF Core DbContext and entities
-│   │   ├── ApplicationDbContext.cs
-│   │   ├── Identity/                 # User and role entities
-│   │   ├── ProjectManagement/        # Domain entities
-│   │   └── Messaging/                # Outbox pattern implementation
-│   ├── BackgroundServices/           # Long-running hosted services
-│   │   ├── FeedSubscriber.cs         # Consumes feed events
-│   │   └── ProjectActivitySubscriber.cs
-│   ├── Jobs/                         # Scheduled background jobs
-│   │   └── OutboxPublisherJob.cs     # Publishes outbox messages
-│   ├── Hubs/                         # SignalR hubs for real-time
-│   │   └── FeedHub.cs
-│   └── Program.cs                    # Service configuration
-│
-├── Skycamp.Web/                      # Blazor frontend application
-│   ├── Components/                   # Blazor components
-│   │   ├── Pages/                    # Routable page components
-│   │   ├── Dialogs/                  # Modal dialogs
-│   │   └── Common/                   # Shared UI components
-│   ├── Services/                     # Client-side services
-│   ├── Api/                          # API client wrappers
-│   └── Program.cs                    # App configuration
-│
-├── Skycamp.ServiceDefaults/          # Shared configuration
-│   └── Extensions.cs                 # Common service registrations
-│
-├── Skycamp.Contracts/                # Shared contracts
-│   └── Events/                       # Event DTOs for messaging
-│
-└── Skycamp.Tests/                    # Integration tests
-    └── IntegrationTests.cs           # Aspire-based integration testing
-```
-
----
-
 ## 🎨 Key Features
 
 ### Project Management
@@ -225,7 +177,9 @@ Skycamp/
 
 ---
 
-## 🛠️ Getting Started
+## 🛠️ Quick Start Guide
+
+Skycamp requires several prerequisites to run locally, as it is a full-stack application. Follow the steps below to get started.
 
 ### Prerequisites
 
@@ -285,6 +239,15 @@ Skycamp/
    }
    ```
 
+   Be sure to also manually add your database connection string to the API project (required to run migrations outside Aspire):
+   ```json
+   {
+     "ConnectionStrings": {
+       "sqldb": "Server=127.0.0.1,1433;Database=database;User ID=sa;Password=password;TrustServerCertificate=true"
+     }
+   }
+   ```
+
 5. **Run the Application**
 
    Open `Skycamp.sln` in Visual Studio and:
@@ -303,13 +266,17 @@ Skycamp/
    - **Aspire Dashboard**: `https://localhost:17000` (check console output)
    - **API Swagger**: Navigate to API service URL from Aspire Dashboard
 
-### First-Time Setup
+### Usage
 
 When you first log in:
 1. Click "Login" on the home page
 2. Create a new account via Auth0 (or use social login if configured)
 3. The system automatically syncs your user to the local database
 4. Navigate to your profile to verify authentication
+5. Go to "Workspaces" to create your first workspace
+6. Select your workspace as primary/selected (will show in bottom left)
+7. Navigate to projects and create your first project.
+8. Click the project to view details and add todo items.
 
 ---
 
@@ -387,6 +354,16 @@ To understand the patterns and technologies used:
 - [Vertical Slice Architecture](https://www.jimmybogard.com/vertical-slice-architecture/)
 - [Outbox Pattern](https://microservices.io/patterns/data/transactional-outbox.html)
 - [CQRS Pattern](https://martinfowler.com/bliki/CQRS.html)
+
+---
+
+## 🤝 Contributing
+
+Thank you for considering contributing to Skycamp! Contributions are welcome and appreciated. Please follow these steps:
+1. Fork the repository
+2. Create a new branch for your feature or bugfix
+3. Make your changes with clear commit messages
+4. Submit a pull request describing your changes
 
 ---
 
