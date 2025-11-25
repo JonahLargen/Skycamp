@@ -390,12 +390,6 @@ To understand the patterns and technologies used:
 
 ---
 
-## 🤝 Contributing
-
-This project is primarily a portfolio piece and will not incorporate external contributions. It does not claim to be a production-ready application but serves as a demonstration of good development practices in .NET. Fork and explore at your own risk!
-
----
-
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
